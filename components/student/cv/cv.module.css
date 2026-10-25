@@ -1,0 +1,84 @@
+/* Shared light UI of the student CV cycle. Phone first: 16px text, 48px+ touch targets. */
+.stack{display:flex;flex-direction:column;gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow-card)}
+.cardHead{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;font-weight:600;color:var(--muted)}
+.cardHead svg{color:var(--cy);flex-shrink:0}
+.h1{font-size:24px;font-weight:700;line-height:1.25;color:var(--ink)}
+.h2{font-size:18px;font-weight:600;line-height:1.35;color:var(--ink)}
+.lead{font-size:16px;line-height:1.6;color:var(--body)}
+.small{font-size:13.5px;line-height:1.5;color:var(--muted)}
+.center{text-align:center}
+.spin{display:grid;place-items:center;padding:48px 0}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;
+  padding:0 20px;border-radius:14px;border:1px solid #CBD5E1;background:#fff;color:var(--ink);
+  font-size:16px;font-weight:600;text-decoration:none;cursor:pointer}
+.btn:hover:not(:disabled){background:#F1F5F9;border-color:#94A3B8;text-decoration:none}
+.btnPrimary{background:var(--cy);border-color:var(--cy);color:#fff}
+.btnPrimary:hover:not(:disabled){background:#12807A;border-color:#12807A;color:#fff}
+.btnWarn{background:var(--gold-soft);border-color:var(--gold-line);color:#92400E}
+.btnWarn:hover:not(:disabled){background:rgba(217,119,6,.18);border-color:var(--gold);color:#92400E}
+.btnGhost{background:transparent;border-color:transparent;color:var(--muted)}
+.btnGhost:hover:not(:disabled){background:#EEF2F6;border-color:transparent;color:var(--ink)}
+.btnSm{min-height:44px;padding:0 14px;font-size:15px;width:auto}
+.btnRow{display:flex;gap:10px}
+.btnRow > *{flex:1}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;
+  background:var(--cy-soft);color:#0B5F5A;font-size:14px;font-weight:500}
+.chipMuted{background:#EEF2F6;color:#334155}
+.chipWarn{background:var(--gold-soft);color:#92400E}
+.chipBad{background:var(--danger-soft);color:#991B1B}
+
+.note{padding:12px 14px;border-radius:14px;background:var(--cy-soft);color:#0B5F5A;font-size:15px;line-height:1.55}
+.noteWarn{background:var(--gold-soft);color:#92400E}
+.noteBad{background:var(--danger-soft);color:#991B1B}
+
+.field{display:block}
+.input{width:100%;min-height:48px;padding:0 14px;border-radius:14px;border:1.5px solid #CBD5E1;font-size:16px}
+
+/* progress bars with 50 / 150 ticks (the bar is full at 200) */
+.row{padding:12px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0;padding-top:0}
+.rowHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:16px}
+.rowHead b{color:var(--ink);font-weight:600}
+.num{font-family:var(--font-num);font-size:14px;color:var(--muted)}
+.track{position:relative;height:12px;border-radius:999px;background:#E9EEF3;overflow:hidden}
+.fill{position:absolute;inset-block:0;inset-inline-start:0;border-radius:999px;transition:inline-size .4s ease}
+.tierRed{background:var(--danger)}
+.tierOk{background:#2FA39B}
+.tierStrong{background:#0B5F5A}
+.mark{position:absolute;inset-block:0;width:2px;background:rgba(15,28,46,.35)}
+.tierText{font-size:13px;font-weight:600}
+.tierTextRed{color:var(--danger)}
+.tierTextOk{color:#0F766E}
+.tierTextStrong{color:#0B5F5A}
+.rowFoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.link{display:inline-flex;align-items:center;min-height:44px;font-size:14px;font-weight:600;color:var(--cy)}
+
+/* model / stats */
+.bigNum{font-family:var(--font-num);font-size:44px;font-weight:700;line-height:1;color:var(--ink)}
+.bigNum small{font-size:22px;font-weight:600;color:var(--muted)}
+.statRow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 10px;padding:12px;border-radius:14px;
+  background:#F6F8FA;text-decoration:none;color:var(--ink)}
+.statRowWeak{background:var(--gold-soft)}
+.statName{font-size:16px;font-weight:600}
+.statPct{font-family:var(--font-num);font-size:15px;color:var(--body)}
+.statBar{grid-column:1 / -1;height:8px;border-radius:999px;background:#E3E8EE;overflow:hidden}
+.statBar i{display:block;height:100%;border-radius:999px;background:#2FA39B}
+.statRowWeak .statBar i{background:var(--gold)}
+.statFix{grid-column:1 / -1;font-size:14px;font-weight:600;color:#92400E}
+
+.jobs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.job{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 0;border-top:1px solid var(--line);font-size:15px}
+.job:first-child{border-top:0}
+.dot{flex-shrink:0;width:10px;height:10px;border-radius:50%;background:#94A3B8}
+.dotOk{background:#0B5F5A}
+.dotActive{background:var(--gold)}
+.dotWait{background:#64748B}
+.dotBad{background:var(--danger)}
+.jobTime{margin-inline-start:auto;font-size:13px;color:var(--muted)}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}.fill{transition:none}}

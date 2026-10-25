@@ -1,0 +1,83 @@
+/* Facilitator guide: read view of a module. Comfortable measure (<= 70ch), clear hierarchy, hairlines only. */
+.guide{max-width:72ch;margin-inline:auto;padding:4px 4px 40px;color:var(--body);font-size:15px;line-height:1.75}
+.head{padding-bottom:18px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.head h2{font-size:24px;font-weight:600;line-height:1.3;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--muted)}
+.metaItem{display:inline-flex;align-items:center;gap:5px}
+.version{font-family:var(--font-num);color:var(--muted)}
+
+.section{margin-top:30px}
+.sectionTitle{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:12.5px;font-weight:600;
+  letter-spacing:.06em;color:var(--muted)}
+.sectionTitle::after{content:"";flex:1;height:1px;background:var(--line)}
+.sectionCount{font-weight:500;color:var(--faint)}
+
+/* agenda chips (from summary) */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chipItem{display:inline-flex;align-items:baseline;gap:7px;padding:5px 12px;border-radius:999px;
+  background:#F1F5F9;color:var(--ink);font-size:13.5px;line-height:1.5}
+.chipMin{font-family:var(--font-num);font-size:12px;font-weight:600;color:#0B5F5A}
+.summaryText{white-space:pre-line}
+
+/* objectives */
+.objectives{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.objectives li{position:relative;padding-inline-start:26px}
+.objectives li::before{content:"";position:absolute;inset-inline-start:2px;top:.62em;width:10px;height:10px;
+  border-radius:50%;background:var(--cy-soft);border:2px solid var(--cy)}
+
+/* exercises */
+.exercise{padding:18px 20px;margin-bottom:14px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;
+  box-shadow:var(--shadow-card)}
+.exHead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}
+.exTitle{flex:1 1 220px;font-size:16px;font-weight:600;color:var(--ink);line-height:1.4}
+.steps{margin:0;padding:0;list-style:none;counter-reset:step;display:grid;gap:10px}
+.steps li{counter-increment:step;position:relative;padding-inline-start:36px}
+.steps li::before{content:counter(step);position:absolute;inset-inline-start:0;top:.2em;width:24px;height:24px;
+  display:grid;place-items:center;border-radius:50%;background:var(--cy);color:#fff;
+  font-family:var(--font-num);font-size:12px;font-weight:600;line-height:1}
+
+/* question bank */
+.questions{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);display:grid;gap:16px}
+.qTitle{font-size:12.5px;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.question{display:grid;gap:6px}
+.qText{font-weight:600;color:var(--ink)}
+.options{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.option{display:flex;align-items:baseline;gap:8px;padding:4px 10px;border-radius:5px;font-size:14px}
+.optMark{flex:0 0 auto;width:18px;font-family:var(--font-num);font-size:12px;color:var(--faint)}
+.correct{background:var(--cy-soft);color:#0B5F5A;font-weight:500}
+.correct .optMark{color:var(--cy);font-weight:700}
+
+/* materials checklist */
+.materials{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.material label{display:flex;align-items:center;gap:10px;padding:6px 8px;margin-inline:-8px;border-radius:5px;cursor:pointer}
+.material label:hover{background:#F8FAFC}
+.material input{width:17px;height:17px;flex:0 0 auto;accent-color:var(--cy)}
+.material input:checked + .matLabel{color:var(--faint);text-decoration:line-through}
+.matKind{margin-inline-start:auto;font-size:12px;color:var(--faint)}
+
+/* facilitator notes */
+.noteBlock{margin-bottom:22px}
+.noteTitle{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--cy);letter-spacing:.04em}
+.agendaRows{display:grid;gap:0}
+.agendaRow{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid #EEF2F6}
+.agendaRow:last-child{border-bottom:none}
+.agendaMin{font-family:var(--font-num);font-size:13px;font-weight:600;color:#0B5F5A;padding-top:2px}
+.agendaTitle{font-weight:600;color:var(--ink)}
+.agendaText{color:var(--body)}
+.labelled{display:grid;gap:8px;margin:0}
+.labelled p{margin:0}
+.labelled b{color:var(--ink);font-weight:600}
+.noteLine{margin:0 0 6px}
+
+.empty{color:var(--faint);font-size:14px}
+
+@media (max-width:700px){
+  .guide{font-size:14.5px}
+  .head h2{font-size:21px}
+  .exercise{padding:14px}
+}
+@media print{
+  .guide{max-width:none}
+  .exercise{box-shadow:none;break-inside:avoid}
+}
+.srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

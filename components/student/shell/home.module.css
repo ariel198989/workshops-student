@@ -1,0 +1,69 @@
+.greetRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.refresh{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:14px;
+  border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer}
+.refresh:hover:not(:disabled){background:#EEF2F6;color:var(--ink);border-color:transparent}
+.spinning svg{animation:turn .9s linear infinite}
+@keyframes turn{to{transform:rotate(360deg)}}
+
+/* next step: the one big call to action */
+.next{display:flex;align-items:center;gap:14px;padding:18px;border-radius:18px;background:var(--cy);color:#fff;
+  text-decoration:none;box-shadow:0 6px 18px rgba(23,148,140,.28)}
+.next:hover{background:#12807A;color:#fff;text-decoration:none}
+.nextText{flex:1;min-width:0}
+.nextLabel,.nextTitle,.nextHint{display:block}
+.nextLabel{font-size:13px;font-weight:500;opacity:.88}
+.nextTitle{font-size:20px;font-weight:700;line-height:1.3}
+.nextHint{margin-top:2px;font-size:14px;opacity:.9}
+.nextIcon{flex-shrink:0;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2)}
+
+.mission h2{margin-bottom:4px}
+.client{font-size:14px;color:var(--muted);margin-bottom:10px}
+.sub{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.subRow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.metric{margin-top:10px;font-size:15px;color:var(--body)}
+.metric b{color:var(--ink)}
+.empty{font-size:16px;color:var(--body)}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.stat{padding:10px 6px;border-radius:14px;background:#F6F8FA;text-align:center}
+.stat b{display:block;font-family:var(--font-num);font-size:26px;line-height:1.1;color:var(--ink)}
+.stat span{font-size:13px;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:16px}
+.barHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:15px}
+.barHead b{color:var(--ink);font-weight:600}
+.barCount{font-family:var(--font-num);font-size:14px;color:var(--muted)}
+.track{position:relative;height:14px;border-radius:999px;background:#E9EEF3;overflow:hidden}
+.fill{position:absolute;inset-block:0;inset-inline-start:0;border-radius:999px;transition:inline-size .4s ease}
+.red{background:var(--danger)}
+.okc{background:#2FA39B}
+.strong{background:#0B5F5A}
+.mark{position:absolute;inset-block:0;width:2px;background:rgba(15,28,46,.35)}
+.ticks{position:relative;height:18px;margin-top:3px;font-size:11.5px;color:var(--muted)}
+.tick{position:absolute;transform:translateX(50%);font-family:var(--font-num)}
+.tickEnd{inset-inline-end:0;transform:none}
+.level{font-size:12.5px;font-weight:600}
+.levelred{color:var(--danger)} .levelok{color:#0F766E} .levelstrong{color:#0B5F5A}
+
+.person{display:flex;align-items:center;gap:10px;min-height:48px}
+.person + .person{border-top:1px solid var(--line)}
+.avatar{flex-shrink:0;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;
+  background:var(--cy-soft);color:#0B5F5A;font-weight:700}
+.personName{flex:1;min-width:0;font-weight:500;color:var(--ink)}
+.me{font-size:12.5px;color:var(--cy);font-weight:600}
+
+.nextSession{padding:14px;border-radius:14px;background:var(--cy-soft);margin-bottom:10px}
+.nextSession b{display:block;font-size:17px;color:var(--ink)}
+.nextSession span{font-size:14px;color:#0B5F5A}
+.sessions{list-style:none;margin:0;padding:0}
+.sessionRow{display:flex;align-items:baseline;gap:10px;min-height:44px;padding:8px 0;font-size:15px}
+.sessionRow + .sessionRow{border-top:1px solid var(--line)}
+.sessionNo{flex-shrink:0;width:24px;font-family:var(--font-num);font-weight:700;color:var(--cy)}
+.sessionTitle{flex:1;min-width:0;color:var(--ink)}
+.sessionWhen{font-size:13px;color:var(--muted);text-align:end}
+.done{opacity:.55}
+
+.cert{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:18px;text-decoration:none;
+  background:var(--gold-soft);border:1px solid var(--gold-line);color:#92400E}
+.cert:hover{text-decoration:none;background:rgba(217,119,6,.16)}
+.cert b{display:block;font-size:17px}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}.spinning svg{animation:none}}

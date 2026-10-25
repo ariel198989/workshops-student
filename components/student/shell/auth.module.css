@@ -1,0 +1,9 @@
+.screen{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:20px 14px;
+  background:linear-gradient(180deg,#EAF6F5 0,var(--bg-0) 260px)}
+.card{width:100%;max-width:420px;padding:26px 20px 22px;background:#fff;border:1px solid var(--line);
+  border-radius:22px;box-shadow:0 8px 30px rgba(15,28,46,.07);animation:rise .3s ease}
+.brand{text-align:center;font-size:26px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.by{text-align:center;margin:2px 0 8px;font-size:12px;letter-spacing:.04em;color:var(--muted)}
+.intro{margin-bottom:18px}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.card{animation:none}}

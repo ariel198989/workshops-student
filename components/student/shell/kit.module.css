@@ -1,0 +1,43 @@
+/* Student UI kit: phone first, 16px text, 48px+ touch targets. Selectors are written to beat the global
+   button/input rules in app/globals.css (which are tag-level) without !important. */
+.stack{display:flex;flex-direction:column;gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow-card)}
+.cardHead{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;font-weight:600;color:var(--muted)}
+.cardHead svg{color:var(--cy);flex-shrink:0}
+.h1{font-size:26px;font-weight:700;line-height:1.25;color:var(--ink)}
+.h2{font-size:19px;font-weight:600;line-height:1.35;color:var(--ink)}
+.lead{font-size:16px;line-height:1.6;color:var(--body)}
+.small{font-size:13.5px;color:var(--muted)}
+.center{text-align:center}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;
+  padding:0 20px;border-radius:14px;border:1px solid #CBD5E1;background:#fff;color:var(--ink);
+  font-size:16px;font-weight:600;text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s}
+.btn:hover:not(:disabled){background:#F1F5F9;border-color:#94A3B8;text-decoration:none}
+.btnPrimary{background:var(--cy);border-color:var(--cy);color:#fff}
+.btnPrimary:hover:not(:disabled){background:#12807A;border-color:#12807A;color:#fff}
+.btnGhost{background:transparent;border-color:transparent;color:var(--muted)}
+.btnGhost:hover:not(:disabled){background:#EEF2F6;border-color:transparent;color:var(--ink)}
+.btnInline{width:auto}
+
+.field{display:block;margin-bottom:14px}
+.label{display:block;margin-bottom:6px;font-size:14px;font-weight:600;color:var(--ink)}
+.field input[type]{min-height:52px;padding:0 14px;border-radius:14px;font-size:16px;border:1.5px solid #CBD5E1}
+.field input[type]:focus{border-color:var(--cy);box-shadow:0 0 0 4px rgba(23,148,140,.16)}
+.codeInput{text-align:center;letter-spacing:.12em;font-weight:700;font-family:var(--font-num)}
+.field input[type].codeInput{font-size:22px;min-height:60px}
+.error{min-height:20px;margin:0 0 10px;font-size:14px;color:var(--danger)}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin-bottom:20px;border-radius:14px;background:#EEF2F6}
+.tab{min-height:48px;padding:0 8px;border-radius:11px;border:0;background:transparent;color:var(--muted);
+  font-size:15px;font-weight:600}
+.tab:hover:not(:disabled){background:rgba(255,255,255,.6);border-color:transparent}
+.tabOn,.tabOn:hover:not(:disabled){background:#fff;color:var(--cy);box-shadow:0 1px 3px rgba(15,28,46,.12)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;
+  background:var(--cy-soft);color:#0B5F5A;font-size:14px;font-weight:500}
+.chipMuted{background:#EEF2F6;color:#334155}
+
+.spin{display:grid;place-items:center;padding:48px 0}
+@media (prefers-reduced-motion:reduce){.btn,.tab{transition:none}}

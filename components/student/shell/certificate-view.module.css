@@ -1,0 +1,5 @@
+/* The sheet is A4 landscape; zoom (set from JS) shrinks it to the column, so the frame just clips and rounds it. */
+.frame{width:100%;overflow:hidden;border-radius:12px;border:1px solid var(--line);background:#fff;
+  box-shadow:0 4px 18px rgba(15,28,46,.08)}
+.emptyIcon{align-self:center;display:grid;place-items:center;width:64px;height:64px;border-radius:50%;
+  background:var(--gold-soft);color:var(--gold)}

@@ -1,0 +1,25 @@
+/* Tagging stage: the wrapper shrink-wraps the photo so overlay percentages match the image exactly. */
+.stage{position:relative;width:fit-content;max-width:100%;margin:0 auto;border-radius:14px;overflow:hidden;
+  background:#0B1220;touch-action:none;-webkit-user-select:none;user-select:none;cursor:crosshair}
+.photo{display:block;max-width:100%;max-height:calc(100dvh - 380px);min-height:180px;object-fit:contain;
+  pointer-events:none}
+.box{position:absolute;border:3px solid #2DD4BF;border-radius:4px;background:rgba(45,212,191,.12);
+  box-shadow:0 0 0 1px rgba(11,18,32,.5);pointer-events:none}
+.boxLabel{position:absolute;inset-inline-start:-3px;bottom:100%;margin-bottom:3px;padding:2px 8px;border-radius:6px;
+  background:#2DD4BF;color:#0B1220;font-size:13px;font-weight:700;white-space:nowrap}
+.handle{position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid #2DD4BF}
+.nw{left:-12px;top:-12px}.ne{right:-12px;top:-12px}.sw{left:-12px;bottom:-12px}.se{right:-12px;bottom:-12px}
+.guide{position:absolute;inset-inline:12px;bottom:12px;padding:8px 12px;border-radius:12px;text-align:center;
+  background:rgba(11,18,32,.72);color:#fff;font-size:15px;pointer-events:none}
+
+.progress{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chipBtn{flex-shrink:0;min-height:48px;padding:0 18px;border-radius:999px;border:1.5px solid #CBD5E1;
+  background:#fff;color:var(--ink);font-size:16px;font-weight:500}
+.chipBtn:hover:not(:disabled){background:var(--cy-soft);border-color:var(--cy)}
+.chipOn,.chipOn:hover:not(:disabled){background:var(--cy);border-color:var(--cy);color:#fff}
+.toggle{display:flex;align-items:center;gap:10px;min-height:48px;font-size:15px;color:var(--body)}
+.toggle input{width:22px;height:22px;accent-color:var(--cy)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions .wide{grid-column:1 / -1}

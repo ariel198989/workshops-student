@@ -1,0 +1,52 @@
+/* Dashboard sections under the KPI row, and the models mirror. Light, dense, hairlines. */
+.stack{display:grid;gap:22px}
+.section{display:grid;gap:10px}
+.sectionHead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sectionTitle{font-size:15px;font-weight:600;color:var(--ink)}
+.more{font-size:12.5px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+
+.live{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:20px 22px;border:1px solid rgba(23,148,140,.45);
+  border-radius:var(--radius);background:linear-gradient(to left,var(--cy-soft),#fff 60%);box-shadow:var(--shadow-card)}
+.liveInfo{flex:1 1 260px;display:grid;gap:4px}
+.liveTitle{font-size:20px;font-weight:600;color:var(--ink);line-height:1.3}
+.liveMeta{font-size:13px;color:var(--muted)}
+.liveLink{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:var(--radius);
+  background:var(--cy);color:#fff;font-size:15px;font-weight:600;text-decoration:none;box-shadow:var(--shadow-card);
+  transition:background .15s}
+.liveLink:hover{background:#12807A;color:#fff;text-decoration:none}
+.liveLink:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.secondary{font-size:13px}
+
+.list{margin:0;padding:0;list-style:none}
+.row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.rowMain{flex:1;min-width:0;display:grid;gap:1px}
+.rowTitle{font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rowTitle a{color:inherit}
+.rowSub{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rowEnd{font-size:12.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.panel{padding:0;overflow:hidden}
+.panelEmpty{padding:18px 16px;color:var(--faint);font-size:13.5px}
+
+/* onboarding */
+.steps{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.step{display:grid;gap:10px;align-content:start;padding:20px;border:1px solid var(--line);border-radius:var(--radius);
+  background:#fff;box-shadow:var(--shadow-card);color:inherit;text-decoration:none}
+.step:hover{border-color:var(--cy);text-decoration:none}
+.stepNo{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--cy);color:#fff;
+  font-family:var(--font-num);font-weight:700;font-size:14px}
+.stepTitle{font-size:16px;font-weight:600;color:var(--ink)}
+.stepText{font-size:13.5px;color:var(--muted)}
+.intro{max-width:60ch}
+.intro h2{font-size:20px;font-weight:600;margin-bottom:4px}
+.intro p{color:var(--muted)}
+
+/* models */
+.acc{font-family:var(--font-num);font-weight:600;color:var(--ink)}
+.accNone{color:var(--faint)}
+
+@media (max-width:900px){
+  .two{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}
+}
