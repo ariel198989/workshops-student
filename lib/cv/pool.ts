@@ -78,7 +78,7 @@ export async function buildTeamPoolZip(team: string, onProgress: (done: number, 
   const valGroups = splitValGroups(rows);
   const zip = new JSZip();
   zip.file('data.yaml',
-    `# Workshops OS group pool\npath: .\ntrain: images/train\nval: images/val\n\n` +
+    `# Workshops group pool\npath: .\ntrain: images/train\nval: images/val\n\n` +
     `nc: ${names.length}\nnames: [${names.map((n) => `'${n}'`).join(', ')}]\n`);
 
   let ok = 0;

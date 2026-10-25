@@ -8,15 +8,13 @@ import { BottomNav } from './BottomNav';
 import { TopBar } from './TopBar';
 import s from './shell.module.css';
 
-const BRAND = 'Workshops OS';
-
-/** Phone-first frame for every /student page: top bar, content, bottom nav (once the student is in a workshop). */
+/** Phone-first frame for every student page: top bar, content, bottom nav (once the student is in a workshop). */
 export function StudentShell({ children }: { children: ReactNode }) {
   const { ctx } = useStudentContext();
   const { whoami } = useStore(wsAuthStore);
   return (
     <div className={s.root}>
-      <TopBar title={ctx?.workshop.title ?? BRAND} chip={groupChip(ctx?.group ?? null)} isStaff={!!whoami?.staff} />
+      <TopBar workshop={ctx?.workshop.title ?? ''} chip={groupChip(ctx?.group ?? null)} isStaff={!!whoami?.staff} />
       <main className={ctx ? s.main : `${s.main} ${s.mainBare}`}>{children}</main>
       {ctx ? <BottomNav /> : null}
     </div>

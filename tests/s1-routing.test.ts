@@ -1,68 +1,56 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { decideRoute, isStudentPath, type Whoami } from '../lib/shell-access.ts';
+import { decideAccess, isPublicPath, STUDENT_HOME, STUDENT_JOIN } from '../lib/student/access.ts';
+import type { Whoami } from '../lib/ws/types.ts';
 
 const base = { user_id: 'u1', workshops: [] };
 const staff: Whoami = { ...base, staff: { role: 'instructor', full_name: 'x' }, participations: [] };
+const staffJoined: Whoami = {
+  ...base, staff: { role: 'admin', full_name: 'x' },
+  participations: [{ workshop_id: 'w1', participant_id: 'p1', group_id: 'g1' }],
+};
 const joined: Whoami = {
   ...base, staff: null,
   participations: [{ workshop_id: 'w1', participant_id: 'p1', group_id: 'g1' }],
 };
 const fresh: Whoami = { ...base, staff: null, participations: [] };
 
+test('constants point at the root routes', () => {
+  assert.equal(STUDENT_HOME, '/');
+  assert.equal(STUDENT_JOIN, '/join');
+});
+
 test('whoami that failed to load is denied', () => {
-  assert.deepEqual(decideRoute(null, '/student'), { kind: 'denied' });
+  assert.deepEqual(decideAccess(null, '/', false), { kind: 'denied' });
 });
 
 test('public verify path is always public, even without whoami', () => {
-  assert.deepEqual(decideRoute(null, '/verify/ABC'), { kind: 'public' });
-  assert.deepEqual(decideRoute(fresh, '/verify'), { kind: 'public' });
+  assert.deepEqual(decideAccess(null, '/verify/ABC', false), { kind: 'public' });
+  assert.deepEqual(decideAccess(fresh, '/verify', false), { kind: 'public' });
+  assert.equal(isPublicPath('/verifying'), false);
+  assert.equal(isPublicPath(null), false);
 });
 
-test('staff sees the console on console paths', () => {
-  assert.deepEqual(decideRoute(staff, '/'), { kind: 'staff' });
-  assert.deepEqual(decideRoute(staff, '/workshops/abc'), { kind: 'staff' });
+test('staff without a participation sees the console notice until they choose to preview', () => {
+  assert.deepEqual(decideAccess(staff, '/', false), { kind: 'staff-notice' });
+  assert.deepEqual(decideAccess(staff, '/capture', false), { kind: 'staff-notice' });
+  assert.deepEqual(decideAccess(staff, '/', true), { kind: 'student' });
+  assert.deepEqual(decideAccess(staff, '/join', true), { kind: 'student' });
 });
 
-test('staff may preview student pages without redirect', () => {
-  assert.deepEqual(decideRoute(staff, '/student'), { kind: 'student' });
-  assert.deepEqual(decideRoute(staff, '/student/capture'), { kind: 'student' });
+test('staff who are also students go straight into the student app', () => {
+  assert.deepEqual(decideAccess(staffJoined, '/', false), { kind: 'student' });
 });
 
-test('participant without staff row never reaches the console', () => {
-  assert.deepEqual(decideRoute(joined, '/'), { kind: 'redirect', to: '/student' });
-  assert.deepEqual(decideRoute(joined, '/workshops'), { kind: 'redirect', to: '/student' });
-  assert.deepEqual(decideRoute(joined, '/staff'), { kind: 'redirect', to: '/student' });
+test('a joined student stays on every student page, including /join', () => {
+  for (const p of ['/', '/capture', '/tag', '/train', '/results', '/certificate', '/join']) {
+    assert.deepEqual(decideAccess(joined, p, false), { kind: 'student' });
+  }
+  assert.deepEqual(decideAccess(joined, null, false), { kind: 'student' });
 });
 
-test('joined student stays on student pages', () => {
-  assert.deepEqual(decideRoute(joined, '/student'), { kind: 'student' });
-  assert.deepEqual(decideRoute(joined, '/student/train'), { kind: 'student' });
-  assert.deepEqual(decideRoute(joined, '/student/certificate'), { kind: 'student' });
-});
-
-test('student with no participation is sent to the join page', () => {
-  assert.deepEqual(decideRoute(fresh, '/'), { kind: 'redirect', to: '/student/join' });
-  assert.deepEqual(decideRoute(fresh, '/student'), { kind: 'redirect', to: '/student/join' });
-  assert.deepEqual(decideRoute(fresh, '/student/capture'), { kind: 'redirect', to: '/student/join' });
-});
-
-test('student with no participation may stay on the join page', () => {
-  assert.deepEqual(decideRoute(fresh, '/student/join'), { kind: 'student' });
-});
-
-test('joined student may open the join page (joining another group is handled by the RPC)', () => {
-  assert.deepEqual(decideRoute(joined, '/student/join'), { kind: 'student' });
-});
-
-test('null pathname is treated as the root', () => {
-  assert.deepEqual(decideRoute(joined, null), { kind: 'redirect', to: '/student' });
-});
-
-test('isStudentPath matches the segment, not a prefix of another word', () => {
-  assert.equal(isStudentPath('/student'), true);
-  assert.equal(isStudentPath('/student/tag'), true);
-  assert.equal(isStudentPath('/students'), false);
-  assert.equal(isStudentPath('/'), false);
-  assert.equal(isStudentPath(null), false);
+test('a student who has not joined is sent to /join', () => {
+  assert.deepEqual(decideAccess(fresh, '/', false), { kind: 'redirect', to: '/join' });
+  assert.deepEqual(decideAccess(fresh, '/capture', false), { kind: 'redirect', to: '/join' });
+  assert.deepEqual(decideAccess(fresh, '/join', false), { kind: 'student' });
 });

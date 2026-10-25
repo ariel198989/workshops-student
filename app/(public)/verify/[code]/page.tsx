@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { VerifyResult } from '@/components/ws/p5/VerifyResult';
+import { VerifyResult } from '@/components/verify/VerifyResult';
 
 export const metadata: Metadata = {
   title: 'אימות תעודה · Corewise',

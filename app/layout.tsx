@@ -8,15 +8,19 @@ const FONTS_URL =
   'https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap';
 
 export const metadata: Metadata = {
-  title: 'Workshops OS · Corewise',
-  description: 'קונסולת ניהול לסדנאות ראייה ממוחשבת של Corewise',
+  title: 'Workshops Student · Corewise',
+  description: 'צילום, תיוג ואימון מודל ראייה ממוחשבת עם הקבוצה שלכם',
+  manifest: '/manifest.webmanifest',
   icons: { icon: ['/favicon.ico', '/icon-192.png'], apple: '/icon-192.png' },
+  appleWebApp: { capable: true, title: 'Workshops', statusBarStyle: 'default' },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#F6F8FA',
+  themeColor: '#FFFFFF',
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

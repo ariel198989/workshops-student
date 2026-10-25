@@ -4,7 +4,7 @@ import { login } from '@/lib/auth';
 import { TextField } from './TextField';
 import k from './kit.module.css';
 
-/** Email + password sign in, shared by staff and students. */
+/** Email + password sign in. */
 export function StudentLogin() {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');

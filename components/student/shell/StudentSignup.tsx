@@ -5,7 +5,7 @@ import { MIN_PASSWORD, validateSignup } from '@/lib/student/labels';
 import { TextField } from './TextField';
 import k from './kit.module.css';
 
-/** Student sign up. Accounts are auto-confirmed, so success signs in and the route guard sends the student to /student/join. */
+/** Student sign up. Accounts are auto-confirmed, so success signs in and the route guard sends the student to /join. */
 export function StudentSignup() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');

@@ -61,7 +61,7 @@ export function JobsPanel({ jobs, active, ahead, userId, justDone, onChanged }: 
       {justDone ? (
         <div className={s.note} role="status">
           <b>המודל מוכן!</b>
-          <Link href="/student/results" className={`${s.btn} ${s.btnPrimary}`}>לתוצאות ולבדיקה</Link>
+          <Link href="/results" className={`${s.btn} ${s.btnPrimary}`}>לתוצאות ולבדיקה</Link>
         </div>
       ) : null}
       {active ? <ActiveJob job={active} ahead={ahead} mine={active.requested_by === userId} onCancel={() => void cancel()} busy={busy} /> : null}

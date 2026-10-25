@@ -18,8 +18,8 @@ function NoModel() {
       <p className={s.lead}>
         המודל נולד באימון: מצלמים, מסמנים תיבות, ושולחים לאימון בענן. כשהאימון מסתיים, המודל מופיע כאן וגם אפשר לבדוק אותו במצלמה.
       </p>
-      <Link href="/student/train" className={`${s.btn} ${s.btnPrimary}`}>לאימון</Link>
-      <Link href="/student/capture" className={s.btn}>לצילום</Link>
+      <Link href="/train" className={`${s.btn} ${s.btnPrimary}`}>לאימון</Link>
+      <Link href="/capture" className={s.btn}>לצילום</Link>
     </div>
   );
 }

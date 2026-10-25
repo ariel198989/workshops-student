@@ -5,7 +5,7 @@ import h from './home.module.css';
 
 export function CertificateTeaser() {
   return (
-    <Link href="/student/certificate" className={h.cert}>
+    <Link href="/certificate" className={h.cert}>
       <HugeiconsIcon icon={Certificate01Icon} size={30} />
       <span style={{ flex: 1 }}>
         <b>התעודה שלכם מוכנה</b>

@@ -20,8 +20,8 @@ function Done({ saved, skipped, onReload }: { saved: number; skipped: number; on
       {skipped > 0 ? (
         <button type="button" className={`${s.btn} ${s.btnWarn}`} onClick={onReload}>חזרה לתמונות שדילגתם ({skipped})</button>
       ) : null}
-      <Link href="/student/capture" className={`${s.btn} ${s.btnPrimary}`}>לצילום</Link>
-      <Link href="/student/train" className={s.btn}>לאימון</Link>
+      <Link href="/capture" className={`${s.btn} ${s.btnPrimary}`}>לצילום</Link>
+      <Link href="/train" className={s.btn}>לאימון</Link>
     </div>
   );
 }

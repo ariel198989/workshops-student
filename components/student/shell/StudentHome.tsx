@@ -25,7 +25,7 @@ function Notice({ title, text, action }: { title: string; text: string; action: 
   );
 }
 
-/** /student: greeting, next step, mission, progress, team, schedule, certificate. One RPC feeds all of it. */
+/** /: greeting, next step, mission, progress, team, schedule, certificate. One RPC feeds all of it. */
 export function StudentHome() {
   const { ctx, loading, loaded, error, reload } = useStudentContext();
 
@@ -39,7 +39,7 @@ export function StudentHome() {
   if (!ctx) {
     return (
       <Notice title="עוד לא הצטרפתם לסדנה" text="כדי להתחיל צריך את הקוד מהמדריך."
-        action={<Link href="/student/join" className={`${k.btn} ${k.btnPrimary}`}>הצטרפות עם קוד</Link>} />
+        action={<Link href="/join" className={`${k.btn} ${k.btnPrimary}`}>הצטרפות עם קוד</Link>} />
     );
   }
   const name = firstName(ctx.me.full_name);

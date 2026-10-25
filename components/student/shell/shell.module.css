@@ -7,8 +7,12 @@
   padding:8px 14px;padding-top:max(8px,env(safe-area-inset-top));
   background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .topText{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:700;color:var(--ink)}
-.chip{align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+.sub{display:flex;align-items:center;gap:8px;min-width:0}
+.brandLine{display:flex;align-items:baseline;gap:8px}
+.wordmark{font-size:17px;font-weight:800;letter-spacing:-.01em;color:var(--ink);line-height:1.1}
+.by{font-size:11px;letter-spacing:.04em;color:var(--muted)}
+.title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:600;color:var(--body)}
+.chip{flex-shrink:0;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   padding:1px 10px;border-radius:999px;background:var(--cy-soft);color:#0B5F5A;font-size:13px;font-weight:600}
 .topAction{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:48px;min-height:48px;
   padding:0 10px;border-radius:14px;border:0;background:transparent;color:var(--muted);font-size:14px;font-weight:500;

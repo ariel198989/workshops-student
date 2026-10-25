@@ -43,19 +43,19 @@ export function CvGate({ children }: { children: (session: CvSession) => ReactNo
   if (!ctx) {
     return (
       <Notice title="עוד לא הצטרפתם לסדנה" text="כדי להתחיל צריך את הקוד מהמדריך."
-        action={<Link href="/student/join" className={`${s.btn} ${s.btnPrimary}`}>הצטרפות עם קוד</Link>} />
+        action={<Link href="/join" className={`${s.btn} ${s.btnPrimary}`}>הצטרפות עם קוד</Link>} />
     );
   }
   if (!ctx.group) {
     return (
       <Notice title="עוד לא הצטרפתם לקבוצה" text="התמונות והמודל שייכים לקבוצה, אז קודם בוחרים קבוצה."
-        action={<Link href="/student/join" className={`${s.btn} ${s.btnPrimary}`}>בחירת קבוצה</Link>} />
+        action={<Link href="/join" className={`${s.btn} ${s.btnPrimary}`}>בחירת קבוצה</Link>} />
     );
   }
   if (!userId) {
     return (
       <Notice title="צריך להתחבר מחדש" text="ההתחברות שלכם פגה. התחברו שוב כדי להמשיך."
-        action={<Link href="/student" className={`${s.btn} ${s.btnPrimary}`}>לדף הבית</Link>} />
+        action={<Link href="/" className={`${s.btn} ${s.btnPrimary}`}>לדף הבית</Link>} />
     );
   }
   return <>{children({ ctx, team: ctx.group.team_name, userId })}</>;

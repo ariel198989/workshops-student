@@ -27,9 +27,6 @@ export function useStore<T extends object>(store: Store<T>): T {
   return useSyncExternalStore(store.subscribe, store.get, store.get);
 }
 
-// bump to make data-driven views refetch (detections, frames, routes)
-export const dataVersion = createStore({ n: 0 });
-export const bumpData = () => dataVersion.set({ n: dataVersion.get().n + 1 });
 
 // toast bus
 export const toastStore = createStore<{ msg: string; info: boolean; at: number }>({ msg: '', info: false, at: 0 });

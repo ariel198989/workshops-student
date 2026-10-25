@@ -66,7 +66,7 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
       {cap.flashAt ? <div key={cap.flashAt} className={c.flash} /> : null}
       <div className={c.top}>
         <div className={c.topRow}>
-          <Link href="/student" className={c.close} onClick={leave} aria-label="יציאה מהצילום">
+          <Link href="/" className={c.close} onClick={leave} aria-label="יציאה מהצילום">
             <HugeiconsIcon icon={Cancel01Icon} size={22} />
           </Link>
           <span className={c.title}>צילום לקבוצה</span>

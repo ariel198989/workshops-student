@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Certificate01Icon, PrinterIcon, Link01Icon } from '@hugeicons/core-free-icons';
 import { Spinner } from '@/components/ui/Spinner';
-import { CertificatePreview } from '@/components/ws/p5/CertificatePreview';
-import { PrintHost } from '@/components/ws/p5/PrintHost';
+import { CertificatePreview } from '@/components/student/certificate/CertificatePreview';
+import { PrintHost } from '@/components/student/certificate/PrintHost';
 import { fetchMyCertificate } from '@/lib/student/certificate';
 import { useStudentContext } from '@/lib/student/context';
 import { certificateVariantFor } from '@/lib/student/labels';
@@ -40,7 +40,7 @@ function Empty() {
       <span className={c.emptyIcon}><HugeiconsIcon icon={Certificate01Icon} size={30} /></span>
       <h1 className={k.h2}>התעודה תופיע כאן בסיום הסדנה</h1>
       <p className={k.lead}>ממשיכים לצלם, לתייג ולאמן, והמדריך יפיק את התעודה.</p>
-      <Link href="/student" className={`${k.btn} ${k.btnPrimary}`}>חזרה לבית</Link>
+      <Link href="/" className={`${k.btn} ${k.btnPrimary}`}>חזרה לבית</Link>
     </div>
   );
 }

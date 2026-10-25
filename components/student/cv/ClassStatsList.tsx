@@ -15,7 +15,7 @@ function Row({ stat }: { stat: ClassStat }) {
     </>
   );
   return weak
-    ? <Link href={`/student/capture?cls=${encodeURIComponent(stat.name)}`} className={`${s.statRow} ${s.statRowWeak}`}>{body}</Link>
+    ? <Link href={`/capture?cls=${encodeURIComponent(stat.name)}`} className={`${s.statRow} ${s.statRowWeak}`}>{body}</Link>
     : <div className={s.statRow}>{body}</div>;
 }
 

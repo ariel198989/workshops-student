@@ -48,7 +48,7 @@ export function ModelCard({ model }: { model: TeamModel }) {
       </div>
       <p className={`${s.note} ${VERDICT_STYLE[verdict]}`}>{verdictText(verdict, model.image_count, model.honest_val)}</p>
       {verdict === 'weak' || verdict === 'basic' ? (
-        <Link href="/student/capture" className={`${s.btn} ${s.btnWarn}`} style={{ marginTop: 12 }}>צלמו עוד תמונות לשיפור</Link>
+        <Link href="/capture" className={`${s.btn} ${s.btnWarn}`} style={{ marginTop: 12 }}>צלמו עוד תמונות לשיפור</Link>
       ) : null}
     </div>
   );

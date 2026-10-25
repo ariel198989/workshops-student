@@ -21,10 +21,10 @@ export interface NextStep {
 
 const step = (title: string, hint: string, href: string): NextStep => ({ title, hint, href });
 
-const CAPTURE = '/student/capture';
-const TAG = '/student/tag';
-const TRAIN = '/student/train';
-const RESULTS = '/student/results';
+const CAPTURE = '/capture';
+const TAG = '/tag';
+const TRAIN = '/train';
+const RESULTS = '/results';
 
 function tagTitle(n: number): string {
   return n === 1 ? 'תייגו תמונה אחת' : `תייגו ${n} תמונות`;

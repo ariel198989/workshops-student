@@ -32,7 +32,7 @@ export function ReadinessList({ rows }: { rows: CoverageRow[] }) {
           <div className={s.rowFoot}>
             <span className={`${s.tierText} ${TEXT[row.tier]}`}>{tierNote(row)}</span>
             {row.tier !== 'strong' && !row.offTarget ? (
-              <Link href={`/student/capture?cls=${encodeURIComponent(row.name)}`} className={s.link}>צלמו עוד</Link>
+              <Link href={`/capture?cls=${encodeURIComponent(row.name)}`} className={s.link}>צלמו עוד</Link>
             ) : null}
           </div>
         </div>

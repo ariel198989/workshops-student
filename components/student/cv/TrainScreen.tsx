@@ -78,7 +78,7 @@ export function TrainScreen({ session }: { session: CvSession }) {
         <ReadinessList rows={rows} />
         <p className={`${s.note} ${tier === 'red' ? s.noteWarn : ''}`}>{SUMMARY[tier]}</p>
         {untagged > 0 ? (
-          <p className={s.small}>עוד {untagged} תמונות מחכות לתיבה. <Link href="/student/tag" className={s.link}>לתיוג</Link></p>
+          <p className={s.small}>עוד {untagged} תמונות מחכות לתיבה. <Link href="/tag" className={s.link}>לתיוג</Link></p>
         ) : null}
       </div>
       <Explain />

@@ -1,6 +1,6 @@
 // Single entry point for the shared Smart City constants. The values live in
 // lib/config.ts (same Supabase project, bucket and Colab trainer as Smart City).
-export { BUCKET, COLAB, DEFAULT_CITY } from '../config';
+export { BUCKET, DEFAULT_CITY } from '../config';
 export { MIN_TRAIN_IMAGES, RED_BELOW, STRONG_FROM } from './readiness';
 
 /** Cache API bucket for model ZIPs (immutable per path, so cache-first is safe). */

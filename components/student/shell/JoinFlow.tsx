@@ -12,7 +12,7 @@ import j from './join.module.css';
 
 interface Found { code: string; workshop: FoundWorkshop }
 
-/** Three steps: code, group, confirm name. Ends on /student with a fresh whoami and student context. */
+/** Three steps: code, group, confirm name. Ends on / with a fresh whoami and student context. */
 export function JoinFlow() {
   const router = useRouter();
   const { ctx } = useStudentContext();
@@ -34,10 +34,10 @@ export function JoinFlow() {
     }
     try {
       await refreshAfterJoin();
-      router.replace('/student');
+      router.replace('/');
     } catch {
       // joined, but the refresh failed: a full navigation reloads everything from scratch
-      window.location.assign('/student');
+      window.location.assign('/');
     }
   };
 
@@ -45,7 +45,7 @@ export function JoinFlow() {
     <div className={k.stack}>
       {ctx ? (
         <p className={j.notice}>
-          אתם כבר בסדנה ״{ctx.workshop.title}״. <Link href="/student">חזרה לבית</Link>
+          אתם כבר בסדנה ״{ctx.workshop.title}״. <Link href="/">חזרה לבית</Link>
         </p>
       ) : null}
       {!found ? (

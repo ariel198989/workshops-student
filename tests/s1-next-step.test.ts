@@ -37,17 +37,17 @@ test('barFill is a 0..100 percent of the 150 scale', () => {
 
 test('no progress at all: capture first object', () => {
   const s = pickNextStep(null);
-  assert.equal(s.href, '/student/capture');
+  assert.equal(s.href, '/capture');
   assert.equal(s.title, 'צלמו את האובייקט הראשון');
 });
 
 test('zero photos: capture first object', () => {
-  assert.equal(pickNextStep(progress()).href, '/student/capture');
+  assert.equal(pickNextStep(progress()).href, '/capture');
 });
 
 test('untagged photos: tag them, with the count', () => {
   const s = pickNextStep(progress({ photos: 12, untagged: 7 }));
-  assert.equal(s.href, '/student/tag');
+  assert.equal(s.href, '/tag');
   assert.equal(s.title, 'תייגו 7 תמונות');
 });
 
@@ -61,7 +61,7 @@ test('every class at 50 and nothing running: train', () => {
     coverage: [{ name: 'a', tagged: 50 }, { name: 'b', tagged: 80 }],
   });
   const s = pickNextStep(p);
-  assert.equal(s.href, '/student/train');
+  assert.equal(s.href, '/train');
   assert.equal(s.title, 'אמנו מודל');
 });
 
@@ -71,7 +71,7 @@ test('running job: follow the training instead of starting one', () => {
     jobs: { pending: 0, running: 1, done: 0, last: null },
   });
   const s = pickNextStep(p);
-  assert.equal(s.href, '/student/train');
+  assert.equal(s.href, '/train');
   assert.notEqual(s.title, 'אמנו מודל');
 });
 
@@ -80,13 +80,13 @@ test('model exists: test the model', () => {
     photos: 100, tagged: 100, coverage: [{ name: 'a', tagged: 100 }], model,
   });
   const s = pickNextStep(p);
-  assert.equal(s.href, '/student/results');
+  assert.equal(s.href, '/results');
   assert.equal(s.title, 'בדקו את המודל');
 });
 
 test('untagged photos beat an existing model', () => {
   const p = progress({ photos: 100, untagged: 4, coverage: [{ name: 'a', tagged: 100 }], model });
-  assert.equal(pickNextStep(p).href, '/student/tag');
+  assert.equal(pickNextStep(p).href, '/tag');
 });
 
 test('a class under 50 sends the team back to capture, naming the weakest class', () => {
@@ -95,11 +95,11 @@ test('a class under 50 sends the team back to capture, naming the weakest class'
     coverage: [{ name: 'כלב', tagged: 40 }, { name: 'חתול', tagged: 20 }],
   });
   const s = pickNextStep(p);
-  assert.equal(s.href, '/student/capture');
+  assert.equal(s.href, '/capture');
   assert.match(s.title, /חתול/);
 });
 
 test('no target classes: train once total tagged reaches 50', () => {
-  assert.equal(pickNextStep(progress({ photos: 60, tagged: 60 })).href, '/student/train');
-  assert.equal(pickNextStep(progress({ photos: 30, tagged: 30 })).href, '/student/capture');
+  assert.equal(pickNextStep(progress({ photos: 60, tagged: 60 })).href, '/train');
+  assert.equal(pickNextStep(progress({ photos: 30, tagged: 30 })).href, '/capture');
 });

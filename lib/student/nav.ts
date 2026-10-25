@@ -7,14 +7,14 @@ export interface StudentNavItem {
 }
 
 export const STUDENT_NAV: readonly StudentNavItem[] = [
-  { id: 'home', href: '/student', label: 'בית' },
-  { id: 'capture', href: '/student/capture', label: 'צילום' },
-  { id: 'tag', href: '/student/tag', label: 'תיוג' },
-  { id: 'train', href: '/student/train', label: 'אימון' },
-  { id: 'results', href: '/student/results', label: 'תוצאות' },
+  { id: 'home', href: '/', label: 'בית' },
+  { id: 'capture', href: '/capture', label: 'צילום' },
+  { id: 'tag', href: '/tag', label: 'תיוג' },
+  { id: 'train', href: '/train', label: 'אימון' },
+  { id: 'results', href: '/results', label: 'תוצאות' },
 ];
 
-const HOME = '/student';
+const HOME = '/';
 
 export function isStudentNavActive(pathname: string | null, href: string): boolean {
   if (!pathname) return false;

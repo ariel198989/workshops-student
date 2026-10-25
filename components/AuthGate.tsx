@@ -25,8 +25,8 @@ function NoAccess({ email }: { email?: string }) {
 }
 
 /**
- * Signed out: login / student sign up. Signed in: waits for ws_whoami, then renders children.
- * Who sees what (staff console, student area, join flow) is decided by the route guard in AppFrame.
+ * Signed out: sign up / login. Signed in: waits for ws_whoami (once per user), then renders children.
+ * What the signed-in user sees (student shell, join flow, staff notice) is decided in AppFrame.
  */
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, loaded } = useStore(authStore);
@@ -41,7 +41,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       wsAuthStore.set({ whoami: null, loaded: false });
       return;
     }
-    // canonical ws_whoami, once per signed-in user; any failure fails closed to the error screen
+    // any failure fails closed to the error screen
     let current = true;
     fetchWhoami()
       .then((w) => { if (current) wsAuthStore.set({ whoami: w, loaded: true }); })
