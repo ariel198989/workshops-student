@@ -14,6 +14,20 @@
 .engineOn{background:var(--cy)}
 .engineErr{background:var(--danger)}
 
+/* רובי in the header: small face + its current line, on every step */
+.robotHead{display:flex;align-items:center;gap:12px;flex:0 1 auto;min-width:0;max-width:min(46%,560px)}
+.robotLine{font-size:22px;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:900px){.robotHead{order:9;flex-basis:100%;max-width:none}}
+
+.stepsRow{display:flex;align-items:stretch;gap:12px}
+.stepsRow .steps{flex:1;min-width:0}
+.voice{align-self:center;display:inline-flex;align-items:center;gap:10px;flex:none;min-height:46px!important;padding:6px 18px!important;
+  border-radius:999px!important;border:1.5px solid var(--line);background:#fff;color:var(--muted);font-size:20px!important;font-weight:500}
+.voice:hover:not(:disabled){border-color:var(--cy);color:var(--ink)}
+.voiceDot{width:12px;height:12px;border-radius:50%;background:#CBD5E1}
+.voiceOn{border-color:var(--cy);color:var(--cy);background:var(--cy-soft)}
+.voiceOn .voiceDot{background:var(--cy)}
+
 .steps{display:grid;grid-template-columns:repeat(4,1fr)}
 .step{appearance:none;background:none;border:0;border-bottom:4px solid transparent;border-radius:0;
   min-height:64px;padding:12px 8px;font-size:22px;font-weight:500;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:12px}
@@ -81,7 +95,16 @@
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
 .thumb{width:72px;height:54px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 
-/* test */
+/* test: camera first (inline-start), רובי beside it looking at the camera */
+.testRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,340px);gap:24px;align-items:start}
+.robotCol{display:flex;flex-direction:column;align-items:center;gap:22px;padding-top:8px;min-width:0}
+.robotCol > p{align-self:stretch;text-align:center}
+@media (max-width:1000px){
+  .testRow{grid-template-columns:1fr}
+  .robotCol{flex-direction:row;align-items:center;justify-content:center;gap:18px;padding-top:0}
+  .robotCol > svg{width:120px;height:120px}
+  .robotCol > p{align-self:center;text-align:start}
+}
 .overlay{position:absolute;inset-inline:0;bottom:0;padding:18px 22px 22px;background:linear-gradient(0deg,rgba(0,0,0,.72),rgba(0,0,0,0));color:#fff;display:flex;flex-direction:column;gap:12px}
 .predName{font-size:64px;line-height:1.1;font-weight:700;text-shadow:0 2px 12px rgba(0,0,0,.5)}
 .predWord{font-size:32px;font-weight:500}
@@ -118,6 +141,7 @@
 .pip{position:fixed;bottom:24px;inset-inline-end:24px;width:min(32vw,320px);aspect-ratio:4/3;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#111}
 .pipVideo{width:100%;height:100%;object-fit:cover}
 .exitLight{position:fixed;top:20px;inset-inline-start:24px}
+.lightRobot{position:fixed;top:20px;inset-inline-end:24px;display:flex;align-items:center;gap:14px;max-width:min(44vw,520px)}
 
 /* gallery import */
 .sheet{position:fixed;inset:0;z-index:65;display:grid;place-items:center;background:rgba(15,28,46,.45);padding:20px}

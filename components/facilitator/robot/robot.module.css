@@ -1,0 +1,36 @@
+/* רובי: the one playful element on the facilitator surface. Paper-white head, ink
+   features, a single antenna light that borrows the confidence-bar colours. */
+.face{display:block;flex:none;overflow:visible}
+.sm{width:60px;height:60px}
+.lg{width:min(240px,34vw);height:auto;aspect-ratio:1}
+
+.body{animation:rbBreathe 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes rbBreathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.2px)}}
+
+.lids{transform-box:fill-box;transform-origin:center;animation:rbBlink 5.2s ease-in-out infinite}
+@keyframes rbBlink{0%,92%,100%{transform:scaleY(1)}95%,97%{transform:scaleY(.08)}}
+.lidsShut{animation:none;transform:scaleY(.08)}
+
+.pupil{transition:transform .35s ease}
+.brow{transition:transform .3s ease}
+.mouth{transition:d .25s ease}
+.talk{transform-box:fill-box;transform-origin:center;animation:rbTalk .32s ease-in-out infinite alternate}
+@keyframes rbTalk{from{transform:scaleY(.55)}to{transform:scaleY(1.25)}}
+
+.lamp{transition:fill .3s ease}
+.lampOn{animation:rbGlow 2.4s ease-in-out infinite}
+@keyframes rbGlow{0%,100%{opacity:1}50%{opacity:.55}}
+
+/* the robot talks here; projector sizes */
+.bubble{position:relative;display:inline-block;max-width:100%;padding:14px 22px;border:1px solid var(--line);border-radius:18px;
+  background:#fff;color:var(--ink);font-size:32px;line-height:1.3;font-weight:500;text-wrap:balance;min-height:1.3em}
+.bubble::before{content:"";position:absolute;top:-11px;inset-inline-start:34px;width:20px;height:20px;background:#fff;
+  border-inline-start:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.bubbleSm{font-size:22px;padding:10px 16px;border-radius:14px}
+.bubbleSm::before{inset-inline-start:22px;top:-8px;width:14px;height:14px}
+
+@media (prefers-reduced-motion:reduce){
+  .body,.lids,.talk,.lampOn{animation:none}
+  .lidsShut{transform:scaleY(.08)}
+  .pupil,.brow,.mouth,.lamp{transition:none}
+}

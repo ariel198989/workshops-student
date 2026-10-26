@@ -5,6 +5,9 @@ import { useEffect, useState } from 'react';
 import {
   defaultRules, initialLight, lightStep, ruleTarget, toggleRule, type LightDebounce, type LightRule,
 } from '@/lib/pocket/score';
+import type { RobotApi } from '@/lib/robot/useRobot';
+import { RobotFace } from './robot/RobotFace';
+import { SpeechBubble } from './robot/SpeechBubble';
 import { useFacilitatorCamera } from './useFacilitatorCamera';
 import { useLivePrediction } from './useLivePrediction';
 import f from './facilitator.module.css';
@@ -29,11 +32,12 @@ function RuleBuilder({ rules, onToggle }: { rules: LightRule[]; onToggle: (cls: 
   );
 }
 
-function TrafficLight({ rules, onExit }: { rules: LightRule[]; onExit: () => void }) {
+function TrafficLight({ rules, robot, onExit }: { rules: LightRule[]; robot: RobotApi; onExit: () => void }) {
   const cam = useFacilitatorCamera();
   const live = useLivePrediction(cam.videoRef, cam.state === 'live');
   const [light, setLight] = useState<LightDebounce>(initialLight);
   const target = ruleTarget(rules, live.prediction?.label ?? null, live.prediction?.confidence ?? 0);
+  const { say } = robot;
 
   // the reducer is fed on every prediction and on a timer, so a steady target also fires after 1.5s
   useEffect(() => {
@@ -50,9 +54,20 @@ function TrafficLight({ rules, onExit }: { rules: LightRule[]; onExit: () => voi
   }, [onExit]);
 
   const shownClass = rules.find((r) => r.colour === light.shown)?.className;
+
+  // רובי follows the light, not the raw prediction: off = still thinking, a colour = sure of that class
+  useEffect(() => {
+    say(light.shown === 'off' ? 'thinking' : 'sure', { className: shownClass ?? null });
+  }, [light.shown, shownClass, say]);
+  useEffect(() => () => say('idle'), [say]);
+
   return (
     <div className={f.lightScreen} role="dialog" aria-label="רמזור">
       <button type="button" className={f.exitLight} onClick={onExit}>יציאה</button>
+      <div className={f.lightRobot}>
+        <RobotFace size="sm" mood={robot.mood} speaking={robot.speaking} gaze={0.5} />
+        <SpeechBubble line={robot.line} size="sm" />
+      </div>
       <div className={f.housing} aria-live="polite" aria-label={light.shown === 'off' ? 'כבוי' : COLOUR_HE[light.shown]}>
         <div className={`${f.lamp} ${light.shown === 'red' ? f.lampRed : ''}`} />
         <div className={f.lamp} />
@@ -66,7 +81,7 @@ function TrafficLight({ rules, onExit }: { rules: LightRule[]; onExit: () => voi
   );
 }
 
-export function LightStep({ classes, ready }: { classes: string[]; ready: boolean }) {
+export function LightStep({ classes, ready, robot }: { classes: string[]; ready: boolean; robot: RobotApi }) {
   const [rules, setRules] = useState<LightRule[]>(() => defaultRules(classes));
   const [open, setOpen] = useState(false);
 
@@ -83,7 +98,7 @@ export function LightStep({ classes, ready }: { classes: string[]; ready: boolea
       <div className={f.actions}>
         <button type="button" className={`primary ${f.bigBtn}`} disabled={!ready} onClick={() => setOpen(true)}>הדלקת הרמזור</button>
       </div>
-      {open ? <TrafficLight rules={rules} onExit={() => setOpen(false)} /> : null}
+      {open ? <TrafficLight rules={rules} robot={robot} onExit={() => setOpen(false)} /> : null}
     </>
   );
 }

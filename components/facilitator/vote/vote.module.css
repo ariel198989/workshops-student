@@ -1,0 +1,47 @@
+/* הצבעה במצלמה: projector surface. Paper, Rubik, teal accent, hairlines, nothing under 20px.
+   The two count tiles are the only loud elements; the tint overlay shows the class what the camera sees. */
+.root{display:flex;flex-direction:column;gap:20px;width:100%;color:var(--ink);font-size:20px}
+.root button{font-size:20px;min-height:52px;padding:10px 22px;border-radius:10px}
+
+/* fullscreen: real API or the fixed fallback */
+.root:fullscreen,.fixed{background:#FBFBF8;padding:24px 28px;overflow:auto}
+.root:fullscreen{width:100vw;height:100vh}
+.fixed{position:fixed;inset:0;z-index:70}
+
+.question{font-size:clamp(34px,5vw,64px);line-height:1.15;font-weight:700;color:var(--ink);text-wrap:balance;margin:0;min-height:1.15em}
+.questionEmpty{color:var(--faint);font-weight:500}
+
+.stage{position:relative;width:100%;max-height:48vh;aspect-ratio:4/3;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#111;margin:0 auto}
+.video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
+.tint{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.3;pointer-events:none;image-rendering:pixelated}
+.stageMsg{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:#fff;font-size:24px;background:rgba(17,17,17,.7)}
+.stageMsg button{margin-top:12px}
+.frozenTag{position:absolute;top:16px;inset-inline-start:16px;padding:6px 18px;border-radius:999px;background:#fff;color:var(--ink);font-size:22px;font-weight:600}
+
+/* the two giant tiles */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:22px 20px 26px;border-radius:20px;border:1px solid var(--line);background:#fff;min-height:200px}
+.tileGreen{background:#DCFCE7;border-color:#86EFAC}
+.tileRed{background:#FEE2E2;border-color:#FCA5A5}
+.tileLabel{font-size:clamp(26px,3vw,40px);font-weight:600}
+.tileGreen .tileLabel{color:#14532D}
+.tileRed .tileLabel{color:#7F1D1D}
+.tileNum{font-family:var(--font-num);font-size:clamp(96px,16vw,220px);line-height:1;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.tileGreen .tileNum{color:#15803D}
+.tileRed .tileNum{color:#B91C1C}
+.pop{animation:vPop .25s ease-out}
+@keyframes vPop{from{transform:scale(1.08)}to{transform:scale(1)}}
+
+/* controls */
+.controls{display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.bigBtn{min-height:68px!important;padding:14px 34px!important;font-size:26px!important;font-weight:600}
+.grow{flex:1}
+.sens{display:flex;align-items:center;gap:12px;min-width:260px;font-size:20px;color:var(--muted)}
+.sens input[type=range]{flex:1;min-width:140px;accent-color:var(--cy);height:32px}
+.questionRow{display:flex;gap:12px;align-items:center;width:100%}
+.questionRow input[type=text]{flex:1;font-size:22px;padding:12px 16px;border-radius:10px}
+.err{color:#991B1B;font-size:20px}
+.sub{color:var(--muted);font-size:22px}
+
+@media (max-width:720px){.tiles{grid-template-columns:1fr}.tile{min-height:150px}}
+@media (prefers-reduced-motion:reduce){.pop{animation:none}}

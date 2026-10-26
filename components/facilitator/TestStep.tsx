@@ -1,10 +1,14 @@
 'use client';
 // Step 3: live prediction with the colour bar, the freeze button and the
 // "X מתוך 10" sheet. No percentages reach the screen.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   barLevel, confidenceWord, emptyTally, recordResult, TALLY_SIZE, tallyFull, tallyLabel, type Tally,
 } from '@/lib/pocket/score';
+import { moodFromPrediction } from '@/lib/robot/mood';
+import type { RobotApi } from '@/lib/robot/useRobot';
+import { RobotFace } from './robot/RobotFace';
+import { SpeechBubble } from './robot/SpeechBubble';
 import { useFacilitatorCamera } from './useFacilitatorCamera';
 import { useLivePrediction } from './useLivePrediction';
 import f from './facilitator.module.css';
@@ -48,30 +52,50 @@ function TallyPanel({ tally, onMark, onReset }: { tally: Tally; onMark: (ok: boo
   );
 }
 
-export function TestStep({ ready, onNext }: { ready: boolean; onNext: () => void }) {
+export function TestStep({ ready, robot, onNext }: { ready: boolean; robot: RobotApi; onNext: () => void }) {
   const cam = useFacilitatorCamera();
-  const live = useLivePrediction(cam.videoRef, ready && cam.state === 'live');
+  const liveOn = ready && cam.state === 'live';
+  const live = useLivePrediction(cam.videoRef, liveOn);
   const [tally, setTally] = useState<Tally>(emptyTally);
   const p = live.prediction;
+  const { say } = robot;
+
+  // רובי watches the same prediction the bar shows; the reducer ignores unchanged ticks
+  useEffect(() => {
+    if (!liveOn) { say('idle'); return; }
+    say(moodFromPrediction(p, live.frozen), { className: p?.label ?? null });
+  }, [liveOn, p, live.frozen, say]);
+  useEffect(() => () => say('idle'), [say]);
+
+  const mark = (ok: boolean) => {
+    setTally((t) => recordResult(t, ok));
+    say(ok ? 'right' : 'wrong');
+  };
 
   return (
     <>
-      <div className={f.stage}>
-        <video ref={cam.videoRef} className={f.video} playsInline muted />
-        {cam.state === 'error' ? (
-          <div className={f.stageMsg} role="alert">
-            <div>
-              <p>{cam.error}</p>
-              <button type="button" className="primary" onClick={cam.retry}>ניסיון נוסף</button>
+      <div className={f.testRow}>
+        <div className={f.stage}>
+          <video ref={cam.videoRef} className={f.video} playsInline muted />
+          {cam.state === 'error' ? (
+            <div className={f.stageMsg} role="alert">
+              <div>
+                <p>{cam.error}</p>
+                <button type="button" className="primary" onClick={cam.retry}>ניסיון נוסף</button>
+              </div>
             </div>
-          </div>
-        ) : !ready ? (
-          <div className={f.stageMsg}><p>עוד אין מודל. למדו לפחות שתי מחלקות קודם.</p></div>
-        ) : null}
-        {live.frozen ? <span className={f.frozenTag}>עצור</span> : null}
-        {ready && cam.state === 'live' ? (
-          <PredictionOverlay label={p?.label ?? null} confidence={p?.confidence ?? 0} known={!!p} />
-        ) : null}
+          ) : !ready ? (
+            <div className={f.stageMsg}><p>עוד אין מודל. למדו לפחות שתי מחלקות קודם.</p></div>
+          ) : null}
+          {live.frozen ? <span className={f.frozenTag}>עצור</span> : null}
+          {liveOn ? (
+            <PredictionOverlay label={p?.label ?? null} confidence={p?.confidence ?? 0} known={!!p} />
+          ) : null}
+        </div>
+        <aside className={f.robotCol} aria-label="רובי">
+          <RobotFace size="lg" mood={robot.mood} speaking={robot.speaking} gaze={0.6} />
+          <SpeechBubble line={robot.line} />
+        </aside>
       </div>
       {live.error ? <p className={f.err} role="alert">{live.error}</p> : null}
       <div className={f.actions}>
@@ -83,7 +107,7 @@ export function TestStep({ ready, onNext }: { ready: boolean; onNext: () => void
         <span className={f.grow} />
         <button type="button" className="primary" onClick={onNext} disabled={!ready}>הלאה, רמזור</button>
       </div>
-      <TallyPanel tally={tally} onMark={(ok) => setTally((t) => recordResult(t, ok))} onReset={() => setTally(emptyTally())} />
+      <TallyPanel tally={tally} onMark={mark} onReset={() => setTally(emptyTally())} />
     </>
   );
 }

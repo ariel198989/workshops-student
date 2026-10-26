@@ -9,16 +9,24 @@ import {
 } from '@/lib/pocket/engine';
 import { canClassify } from '@/lib/pocket/score';
 import { clearTrainer, loadTrainer, saveTrainer } from '@/lib/pocket/store';
+import { joinHe } from '@/lib/robot/mood';
+import { useRobot } from '@/lib/robot/useRobot';
 import { ClassesStep } from './ClassesStep';
 import { GalleryImport } from './GalleryImport';
 import { LightStep } from './LightStep';
+import { PixelStep } from './pixels/PixelStep';
+import { RobotFace } from './robot/RobotFace';
 import { TeachStep, type QueuedFrame } from './TeachStep';
 import { TestStep } from './TestStep';
+import { VoteStep } from './vote/VoteStep';
 import f from './facilitator.module.css';
 
-type Step = 'classes' | 'teach' | 'test' | 'light';
+type Step = 'classes' | 'teach' | 'test' | 'light' | 'vote' | 'pixels';
+// tools that need no trained model: always reachable
+const TOOL_STEPS: ReadonlySet<Step> = new Set<Step>(['vote', 'pixels']);
 const STEPS: { id: Step; label: string }[] = [
   { id: 'classes', label: 'מחלקות' }, { id: 'teach', label: 'מלמדים' }, { id: 'test', label: 'בודקים' }, { id: 'light', label: 'רמזור' },
+  { id: 'vote', label: 'הצבעה' }, { id: 'pixels', label: 'פיקסלים' },
 ];
 const DEFAULT_CLASSES = ['כוס', 'נעל'];
 const ENGINE_HE = { idle: 'המנוע מחכה', loading: 'המנוע נטען', ready: 'המנוע מוכן', error: 'המנוע לא נטען' } as const;
@@ -32,6 +40,14 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
   const [learning, setLearning] = useState<{ done: number; total: number } | null>(null);
   const [gallery, setGallery] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const robot = useRobot();
+  const { say } = robot;
+
+  // רובי's resting face outside the live steps: asleep until the first example is learned
+  const hasExamples = Object.values(engine.counts).some((n) => n > 0);
+  useEffect(() => {
+    if (step === 'classes' || step === 'teach') say(hasExamples ? 'idle' : 'sleep');
+  }, [step, hasExamples, say]);
 
   // saved model for this workshop + background MobileNet download
   useEffect(() => {
@@ -55,6 +71,7 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
     setClasses(next);
     if (!active) setActive(name);
     persist(next);
+    say('class_added', { className: name });
   };
   const removeClass = (name: string) => {
     const next = classes.filter((c) => c !== name);
@@ -77,6 +94,7 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
       setQueue([]);
       persist(classes);
       navigator.vibrate?.(150);
+      say('learned', { count: items.length, className: joinHe([...new Set(items.map((x) => x.label))]) });
     } catch (e) {
       setNote(e instanceof Error && /[֐-׿]/.test(e.message) ? e.message : 'הלמידה נעצרה. נסו שוב.');
     } finally {
@@ -101,6 +119,7 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
     setQueue([]);
     setStep('classes');
     setNote(null);
+    say('reset');
   };
 
   const ready = engine.status === 'ready' && canClassify(engine.counts);
@@ -112,19 +131,31 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
         <div className={f.titleRow}>
           <Link href="/facilitator" className={f.back}>סדנה אחרת</Link>
           <span className={f.title}>{title}</span>
+          <div className={f.robotHead}>
+            <RobotFace size="sm" mood={robot.mood} speaking={robot.speaking} />
+            <span className={f.robotLine} role="status" aria-live="polite">{robot.line}</span>
+          </div>
           <span className={f.engine} aria-live="polite">
             <i className={`${f.engineDot} ${engine.status === 'ready' ? f.engineOn : engine.status === 'error' ? f.engineErr : ''}`} />
             {ENGINE_HE[engine.status]}
           </span>
         </div>
-        <nav className={f.steps} aria-label="שלבים">
-          {STEPS.map((s, i) => (
-            <button key={s.id} type="button" className={`${f.step} ${step === s.id ? f.stepOn : ''}`} aria-current={step === s.id ? 'step' : undefined}
-              disabled={s.id !== 'classes' && !canLeaveClasses} onClick={() => setStep(s.id)}>
-              <span className={f.stepNo}>{i + 1}</span>{s.label}
-            </button>
-          ))}
-        </nav>
+        <div className={f.stepsRow}>
+          <nav className={f.steps} aria-label="שלבים">
+            {STEPS.map((s, i) => (
+              <button key={s.id} type="button" className={`${f.step} ${step === s.id ? f.stepOn : ''}`} aria-current={step === s.id ? 'step' : undefined}
+                disabled={s.id !== 'classes' && !TOOL_STEPS.has(s.id) && !canLeaveClasses} onClick={() => setStep(s.id)}>
+                <span className={f.stepNo}>{i + 1}</span>{s.label}
+              </button>
+            ))}
+          </nav>
+          <button type="button" className={`${f.voice} ${robot.voiceOn ? f.voiceOn : ''}`} aria-pressed={robot.voiceOn}
+            disabled={!robot.voiceSupported} title={robot.voiceSupported ? 'רובי מדבר בקול רם' : 'הדפדפן הזה לא יודע לדבר'}
+            onClick={() => robot.setVoiceOn(!robot.voiceOn)}>
+            <i className={f.voiceDot} aria-hidden />
+            קול
+          </button>
+        </div>
       </header>
 
       <main className={f.main}>
@@ -134,11 +165,13 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
         ) : null}
         {step === 'teach' ? (
           <TeachStep classes={classes} counts={engine.counts} queue={queue} active={active} learning={learning} workshopId={workshopId}
-            onPick={setActive} onShot={(fr) => setQueue((q) => [...q, fr])} onDropShot={(i) => setQueue((q) => q.filter((_, j) => j !== i))}
+            onPick={setActive} onShot={(fr) => { setQueue((q) => [...q, fr]); say('shot'); }} onDropShot={(i) => setQueue((q) => q.filter((_, j) => j !== i))}
             onLearn={() => void learn()} onOpenGallery={() => setGallery(true)} onNext={() => setStep('test')} />
         ) : null}
-        {step === 'test' ? <TestStep ready={ready} onNext={() => setStep('light')} /> : null}
-        {step === 'light' ? <LightStep classes={classes} ready={ready} /> : null}
+        {step === 'test' ? <TestStep ready={ready} robot={robot} onNext={() => setStep('light')} /> : null}
+        {step === 'light' ? <LightStep classes={classes} ready={ready} robot={robot} /> : null}
+        {step === 'vote' ? <VoteStep /> : null}
+        {step === 'pixels' ? <PixelStep /> : null}
       </main>
 
       <footer className={f.footer}>

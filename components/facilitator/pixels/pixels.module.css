@@ -1,0 +1,34 @@
+/* זום פיקסלים: same paper, Rubik, teal and hairlines as the rest of מצב מדריך.
+   The canvas is the only loud thing; controls are big (≥56px) for a projector. */
+.wrap{display:flex;flex-direction:column;gap:18px;--stage-h:62vh}
+.wrapFull{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;gap:16px;padding:18px 28px 22px;background:#FBFBF8;overflow:auto;--stage-h:calc(100vh - 230px)}
+.wrap button{font-size:22px;min-height:56px;padding:10px 22px;border-radius:12px}
+
+.stage{position:relative;container-type:inline-size;width:min(100%,calc(var(--stage-h) * var(--ar,1.3333)));aspect-ratio:var(--ar,1.3333);
+  margin:0 auto;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#111}
+.canvas{display:block;width:100%;height:100%;background:#111}
+.hiddenVideo{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.stageMsg{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:#fff;font-size:24px;background:rgba(17,17,17,.7)}
+.stageMsg button{margin-top:12px}
+.frozenTag{position:absolute;top:16px;inset-inline-start:16px;padding:6px 18px;border-radius:999px;background:#fff;color:var(--ink);font-size:22px;font-weight:600}
+
+/* the digits sit in a grid that matches the cells one-to-one */
+.digits{position:absolute;inset:0;display:grid;pointer-events:none;font-family:var(--font-num);font-weight:700;line-height:1;direction:ltr}
+.digit{display:grid;place-items:center}
+.digitLight{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.digitDark{color:#0F1C2E;text-shadow:0 1px 4px rgba(255,255,255,.6)}
+
+.count{text-align:center;font-size:28px;font-weight:600;color:var(--ink);font-family:var(--font-num);min-height:1.3em}
+.hint{text-align:center;font-size:22px;color:var(--muted)}
+
+.levels{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.wrap .levelBtn{min-width:104px;min-height:64px;font-size:30px;font-weight:600;font-family:var(--font-num);border:1.5px solid var(--line);background:#fff;color:var(--ink)}
+.wrap .levelOn{background:var(--cy);border-color:var(--cy);color:#fff}
+.wrap .levelBtn:hover:not(:disabled):not(.levelOn){border-color:var(--cy);color:var(--cy)}
+
+.toggles{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center}
+.wrap .toggle{min-height:60px;font-size:24px;font-weight:500;border:1.5px solid var(--line);background:#fff;color:var(--ink)}
+.wrap .toggleOn{border-color:var(--cy);background:var(--cy-soft);color:var(--cy)}
+.wrap .nextBtn{min-height:64px;font-size:26px;font-weight:600;padding:10px 34px}
+.grow{flex:1}
+.exitFull{position:fixed;top:18px;inset-inline-start:28px;z-index:71}
