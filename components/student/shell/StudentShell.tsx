@@ -5,6 +5,7 @@ import { groupChip } from '@/lib/student/labels';
 import { useStudentContext } from '@/lib/student/context';
 import { wsAuthStore } from '@/lib/ws/staff';
 import { BottomNav } from './BottomNav';
+import { CapsGuard } from './CapsGuard';
 import { TopBar } from './TopBar';
 import s from './shell.module.css';
 
@@ -15,8 +16,10 @@ export function StudentShell({ children }: { children: ReactNode }) {
   return (
     <div className={s.root}>
       <TopBar workshop={ctx?.workshop.title ?? ''} chip={groupChip(ctx?.group ?? null)} isStaff={!!whoami?.staff} />
-      <main className={ctx ? s.main : `${s.main} ${s.mainBare}`}>{children}</main>
-      {ctx ? <BottomNav /> : null}
+      <main className={ctx ? s.main : `${s.main} ${s.mainBare}`}>
+        <CapsGuard ctx={ctx}>{children}</CapsGuard>
+      </main>
+      {ctx ? <BottomNav caps={ctx.caps} checksCount={ctx.checks.length} /> : null}
     </div>
   );
 }

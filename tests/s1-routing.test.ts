@@ -28,6 +28,8 @@ test('public verify path is always public, even without whoami', () => {
   assert.deepEqual(decideAccess(null, '/verify/ABC', false), { kind: 'public' });
   assert.deepEqual(decideAccess(fresh, '/verify', false), { kind: 'public' });
   assert.equal(isPublicPath('/verifying'), false);
+  assert.equal(isPublicPath('/facilitator'), true);
+  assert.equal(isPublicPath('/facilitator/free'), true);
   assert.equal(isPublicPath(null), false);
 });
 

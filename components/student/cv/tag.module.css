@@ -9,6 +9,11 @@
   background:#2DD4BF;color:#0B1220;font-size:13px;font-weight:700;white-space:nowrap}
 .handle{position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid #2DD4BF}
 .nw{left:-12px;top:-12px}.ne{right:-12px;top:-12px}.sw{left:-12px;bottom:-12px}.se{right:-12px;bottom:-12px}
+/* point mode (L2): one tap proposes the box, so the handles are finger-sized */
+.stagePoint{cursor:pointer}
+.handleLg{width:44px;height:44px;border-width:4px;box-shadow:0 2px 8px rgba(11,18,32,.35)}
+.handleLg.nw{left:-22px;top:-22px}.handleLg.ne{right:-22px;top:-22px}
+.handleLg.sw{left:-22px;bottom:-22px}.handleLg.se{right:-22px;bottom:-22px}
 .guide{position:absolute;inset-inline:12px;bottom:12px;padding:8px 12px;border-radius:12px;text-align:center;
   background:rgba(11,18,32,.72);color:#fff;font-size:15px;pointer-events:none}
 
@@ -23,3 +28,4 @@
 .toggle input{width:22px;height:22px;accent-color:var(--cy)}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .actions .wide{grid-column:1 / -1}
+.actions .tall{min-height:60px;font-size:18px}

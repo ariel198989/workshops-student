@@ -76,7 +76,20 @@ export function jobTone(status: string): JobTone {
   }
 }
 
-export interface ClassStat { name: string; ap50?: number | null; boxes?: number | null }
+export interface ClassStat {
+  name: string;
+  ap50?: number | null;
+  boxes?: number | null;
+  /** optional in Smart City's trainer output (0..1); only present when the trainer wrote them */
+  precision?: number;
+  recall?: number;
+  /** confusion counts, when the trainer wrote them */
+  tp?: number;
+  fp?: number;
+  fn?: number;
+}
+
+const OPTIONAL_NUMERIC: readonly (keyof ClassStat)[] = ['precision', 'recall', 'tp', 'fp', 'fn'];
 
 /** sc_models.class_stats is free-form jsonb: keep only well-formed {name,...} entries. */
 export function parseClassStats(raw: unknown): ClassStat[] {
@@ -86,10 +99,13 @@ export function parseClassStats(raw: unknown): ClassStat[] {
     if (!item || typeof item !== 'object') continue;
     const r = item as Record<string, unknown>;
     if (typeof r.name !== 'string' || !r.name) continue;
+    const extras = OPTIONAL_NUMERIC.reduce<Partial<ClassStat>>(
+      (acc, key) => (typeof r[key] === 'number' && Number.isFinite(r[key]) ? { ...acc, [key]: r[key] } : acc), {});
     out.push({
       name: r.name,
       ap50: typeof r.ap50 === 'number' ? r.ap50 : null,
       boxes: typeof r.boxes === 'number' ? r.boxes : null,
+      ...extras,
     });
   }
   return out;

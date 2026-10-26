@@ -1,36 +1,39 @@
 'use client';
 import Link from 'next/link';
-import { isWeak, parseClassStats, type ClassStat } from '@/lib/cv/readiness';
+import type { MetricClassLine, MetricViewModel } from '@/lib/student/metric';
 import s from './cv.module.css';
 
-function Row({ stat }: { stat: ClassStat }) {
-  const pct = stat.ap50 != null ? Math.round(stat.ap50 * 100) : null;
-  const weak = isWeak(stat);
+function Row({ line, canCapture }: { line: MetricClassLine; canCapture: boolean }) {
   const body = (
     <>
-      <span className={s.statName}>{stat.name}</span>
-      <span className={s.statPct}>{pct !== null ? `${pct}%` : 'לא נמדד'}</span>
-      <span className={s.statBar} aria-hidden><i style={{ inlineSize: `${pct ?? 4}%` }} /></span>
-      {weak ? <span className={s.statFix}>צלמו עוד (יש {stat.boxes ?? '?'} תיבות באימון)</span> : null}
+      <span className={s.statName}>{line.name}</span>
+      <span className={s.statPct}>{line.text}</span>
+      {line.fill !== null ? (
+        <span className={s.statBar} aria-hidden><i style={{ inlineSize: `${Math.max(4, Math.round(line.fill * 100))}%` }} /></span>
+      ) : null}
+      {line.detail ? <span className={s.statDetail}>{line.detail}</span> : null}
+      {line.weak ? (
+        <span className={s.statFix}>{canCapture ? 'צלמו עוד תמונות של האובייקט הזה' : 'המודל עוד לא מזהה אותו טוב'}</span>
+      ) : null}
     </>
   );
-  return weak
-    ? <Link href={`/capture?cls=${encodeURIComponent(stat.name)}`} className={`${s.statRow} ${s.statRowWeak}`}>{body}</Link>
-    : <div className={s.statRow}>{body}</div>;
+  if (line.weak && canCapture) {
+    return <Link href={`/capture?cls=${encodeURIComponent(line.name)}`} className={`${s.statRow} ${s.statRowWeak}`}>{body}</Link>;
+  }
+  return <div className={line.weak ? `${s.statRow} ${s.statRowWeak}` : s.statRow}>{body}</div>;
 }
 
-/** Per-object score from the training run. Weak objects are highlighted and link straight to capturing them. */
-export function ClassStatsList({ raw }: { raw: unknown }) {
-  const stats = parseClassStats(raw);
+/** Per-object result in the band's language. Weak objects are highlighted and link straight to capturing them. */
+export function ClassStatsList({ view, canCapture }: { view: MetricViewModel; canCapture: boolean }) {
   return (
     <div className={s.card}>
       <div className={s.cardHead}>מה המודל למד, לפי אובייקט</div>
-      {stats.length === 0 ? (
+      {view.classes.length === 0 ? (
         <p className={s.small}>המודל הזה לא שמר פירוט לפי אובייקט. אחרי האימון הבא הוא יופיע כאן.</p>
       ) : (
         <div className={s.stack}>
-          {stats.map((st) => <Row key={st.name} stat={st} />)}
-          <p className={s.small}>אובייקט מסומן כחלש כשהציון שלו מתחת ל-50% או כשהיו לו פחות מ-20 תיבות באימון.</p>
+          {view.classes.map((line) => <Row key={line.name} line={line} canCapture={canCapture} />)}
+          <p className={s.small}>{view.weakNote}</p>
         </div>
       )}
     </div>

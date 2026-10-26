@@ -5,6 +5,13 @@
 .spinning svg{animation:turn .9s linear infinite}
 @keyframes turn{to{transform:rotate(360deg)}}
 
+/* banner: who does this step instead of the students (set by the route guard) */
+.banner{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:14px;background:var(--cy-soft);color:#0B5F5A}
+.banner svg{flex-shrink:0;margin-top:2px}
+.bannerText{flex:1;min-width:0;font-size:15px;line-height:1.5}
+.bannerClose{display:grid;place-items:center;width:36px;height:36px;margin:-7px -8px -7px 0;border:0;border-radius:10px;background:transparent;color:inherit;cursor:pointer}
+.bannerClose:hover:not(:disabled){background:rgba(23,148,140,.14);border-color:transparent}
+
 /* next step: the one big call to action */
 .next{display:flex;align-items:center;gap:14px;padding:18px;border-radius:18px;background:var(--cy);color:#fff;
   text-decoration:none;box-shadow:0 6px 18px rgba(23,148,140,.28)}

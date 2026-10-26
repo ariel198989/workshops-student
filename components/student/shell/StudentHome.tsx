@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { useStudentContext } from '@/lib/student/context';
 import { firstName } from '@/lib/student/labels';
 import { CertificateTeaser } from './CertificateTeaser';
+import { HomeBanner } from './HomeBanner';
 import { MissionCard } from './MissionCard';
 import { NextStepCard } from './NextStepCard';
 import { ProgressCard } from './ProgressCard';
@@ -52,7 +53,8 @@ export function StudentHome() {
           <HugeiconsIcon icon={RefreshIcon} size={22} />
         </button>
       </div>
-      <NextStepCard progress={ctx.progress} />
+      <HomeBanner />
+      <NextStepCard progress={ctx.progress} caps={ctx.caps} />
       {ctx.certificate ? <CertificateTeaser /> : null}
       <MissionCard ctx={ctx} />
       <ProgressCard progress={ctx.progress} />

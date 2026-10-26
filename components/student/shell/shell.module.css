@@ -23,7 +23,7 @@
 .mainBare{padding-bottom:max(24px,env(safe-area-inset-bottom))}
 @keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
-.nav{position:fixed;bottom:0;inset-inline:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
+.nav{position:fixed;bottom:0;inset-inline:0;z-index:20;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;
   max-width:520px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom);
   background:#fff;border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(15,28,46,.05)}
 .navItem{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
@@ -31,5 +31,7 @@
 .navItem:hover{color:var(--ink);text-decoration:none}
 .navOn{color:var(--cy);font-weight:700}
 .navOn::before{content:"";position:absolute;top:0;inset-inline:26%;height:3px;border-radius:0 0 3px 3px;background:var(--cy)}
+
+.guardSpin{display:grid;place-items:center;padding:48px 0}
 
 @media (prefers-reduced-motion:reduce){.main{animation:none}}

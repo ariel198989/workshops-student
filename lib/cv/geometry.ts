@@ -91,3 +91,18 @@ export function containRect(cw: number, ch: number, mw: number, mh: number): Rec
   const height = mh * k;
   return { left: (cw - width) / 2, top: (ch - height) / 2, width, height };
 }
+
+/** Point mode (L2): the proposed box is this fraction of the shorter displayed side, centered on the tap. */
+export const POINT_BOX_FRACTION = 0.38;
+
+/**
+ * One box proposed from a single tap: square in pixels (POINT_BOX_FRACTION of the shorter side), centered on
+ * the tap, then shifted so it stays inside the image. `size` is the displayed image size in pixels.
+ */
+export function pointBox(center: Pt, size: { width: number; height: number }, fraction = POINT_BOX_FRACTION): NBox {
+  if (size.width <= 0 || size.height <= 0) return { x: 0, y: 0, w: 0, h: 0 };
+  const px = Math.min(size.width, size.height) * fraction;
+  const w = Math.min(1, px / size.width);
+  const h = Math.min(1, px / size.height);
+  return moveBox({ x: clamp01(center.x) - w / 2, y: clamp01(center.y) - h / 2, w, h }, 0, 0);
+}

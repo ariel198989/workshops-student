@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
-import type { StudentProgress } from '@/lib/student/context';
+import type { StudentCaps, StudentProgress } from '@/lib/student/context';
 import { pickNextStep } from '@/lib/student/next-step';
 import h from './home.module.css';
 
 /** The single next thing to do, chosen from the group's progress. */
-export function NextStepCard({ progress }: { progress: StudentProgress | null }) {
-  const step = pickNextStep(progress);
+export function NextStepCard({ progress, caps }: { progress: StudentProgress | null; caps: StudentCaps }) {
+  const step = pickNextStep(progress, caps);
   return (
     <Link href={step.href} className={h.next}>
       <span className={h.nextText}>

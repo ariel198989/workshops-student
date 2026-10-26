@@ -4,6 +4,11 @@
 import { useEffect } from 'react';
 import { sb } from '../db';
 import { createStore, useStore } from '../store';
+import { normalizeCaps, type CycleDepth, type StudentCaps } from './caps';
+import { normalizeChecks, type ConceptCheck } from './concept';
+
+export type { StudentCaps, CycleDepth, MetricMode, TagMode } from './caps';
+export type { ConceptCheck, ConceptQuestion } from './concept';
 
 export interface StudentCoverage { name: string; tagged: number }
 
@@ -20,8 +25,20 @@ export interface StudentProgress {
   model: { id: string; name: string; accuracy: number | null; approved: boolean; image_count: number | null; honest_val: boolean | null; class_stats: unknown; personal: boolean; created_at: string } | null;
 }
 
+export interface StudentWorkshop {
+  id: string; title: string; format: string; starts_on: string | null; ends_on: string | null; status: string;
+  /** curriculum v2 runtime fields; absent on contexts served before the cycle-depth migration */
+  cycle_depth?: CycleDepth;
+  band?: string | null;
+  device_mode?: string;
+}
+
 export interface StudentContext {
-  workshop: { id: string; title: string; format: string; starts_on: string | null; ends_on: string | null; status: string };
+  workshop: StudentWorkshop;
+  /** always present after normalizeStudentContext(); L3 caps when the server sent none */
+  caps: StudentCaps;
+  /** concept-check modules of this workshop; [] when none (or before the migration) */
+  checks: ConceptCheck[];
   me: { participant_id: string; full_name: string; roles: string[] };
   group: { id: string; number: number; display_name: string | null; team_name: string } | null;
   teammates: { full_name: string; roles: string[] }[];
@@ -36,6 +53,17 @@ interface State { ctx: StudentContext | null; loading: boolean; loaded: boolean;
 
 export const studentStore = createStore<State>({ ctx: null, loading: false, loaded: false, error: null });
 
+/** Fills caps and checks so every screen can rely on them, whatever the server's version. Pure. */
+export function normalizeStudentContext(raw: unknown): StudentContext | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown> & { workshop?: { cycle_depth?: unknown } };
+  return {
+    ...(r as unknown as StudentContext),
+    caps: normalizeCaps(r.caps, r.workshop?.cycle_depth),
+    checks: normalizeChecks(r.checks),
+  };
+}
+
 export async function reloadStudentContext(): Promise<StudentContext | null> {
   studentStore.set({ loading: true, error: null });
   const { data, error } = await sb.rpc('ws_my_context');
@@ -43,7 +71,7 @@ export async function reloadStudentContext(): Promise<StudentContext | null> {
     studentStore.set({ loading: false, loaded: true, error: error.message });
     return null;
   }
-  const ctx = (data as StudentContext | null) ?? null;
+  const ctx = normalizeStudentContext(data);
   studentStore.set({ ctx, loading: false, loaded: true });
   return ctx;
 }

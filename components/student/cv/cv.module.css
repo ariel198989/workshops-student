@@ -68,6 +68,7 @@
 .statBar{grid-column:1 / -1;height:8px;border-radius:999px;background:#E3E8EE;overflow:hidden}
 .statBar i{display:block;height:100%;border-radius:999px;background:#2FA39B}
 .statRowWeak .statBar i{background:var(--gold)}
+.statDetail{grid-column:1 / -1;font-size:13.5px;color:var(--body)}
 .statFix{grid-column:1 / -1;font-size:14px;font-weight:600;color:#92400E}
 
 .jobs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
