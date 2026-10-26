@@ -1,0 +1,244 @@
+/* המפגש: same paper, Rubik, teal and hairlines as the rest of מצב מדריך.
+   Projector first (nothing under 20px), the ״עכשיו״ item and the clock are the only loud things. */
+.root{display:flex;flex-direction:column;gap:20px;color:var(--ink);font-size:20px;line-height:1.45}
+.root button,.proj button{font-size:20px;min-height:52px;padding:10px 22px;border-radius:10px}
+.center{display:grid;place-items:center;padding:60px 0}
+.quiet{color:var(--muted);font-size:20px}
+.err{color:#991B1B;font-size:20px}
+
+/* empty state */
+.empty{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:30px 28px;border:1px dashed var(--line);border-radius:16px;background:#fff}
+.emptyTitle{font-size:28px;font-weight:600;color:var(--ink)}
+.empty a[role=button]{margin-top:6px;font-size:20px;min-height:52px;padding:10px 24px;border-radius:10px}
+
+/* session selector: scroll-snap chips */
+.chips{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 2px 8px;
+  overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;scroll-snap-align:start;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:64px;padding:8px 20px;
+  border:1.5px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);font-size:20px;font-weight:500;text-align:start;max-width:min(92vw,520px)}
+.chip:hover:not(:disabled){border-color:var(--cy)}
+.chipOn,.chipOn:hover:not(:disabled){border-color:var(--cy);background:var(--cy-soft);color:var(--cy)}
+.chipLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.chipDate{font-family:var(--font-num);font-size:16px;color:var(--muted)}
+.chipOn .chipDate{color:var(--cy)}
+
+.meta{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.metaMain{display:flex;align-items:center;gap:14px;flex-wrap:wrap;color:var(--body);font-size:20px}
+.tag{display:inline-flex;align-items:center;padding:2px 12px;border:1px solid var(--line);border-radius:999px;font-size:17px;color:var(--body);background:#fff;white-space:nowrap}
+.tagStage{border-color:var(--cy);color:var(--cy);background:var(--cy-soft)}
+.tagTool{font-family:var(--font-num);color:var(--muted)}
+.tagCore{margin-inline-start:8px;border-color:var(--gold-line);color:#92400E;background:var(--gold-soft)}
+.tagDone{border-color:#86EFAC;color:#14532D;background:#DCFCE7}
+.projToggle{border:1.5px solid var(--line)!important;background:#fff;color:var(--ink)}
+.projToggle:hover:not(:disabled){border-color:var(--cy)!important;color:var(--cy)}
+
+/* module cards */
+.cards{display:flex;flex-direction:column;gap:14px}
+.card{border:1.5px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}
+.cardOpen{border-color:var(--cy)}
+.cardNow{border-inline-start:6px solid var(--cy)}
+.cardDone{opacity:.72}
+.cardHead{appearance:none;width:100%;display:flex;align-items:center;gap:18px;padding:18px 22px!important;border:0!important;border-radius:0!important;
+  background:#fff;color:var(--ink);text-align:start;min-height:0!important}
+.cardHead:hover:not(:disabled){background:#F6F8FA}
+.pos{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:50%;border:1.5px solid var(--cy);color:var(--cy);
+  font-family:var(--font-num);font-size:22px;font-weight:600}
+.cardMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.cardTitle{font-size:26px;font-weight:600;line-height:1.25;color:var(--ink)}
+.cardMeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:18px;color:var(--muted)}
+.dur{font-family:var(--font-num);font-weight:600;color:var(--ink)}
+.progress{font-family:var(--font-num);color:var(--muted)}
+.chev{flex:none;color:var(--muted);transition:transform .2s}
+.cardOpen .chev{transform:rotate(180deg);color:var(--cy)}
+
+.body{display:flex;flex-direction:column;gap:22px;padding:4px 22px 22px;border-top:1px solid var(--line)}
+.summary{padding-top:16px;font-size:21px;color:var(--body);line-height:1.5}
+.section{display:flex;flex-direction:column;gap:10px}
+.sectionTitle{font-size:18px;font-weight:600;letter-spacing:.02em;color:var(--muted);text-transform:uppercase}
+.bullets{margin:0;padding-inline-start:26px;display:flex;flex-direction:column;gap:6px;font-size:21px;color:var(--body)}
+.bullets li::marker{color:var(--cy)}
+
+/* agenda checklist */
+.agenda{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.agendaItem{display:flex;align-items:flex-start;gap:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.agendaNow{border-color:var(--cy);background:var(--cy-soft)}
+.agendaDone{opacity:.6}
+.agendaDone .itemTitle{text-decoration:line-through;text-decoration-color:var(--muted)}
+.check{flex:none;width:44px;height:44px;min-height:44px!important;padding:0!important;display:grid;place-items:center;border-radius:10px!important;
+  border:2px solid #CBD5E1!important;background:#fff;color:transparent;margin-top:2px}
+.check:hover:not(:disabled){border-color:var(--cy)!important;background:#fff}
+.checkOn,.checkOn:hover:not(:disabled){background:var(--cy)!important;border-color:var(--cy)!important;color:#fff}
+.agendaText{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.agendaHead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.min{flex:none;display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:#EEF2F6;color:var(--ink);
+  font-family:var(--font-num);font-size:18px;font-weight:600}
+.agendaNow .min{background:var(--cy);color:#fff}
+.itemTitle{font-size:22px;font-weight:600;color:var(--ink);line-height:1.3}
+.nowTag{display:inline-flex;align-items:center;padding:2px 12px;border-radius:999px;background:var(--cy);color:#fff;font-size:16px;font-weight:600}
+.itemText{font-size:19px;color:var(--body);line-height:1.5}
+
+/* exercises */
+.exercises{display:flex;flex-direction:column;gap:14px}
+.exercise{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:#FBFBF8}
+.exHead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.exTitle{font-size:22px;font-weight:600;color:var(--ink)}
+.steps{margin:0;padding-inline-start:30px;display:flex;flex-direction:column;gap:6px;font-size:20px;color:var(--body)}
+.steps li::marker{color:var(--cy);font-weight:600;font-family:var(--font-num)}
+.qTable{width:100%;border-collapse:collapse;font-size:19px}
+.qTable th{text-align:start;font-size:16px;font-weight:600;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--line)}
+.qTable td{vertical-align:top;padding:10px;border-bottom:1px solid var(--line);color:var(--body)}
+.qTable tr:last-child td{border-bottom:0}
+.options{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.qCorrect{color:var(--cy);font-weight:600}
+
+.materials{display:flex;gap:10px;flex-wrap:wrap}
+.mat{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:19px;color:var(--ink)}
+.notes{display:flex;flex-direction:column;gap:8px;font-size:20px;color:var(--body);line-height:1.55}
+.adapt{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
+.adaptCol{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:#F6F8FA;font-size:19px;color:var(--body);line-height:1.5}
+.adaptLabel{font-size:16px;font-weight:600;color:var(--muted)}
+.tpl{background:var(--gold-soft);color:#92400E;border-radius:6px;padding:0 6px;font-weight:500}
+.cardActions{display:flex;gap:12px;flex-wrap:wrap;padding-top:6px}
+
+/* the sticky ״עכשיו״ bar */
+.nowBar{position:sticky;bottom:0;z-index:5;display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:14px 20px;margin-top:4px;
+  border:1.5px solid var(--cy);border-radius:16px;background:#fff;box-shadow:0 -6px 24px rgba(15,28,46,.08)}
+.nowText{flex:1 1 260px;min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.nowLabel{font-size:20px;color:var(--muted)}
+.nowItem{font-size:24px;font-weight:600;color:var(--ink)}
+.nowMin{font-family:var(--font-num);font-size:20px;color:var(--muted)}
+.timer{display:flex;align-items:center;gap:10px}
+.clock{font-family:var(--font-num);font-size:40px;font-weight:700;line-height:1;letter-spacing:-.02em;color:var(--ink);min-width:5ch;text-align:center;font-variant-numeric:tabular-nums}
+.clockOn{color:var(--cy)}
+.clockOver{color:var(--danger)}
+.timerBtn{min-height:48px!important;padding:6px 16px!important}
+.doneBtn{min-height:56px!important;padding:10px 28px!important;font-size:22px!important;font-weight:600}
+
+/* projector */
+.proj{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;gap:18px;padding:22px 32px 24px;background:#FBFBF8;color:var(--ink);overflow:auto}
+.projHead{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.projSession{flex:1;min-width:0;font-size:24px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.projNav{display:flex;align-items:center;gap:10px}
+.projCount{font-family:var(--font-num);font-size:22px;color:var(--muted)}
+.projBtn{border:1.5px solid var(--line)!important;background:#fff}
+.projTitle{font-size:clamp(32px,4vw,52px);font-weight:700;line-height:1.15;color:var(--ink)}
+.projDur{font-family:var(--font-num);color:var(--muted);font-weight:500}
+.projBody{flex:1}
+.agendaBig{gap:12px}
+.agendaBig .agendaItem{padding:16px 20px;border-radius:16px;gap:20px}
+.agendaBig .check{width:56px;height:56px;min-height:56px!important;border-radius:14px!important}
+.agendaBig .check svg{width:30px;height:30px}
+.agendaBig .min{min-height:40px;padding:0 16px;font-size:24px}
+.agendaBig .itemTitle{font-size:clamp(28px,3.2vw,40px)}
+.agendaBig .itemText{font-size:clamp(22px,2.2vw,28px)}
+.agendaBig .nowTag{font-size:22px;padding:4px 16px}
+.nowBarBig{position:sticky;bottom:0;padding:18px 26px}
+.nowBarBig .nowItem{font-size:clamp(28px,3vw,36px)}
+.nowBarBig .nowLabel,.nowBarBig .nowMin{font-size:24px}
+.nowBarBig .clock{font-size:clamp(56px,7vw,88px)}
+.nowBarBig .doneBtn{min-height:68px!important;font-size:28px!important;padding:12px 36px!important}
+
+@media (prefers-reduced-motion:reduce){.chev{transition:none}}
+
+/* ---------- phone: the facilitator reading from a phone in hand ---------- */
+@media (max-width:640px){
+  .root{gap:14px;font-size:17px}
+  .root button{font-size:17px;min-height:48px;padding:8px 16px}
+  .quiet,.err{font-size:15px}
+  .empty{padding:20px 16px;gap:10px;border-radius:12px}
+  .emptyTitle{font-size:20px}
+  .empty a[role=button]{font-size:17px;min-height:48px}
+  .chips{gap:8px;margin-inline:-16px;padding-inline:16px;scroll-padding-inline:16px}
+  .chip{min-height:56px;padding:6px 14px;border-radius:12px;font-size:16px;max-width:82vw}
+  .chipDate{font-size:14px}
+  .meta{gap:8px}
+  .metaMain{font-size:15px;gap:8px}
+  .tag{font-size:14px;padding:1px 10px}
+  .projToggle{min-height:44px!important;padding:6px 14px!important}
+  .cards{gap:10px}
+  .card{border-radius:12px}
+  .cardNow{border-inline-start-width:5px}
+  .cardHead{gap:12px;padding:12px 14px!important}
+  .pos{width:38px;height:38px;font-size:17px}
+  .cardMain{gap:4px}
+  .cardTitle{font-size:clamp(18px,5vw,22px)}
+  .cardMeta{font-size:14px;gap:6px}
+  .chev{width:24px;height:24px}
+  .body{gap:16px;padding:0 14px 16px}
+  .summary{padding-top:12px;font-size:16px}
+  .section{gap:8px}
+  .sectionTitle{font-size:14px}
+  .bullets{font-size:16px;padding-inline-start:20px;gap:4px}
+  .agenda{gap:6px}
+  .agendaItem{gap:10px;padding:10px 10px;border-radius:10px}
+  .agendaHead{gap:8px}
+  .min{min-height:26px;padding:0 9px;font-size:14px}
+  .itemTitle{font-size:17px}
+  .nowTag{font-size:13px;padding:1px 9px}
+  .itemText{font-size:15px}
+  .exercises{gap:10px}
+  .exercise{padding:12px;gap:8px;border-radius:10px}
+  .exTitle{font-size:17px}
+  .steps{font-size:16px;padding-inline-start:24px;gap:4px}
+  .qTable{font-size:15px}
+  .qTable th{font-size:13px;padding:4px 6px}
+  .qTable td{padding:8px 6px}
+  .mat{min-height:34px;padding:0 12px;font-size:15px}
+  .notes{font-size:16px;gap:6px}
+  .adapt{gap:8px}
+  .adaptCol{padding:10px 12px;font-size:15px}
+  .adaptLabel{font-size:13px}
+  .cardActions > button{flex:1 1 calc(50% - 6px);min-width:0}
+  /* sticky bar: ״עכשיו״ line on top, clock + buttons in one row under it */
+  .nowBar{gap:8px 10px;padding:10px 12px;margin-inline:-16px;border-radius:14px 14px 0 0;border-bottom:0;
+    bottom:0;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  .nowText{flex-basis:100%;gap:6px}
+  .nowLabel{font-size:15px}
+  .nowItem{font-size:18px}
+  .nowMin{font-size:15px}
+  .timer{flex:1;gap:6px}
+  .clock{font-size:30px;min-width:4.6ch}
+  .timerBtn{min-height:44px!important;padding:4px 12px!important;font-size:15px!important}
+  .doneBtn{min-height:48px!important;padding:8px 18px!important;font-size:18px!important}
+  /* projector on a phone: still big, still one module */
+  .proj{gap:12px;padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+  .proj button{font-size:17px;min-height:48px;padding:8px 14px}
+  .projHead{gap:8px}
+  .projSession{flex-basis:100%;font-size:16px;order:9}
+  .projCount{font-size:17px}
+  .projTitle{font-size:clamp(24px,7vw,32px)}
+  .agendaBig .agendaItem{padding:12px 12px;gap:12px}
+  .agendaBig .check{width:48px;height:48px;min-height:48px!important}
+  .agendaBig .min{min-height:30px;padding:0 10px;font-size:16px}
+  .agendaBig .itemTitle{font-size:clamp(20px,6vw,28px)}
+  .agendaBig .itemText{font-size:16px}
+  .agendaBig .nowTag{font-size:14px;padding:2px 10px}
+  .nowBarBig{padding:10px 12px}
+  .nowBarBig .nowItem{font-size:20px}
+  .nowBarBig .nowLabel,.nowBarBig .nowMin{font-size:15px}
+  .nowBarBig .clock{font-size:40px}
+  .nowBarBig .doneBtn{min-height:52px!important;font-size:20px!important;padding:8px 22px!important}
+}
+
+/* ---------- landscape phone: the bar stays one row, cards keep their text short ---------- */
+@media (max-height:520px) and (orientation:landscape){
+  .root{gap:10px}
+  .chips{padding-bottom:4px}
+  .chip{min-height:48px;padding:4px 14px;font-size:16px;flex-direction:row;align-items:center;gap:10px}
+  .cardHead{padding:10px 16px!important}
+  .pos{width:36px;height:36px;font-size:16px}
+  .cardTitle{font-size:20px}
+  .body{gap:12px}
+  .nowBar{flex-wrap:nowrap;gap:12px;padding:8px 14px}
+  .nowText{flex:1 1 auto;flex-basis:auto}
+  .nowItem{font-size:18px}
+  .clock{font-size:30px}
+  .proj{gap:8px;padding:10px 20px}
+  .projTitle{font-size:24px}
+  .agendaBig .agendaItem{padding:8px 12px}
+  .agendaBig .itemTitle{font-size:22px}
+  .agendaBig .itemText{display:none}
+  .nowBarBig{flex-wrap:nowrap;padding:8px 14px}
+  .nowBarBig .clock{font-size:40px}
+}

@@ -8,11 +8,12 @@ import {
   addExample, clearExamples, dropClass, engineStore, imageFromDataUrl, preloadEngine, restore, serialize,
 } from '@/lib/pocket/engine';
 import { canClassify } from '@/lib/pocket/score';
-import { clearTrainer, loadTrainer, saveTrainer } from '@/lib/pocket/store';
+import { clearTrainer, FREE_WORKSHOP, loadTrainer, saveTrainer } from '@/lib/pocket/store';
 import { joinHe } from '@/lib/robot/mood';
 import { useRobot } from '@/lib/robot/useRobot';
 import { ClassesStep } from './ClassesStep';
 import { GalleryImport } from './GalleryImport';
+import { GuideStep } from './guide/GuideStep';
 import { LightStep } from './LightStep';
 import { PixelStep } from './pixels/PixelStep';
 import { RobotFace } from './robot/RobotFace';
@@ -21,9 +22,11 @@ import { TestStep } from './TestStep';
 import { VoteStep } from './vote/VoteStep';
 import f from './facilitator.module.css';
 
-type Step = 'classes' | 'teach' | 'test' | 'light' | 'vote' | 'pixels';
+type Step = 'guide' | 'classes' | 'teach' | 'test' | 'light' | 'vote' | 'pixels';
 // tools that need no trained model: always reachable
-const TOOL_STEPS: ReadonlySet<Step> = new Set<Step>(['vote', 'pixels']);
+const TOOL_STEPS: ReadonlySet<Step> = new Set<Step>(['guide', 'vote', 'pixels']);
+// המפגש leads when a real workshop is chosen; free mode has no session plan
+const GUIDE_STEP: { id: Step; label: string } = { id: 'guide', label: 'המפגש' };
 const STEPS: { id: Step; label: string }[] = [
   { id: 'classes', label: 'מחלקות' }, { id: 'teach', label: 'מלמדים' }, { id: 'test', label: 'בודקים' }, { id: 'light', label: 'רמזור' },
   { id: 'vote', label: 'הצבעה' }, { id: 'pixels', label: 'פיקסלים' },
@@ -33,7 +36,9 @@ const ENGINE_HE = { idle: 'המנוע מחכה', loading: 'המנוע נטען',
 
 export function Trainer({ workshopId, title }: { workshopId: string | null; title: string }) {
   const engine = useStore(engineStore);
-  const [step, setStep] = useState<Step>('classes');
+  const hasGuide = !!workshopId && workshopId !== FREE_WORKSHOP;
+  const steps = hasGuide ? [GUIDE_STEP, ...STEPS] : STEPS;
+  const [step, setStep] = useState<Step>(hasGuide ? 'guide' : 'classes');
   const [classes, setClasses] = useState<string[]>(DEFAULT_CLASSES);
   const [active, setActive] = useState(DEFAULT_CLASSES[0]);
   const [queue, setQueue] = useState<QueuedFrame[]>([]);
@@ -150,7 +155,7 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
         </div>
         <div className={f.stepsRow}>
           <nav ref={stepsRef} className={f.steps} aria-label="שלבים">
-            {STEPS.map((s, i) => (
+            {steps.map((s, i) => (
               <button key={s.id} type="button" className={`${f.step} ${step === s.id ? f.stepOn : ''}`} aria-current={step === s.id ? 'step' : undefined}
                 disabled={s.id !== 'classes' && !TOOL_STEPS.has(s.id) && !canLeaveClasses} onClick={() => setStep(s.id)}>
                 <span className={f.stepNo}>{i + 1}</span>{s.label}
@@ -168,6 +173,7 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
 
       <main className={f.main}>
         {note ? <p className={f.ok} role="status">{note}</p> : null}
+        {step === 'guide' && hasGuide && workshopId ? <GuideStep workshopId={workshopId} /> : null}
         {step === 'classes' ? (
           <ClassesStep classes={classes} counts={engine.counts} onAdd={addClass} onRemove={removeClass} onNext={() => setStep('teach')} />
         ) : null}
