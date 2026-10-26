@@ -1,7 +1,7 @@
 /* Tagging stage: the wrapper shrink-wraps the photo so overlay percentages match the image exactly. */
 .stage{position:relative;width:fit-content;max-width:100%;margin:0 auto;border-radius:14px;overflow:hidden;
   background:#0B1220;touch-action:none;-webkit-user-select:none;user-select:none;cursor:crosshair}
-.photo{display:block;max-width:100%;max-height:calc(100dvh - 380px);min-height:180px;object-fit:contain;
+.photo{display:block;max-width:100%;max-height:calc(100vh - 380px);max-height:calc(100dvh - 380px);min-height:180px;object-fit:contain;
   pointer-events:none}
 .box{position:absolute;border:3px solid #2DD4BF;border-radius:4px;background:rgba(45,212,191,.12);
   box-shadow:0 0 0 1px rgba(11,18,32,.5);pointer-events:none}
@@ -27,5 +27,11 @@
 .toggle{display:flex;align-items:center;gap:10px;min-height:48px;font-size:15px;color:var(--body)}
 .toggle input{width:22px;height:22px;accent-color:var(--cy)}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions > *{min-width:0}
 .actions .wide{grid-column:1 / -1}
 .actions .tall{min-height:60px;font-size:18px}
+/* point mode with a proposal up: the confirm / cancel pair sits fixed above the bottom nav, thumb-reachable */
+.bar{position:fixed;inset-inline:0;bottom:calc(64px + env(safe-area-inset-bottom));z-index:15;max-width:520px;margin:0 auto;
+  padding:10px 16px;padding-inline:max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-left));
+  background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line)}
+.barSpace{height:84px}

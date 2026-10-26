@@ -28,7 +28,7 @@
 .voiceOn{border-color:var(--cy);color:var(--cy);background:var(--cy-soft)}
 .voiceOn .voiceDot{background:var(--cy)}
 
-.steps{display:grid;grid-template-columns:repeat(4,1fr)}
+.steps{display:grid;grid-auto-flow:column;grid-auto-columns:1fr}
 .step{appearance:none;background:none;border:0;border-bottom:4px solid transparent;border-radius:0;
   min-height:64px;padding:12px 8px;font-size:22px;font-weight:500;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:12px}
 .step:hover:not(:disabled){background:#F6F8FA;color:var(--ink)}
@@ -47,7 +47,7 @@
 .ok{color:var(--cy);font-size:20px}
 
 /* workshop picker */
-.list{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(360px,1fr))}
+.list{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr))}
 .card{display:flex;flex-direction:column;gap:8px;padding:22px 24px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);text-align:start;min-height:120px}
 .card:hover{border-color:var(--cy);text-decoration:none;color:var(--ink)}
 .cardTitle{font-size:26px;font-weight:600}
@@ -90,7 +90,7 @@
 .shutter:active:not(:disabled){transform:scale(.95)}
 .learn{min-height:76px!important;font-size:28px!important;padding:14px 36px!important}
 .counter{display:flex;flex-direction:column;align-items:center;gap:6px;padding:26px;border:1px solid var(--line);border-radius:14px;background:#fff}
-.counterNum{font-family:var(--font-num);font-size:96px;line-height:1;font-weight:700;color:var(--cy)}
+.counterNum{font-family:var(--font-num);font-size:clamp(40px,14vw,96px);line-height:1;font-weight:700;color:var(--cy)}
 .counterText{font-size:24px;color:var(--muted)}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
 .thumb{width:72px;height:54px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
@@ -106,7 +106,7 @@
   .robotCol > p{align-self:center;text-align:start}
 }
 .overlay{position:absolute;inset-inline:0;bottom:0;padding:18px 22px 22px;background:linear-gradient(0deg,rgba(0,0,0,.72),rgba(0,0,0,0));color:#fff;display:flex;flex-direction:column;gap:12px}
-.predName{font-size:64px;line-height:1.1;font-weight:700;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.predName{font-size:clamp(28px,9vw,64px);line-height:1.1;font-weight:700;text-shadow:0 2px 12px rgba(0,0,0,.5);overflow-wrap:anywhere}
 .predWord{font-size:32px;font-weight:500}
 .bar{height:26px;border-radius:999px;background:rgba(255,255,255,.3);overflow:hidden}
 .barFill{height:100%;border-radius:999px;transition:width .25s,background .25s}
@@ -153,3 +153,130 @@
 .groups{display:flex;gap:10px;flex-wrap:wrap}
 
 @media (prefers-reduced-motion:reduce){.flash,.barFill,.lamp{animation:none;transition:none}}
+
+/* ---------- phone: the facilitator holding a phone instead of driving a projector ---------- */
+@media (max-width:640px){
+  .shell{font-size:17px}
+  .shell button{font-size:17px;min-height:48px;padding:8px 16px}
+  .shell input[type=text]{font-size:18px;padding:10px 14px}
+  .header{gap:10px;padding:10px 16px 0;padding-top:max(10px,env(safe-area-inset-top));
+    padding-inline:max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-left))}
+  .titleRow{gap:10px}
+  .back{font-size:15px;min-height:44px}
+  .title{font-size:20px}
+  .engine{font-size:15px;gap:8px}
+  .engineDot{width:10px;height:10px}
+  .robotHead{gap:10px}
+  .robotHead > svg{width:44px;height:44px}
+  .robotLine{font-size:16px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  /* the step bar becomes a scroll-snapping chip row */
+  .stepsRow{gap:8px}
+  .steps{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:0 0 8px;
+    overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+  .steps::-webkit-scrollbar{display:none}
+  .step{flex:none;scroll-snap-align:center;min-height:44px;padding:6px 14px 6px 8px;gap:8px;font-size:15px;
+    border:1.5px solid var(--line);border-radius:999px}
+  .stepOn,.stepOn:hover:not(:disabled){border-color:var(--cy);background:var(--cy-soft);color:var(--cy)}
+  .stepNo{width:28px;height:28px;font-size:14px}
+  .voice{min-height:44px!important;padding:4px 12px!important;font-size:15px!important;gap:8px;margin-bottom:8px}
+  .voiceDot{width:10px;height:10px}
+  .main{gap:16px;padding:16px 16px 20px;padding-inline:max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-left))}
+  .footer{font-size:15px;gap:10px;padding:12px 16px calc(16px + env(safe-area-inset-bottom));
+    padding-inline:max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-left))}
+  .lead{font-size:clamp(22px,6vw,28px)}
+  .sub{font-size:16px}
+  .err,.ok{font-size:16px}
+  .actions{gap:10px}
+  .actions > button{flex:1 1 calc(50% - 5px);min-width:0}
+  .actions > .sub{flex:1 1 100%;text-align:center}
+  .actions .bigBtn{flex-basis:100%}
+  .grow{display:none}
+  .bigBtn{min-height:60px!important;padding:12px 20px!important;font-size:22px!important}
+  /* workshop picker: one card per row */
+  .card{padding:16px 18px;min-height:0;border-radius:12px}
+  .cardTitle{font-size:clamp(19px,5.5vw,24px)}
+  .cardMeta{font-size:15px;gap:8px}
+  .tag{font-size:14px;padding:2px 10px}
+  /* classes */
+  .chips{gap:10px}
+  .chip{min-height:52px;padding:0 6px 0 16px;font-size:20px;gap:6px}
+  .addRow{max-width:none}
+  .addRow input{min-width:0}
+  .suggest{gap:8px}
+  /* camera: full width, 4:3 kept, never taller than the screen minus the controls */
+  .stage{width:min(100%,max(240px,calc((100vh - 300px) * 4 / 3)));width:min(100%,max(240px,calc((100dvh - 300px) * 4 / 3)));
+    max-height:none;border-radius:12px}
+  .stageMsg{font-size:17px;padding:16px}
+  /* teach: class chips above the camera, the shutter right under it */
+  .teachRow{display:flex;flex-wrap:wrap;gap:10px}
+  .teachRow > .stage{flex:0 0 auto;order:0}
+  .side{display:contents}
+  .side > .lead{flex:1 1 100%;order:-3;font-size:18px}
+  .classCard{flex:1 1 0;order:-2;min-width:0;min-height:48px;gap:4px;padding:6px 10px;border-radius:14px;align-items:stretch}
+  .classCardHead{font-size:16px;gap:6px}
+  .classCardHead > span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .count{font-size:16px}
+  .dots{gap:2px;justify-content:center}
+  .dot{width:7px;height:7px;border-width:1px}
+  .dotQueued{box-shadow:inset 0 0 0 1.5px #fff,inset 0 0 0 4px var(--cy)}
+  .side > .sub{flex:1 1 100%;order:1;font-size:15px}
+  .side > button:not(.classCard){flex:1 1 100%;order:2}
+  .shutterRow{gap:16px;padding-top:0;flex-wrap:wrap}
+  .shutter{width:72px;height:72px;border-width:4px!important}
+  .shutter::after{width:54px;height:54px}
+  .learn{flex:1 1 auto;min-height:56px!important;font-size:20px!important;padding:10px 22px!important}
+  .counter{padding:16px;gap:4px}
+  .counterText{font-size:17px}
+  .thumb{width:60px;height:45px}
+  /* test: camera, then Robi, then the controls and a 5x2 tally */
+  .testRow{display:flex;flex-direction:column;gap:14px}
+  .robotCol{gap:14px}
+  .robotCol > svg{width:84px;height:84px}
+  .overlay{padding:10px 12px 12px;gap:8px}
+  .predWord{font-size:clamp(16px,5vw,24px)}
+  .bar{height:18px}
+  .frozenTag{top:10px;inset-inline-start:10px;padding:4px 12px;font-size:15px}
+  .tally{padding:14px 16px;gap:12px}
+  .tally .actions > .bigBtn{flex-basis:calc(50% - 5px)}
+  .tallyScore{font-size:26px}
+  .cells{grid-template-columns:repeat(5,1fr);gap:8px}
+  .cell{min-height:44px;font-size:22px;border-radius:8px}
+  .cellNo{font-size:16px}
+  /* traffic light: the rule text on one line, the colour button full width under it */
+  .rule{font-size:19px;padding:12px 14px;gap:8px 10px;border-radius:12px}
+  .ruleBtn{flex:1 1 100%;min-width:0;min-height:52px!important;font-size:20px!important}
+  .lightWord{font-size:clamp(24px,7vw,40px);text-align:center}
+  .lightScreen{padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+  .exitLight{top:calc(10px + env(safe-area-inset-top));inset-inline-start:max(16px,env(safe-area-inset-right))}
+  .lightRobot{top:calc(10px + env(safe-area-inset-top));inset-inline-end:max(16px,env(safe-area-inset-left));max-width:calc(100vw - 140px);gap:8px}
+  .lightRobot > svg{width:40px;height:40px}
+  .pip{bottom:calc(12px + env(safe-area-inset-bottom));inset-inline-end:max(12px,env(safe-area-inset-left));width:min(34vw,200px)}
+  /* gallery import: a bottom sheet */
+  .sheet{padding:12px;align-items:end}
+  .sheetBox{max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);gap:14px;border-radius:14px;
+    padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+  .sheetTitle{font-size:22px}
+  .pick{min-height:56px;padding:0 14px;font-size:18px}
+}
+
+/* ---------- landscape phone: camera beside its controls, nothing below the fold that matters ---------- */
+@media (max-height:520px) and (orientation:landscape){
+  .header{gap:6px;padding-top:6px}
+  .robotHead{order:0;flex:0 1 auto;max-width:40%}
+  .step{min-height:48px;padding:6px 8px;font-size:17px}
+  .stepNo{width:26px;height:26px;font-size:14px}
+  .main{gap:12px;padding-top:12px}
+  .stage{width:min(100%,max(240px,calc((100vh - 150px) * 4 / 3)));width:min(100%,max(240px,calc((100dvh - 150px) * 4 / 3)));max-height:none;margin:0 auto}
+  .teachRow,.testRow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:start}
+  .side{display:flex;flex-direction:column;gap:8px}
+  .side > .lead{font-size:18px}
+  .classCard{flex:0 0 auto}
+  .robotCol{flex-direction:column;gap:10px;padding-top:0}
+  .robotCol > svg{width:84px;height:84px}
+  .robotCol > p{align-self:stretch;text-align:center}
+  .lightScreen{flex-direction:row;gap:28px}
+  .housing{gap:2vmin;padding:3vmin}
+  .lamp{width:16vmin;height:16vmin}
+  .lightWord{font-size:clamp(22px,5vh,36px)}
+  .pip{width:min(26vw,220px)}
+}

@@ -2,7 +2,7 @@
 // מצב מדריך: one browser, one projector, four steps. Holds the class list,
 // the unlearned frame queue and the saved-per-workshop model.
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
 import {
   addExample, clearExamples, dropClass, engineStore, imageFromDataUrl, preloadEngine, restore, serialize,
@@ -42,6 +42,14 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
   const [note, setNote] = useState<string | null>(null);
   const robot = useRobot();
   const { say } = robot;
+  const stepsRef = useRef<HTMLElement | null>(null);
+
+  // on a phone the step bar scrolls sideways: keep the active chip in view
+  useEffect(() => {
+    const nav = stepsRef.current;
+    if (!nav || nav.scrollWidth <= nav.clientWidth) return;
+    nav.querySelector<HTMLElement>('[aria-current="step"]')?.scrollIntoView?.({ block: 'nearest', inline: 'center' });
+  }, [step]);
 
   // רובי's resting face outside the live steps: asleep until the first example is learned
   const hasExamples = Object.values(engine.counts).some((n) => n > 0);
@@ -141,7 +149,7 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
           </span>
         </div>
         <div className={f.stepsRow}>
-          <nav className={f.steps} aria-label="שלבים">
+          <nav ref={stepsRef} className={f.steps} aria-label="שלבים">
             {STEPS.map((s, i) => (
               <button key={s.id} type="button" className={`${f.step} ${step === s.id ? f.stepOn : ''}`} aria-current={step === s.id ? 'step' : undefined}
                 disabled={s.id !== 'classes' && !TOOL_STEPS.has(s.id) && !canLeaveClasses} onClick={() => setStep(s.id)}>

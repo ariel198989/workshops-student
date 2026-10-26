@@ -29,6 +29,12 @@
 .bubbleSm{font-size:22px;padding:10px 16px;border-radius:14px}
 .bubbleSm::before{inset-inline-start:22px;top:-8px;width:14px;height:14px}
 
+@media (max-width:640px){
+  .bubble{font-size:clamp(18px,5vw,24px);padding:10px 14px;border-radius:14px}
+  .bubble::before{inset-inline-start:22px;top:-8px;width:14px;height:14px}
+  .bubbleSm{font-size:15px;padding:8px 12px}
+}
+
 @media (prefers-reduced-motion:reduce){
   .body,.lids,.talk,.lampOn{animation:none}
   .lidsShut{transform:scaleY(.08)}

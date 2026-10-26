@@ -59,11 +59,13 @@ function BoxActions({ box, lastBox, busy, onSave, onSkip, onNoObject }: ActionsP
 function PointActions({ box, busy, onSave, onClear, onSkip, onNoObject }: ActionsProps) {
   if (box) {
     return (
-      <div className={t.actions}>
-        <button type="button" className={`${s.btn} ${s.btnPrimary} ${t.tall}`} disabled={busy} onClick={() => onSave(box)}>
-          {busy ? 'שומרים' : 'אישור'}
-        </button>
-        <button type="button" className={`${s.btn} ${t.tall}`} disabled={busy} onClick={onClear}>ביטול</button>
+      <div className={t.bar}>
+        <div className={t.actions}>
+          <button type="button" className={`${s.btn} ${s.btnPrimary} ${t.tall}`} disabled={busy} onClick={() => onSave(box)}>
+            {busy ? 'שומרים' : 'אישור'}
+          </button>
+          <button type="button" className={`${s.btn} ${t.tall}`} disabled={busy} onClick={onClear}>ביטול</button>
+        </div>
       </div>
     );
   }
@@ -141,6 +143,7 @@ export function TagScreen({ session }: { session: CvSession }) {
         להציג גם תמונות של חברי הקבוצה
       </label>
       {mates ? <p className={s.small}>מתייגים גם את התמונות של חברי הקבוצה. כל תיבה עוזרת למודל של כולם.</p> : null}
+      {point && box ? <div className={t.barSpace} aria-hidden /> : null}
     </div>
   );
 }

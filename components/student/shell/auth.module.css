@@ -1,4 +1,5 @@
-.screen{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:20px 14px;
+.screen{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:20px 16px;
+  padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
   background:linear-gradient(180deg,#EAF6F5 0,var(--bg-0) 260px)}
 .card{width:100%;max-width:420px;padding:26px 20px 22px;background:#fff;border:1px solid var(--line);
   border-radius:22px;box-shadow:0 8px 30px rgba(15,28,46,.07);animation:rise .3s ease}
