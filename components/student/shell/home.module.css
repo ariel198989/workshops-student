@@ -21,6 +21,8 @@
 .nextLabel{font-size:13px;font-weight:500;opacity:.88}
 .nextTitle{font-size:20px;font-weight:700;line-height:1.3}
 .nextHint{margin-top:2px;font-size:14px;opacity:.9}
+.nextCta{display:inline-flex;align-items:center;min-height:34px;margin-top:10px;padding:0 14px;border-radius:999px;
+  background:rgba(255,255,255,.2);font-size:14px;font-weight:700}
 .nextIcon{flex-shrink:0;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2)}
 
 .mission h2{margin-bottom:4px}

@@ -17,6 +17,7 @@ interface Args { videoRef: RefObject<HTMLVideoElement | null>; team: string; use
 /** Single shots, the auto-shoot series, per-class counts and the offline retry queue. */
 export function useCapture({ videoRef, team, userId, className }: Args) {
   const [base, setBase] = useState<Record<string, number>>({});
+  const [loaded, setLoaded] = useState(false);
   const [taken, setTaken] = useState<Record<string, number>>({});
   const [running, setRunning] = useState(false);
   const [stats, setStats] = useState<QueueStats>(EMPTY_STATS);
@@ -28,7 +29,9 @@ export function useCapture({ videoRef, team, userId, className }: Args) {
   const classRef = useRef(className);
 
   useEffect(() => { classRef.current = className; }, [className]);
-  useEffect(() => { fetchCaptureCounts(team).then(setBase).catch(() => undefined); }, [team]);
+  useEffect(() => {
+    fetchCaptureCounts(team).then(setBase).catch(() => undefined).finally(() => setLoaded(true));
+  }, [team]);
 
   useEffect(() => {
     const q = createRetryQueue<CaptureItem>(saveCapture, { onChange: setStats });
@@ -81,10 +84,20 @@ export function useCapture({ videoRef, team, userId, className }: Args) {
 
   const countOf = (cls: string) => (base[cls] ?? 0) + (taken[cls] ?? 0);
   const sessionTotal = Object.values(taken).reduce((a, b) => a + b, 0);
+  /** photos of the group that are really on the server: the count at mount plus this session's finished uploads */
+  const uploaded = Object.values(base).reduce((a, b) => a + b, 0) + stats.saved;
   const issueText = issue ? QUALITY_MESSAGES[issue] : null;
 
+  /** Waits for the queue to settle; resolves with how many photos are still waiting (0 when all went up). */
+  const idle = async (): Promise<number> => {
+    const q = queue.current;
+    if (!q) return 0;
+    await q.idle();
+    return q.stats().queued;
+  };
+
   return {
-    shoot, running, setRunning, countOf, sessionTotal, stats, issueText, skipped, flashAt,
+    shoot, running, setRunning, countOf, sessionTotal, uploaded, loaded, stats, issueText, skipped, flashAt, idle,
     retryNow: () => void queue.current?.retryNow(),
   };
 }

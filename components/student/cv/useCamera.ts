@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cameraErrorMessage, openRearCamera, stopStream } from '@/lib/cv/camera';
 
-export type CameraState = 'starting' | 'live' | 'error';
+export type CameraState = 'starting' | 'live' | 'error' | 'off';
 
 /** Opens the rear camera into a <video>; always stops the tracks on unmount. */
 export function useCamera() {
@@ -37,5 +37,13 @@ export function useCamera() {
   }, [attempt]);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
-  return { videoRef, state, error, retry };
+  /** Releases the camera before leaving the screen (unmount does it too; this is just sooner). */
+  const stop = useCallback(() => {
+    const video = videoRef.current;
+    const stream = video?.srcObject;
+    if (stream instanceof MediaStream) stopStream(stream);
+    if (video) video.srcObject = null;
+    setState('off');
+  }, []);
+  return { videoRef, state, error, retry, stop };
 }

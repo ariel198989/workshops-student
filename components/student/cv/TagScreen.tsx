@@ -11,19 +11,28 @@ import type { CvSession } from './CvGate';
 import s from './cv.module.css';
 import t from './tag.module.css';
 
-function Done({ saved, skipped, caps, onReload }: { saved: number; skipped: number; caps: StudentCaps; onReload: () => void }) {
-  const after = caps.can_train ? 'אפשר לצלם עוד או לעבור לאימון.' : 'אפשר לצלם עוד, והמדריך יגיש לאימון.';
+interface DoneProps { saved: number; skipped: number; caps: StudentCaps; mates: boolean; onMates: () => void; onReload: () => void }
+
+const taggedTitle = (n: number): string => (n === 1 ? 'סיימתם לתייג תמונה אחת' : `סיימתם לתייג ${n} תמונות`);
+
+/** The queue is empty: say what was done and put the next step first. */
+function Done({ saved, skipped, caps, mates, onMates, onReload }: DoneProps) {
   return (
     <div className={`${s.card} ${s.center} ${s.stack}`}>
-      <h2 className={s.h2}>{saved > 0 ? `סיימתם! תויגו ${saved} תמונות` : 'אין תמונות שמחכות לתיוג'}</h2>
+      <h2 className={s.h2}>{saved > 0 ? taggedTitle(saved) : 'אין תמונות שמחכות לתיוג'}</h2>
       <p className={s.lead}>
-        {saved > 0 ? `התמונות המתויגות נכנסו למאגר של הקבוצה. ${after}` : 'צלמו עוד תמונות ואז חזרו לכאן לסמן עליהן תיבות.'}
+        {saved > 0 ? 'התמונות המתויגות נכנסו למאגר של הקבוצה.' : 'צלמו עוד תמונות ואז חזרו לכאן לסמן עליהן תיבות.'}
       </p>
+      {caps.can_train
+        ? <Link href="/train" className={`${s.btn} ${s.btnPrimary}`}>לשלב הבא: אימון</Link>
+        : <Link href="/" className={`${s.btn} ${s.btnPrimary}`}>המדריך שולח לאימון</Link>}
       {skipped > 0 ? (
         <button type="button" className={`${s.btn} ${s.btnWarn}`} onClick={onReload}>חזרה לתמונות שדילגתם ({skipped})</button>
       ) : null}
-      {caps.can_capture ? <Link href="/capture" className={`${s.btn} ${s.btnPrimary}`}>לצילום</Link> : null}
-      {caps.can_train ? <Link href="/train" className={s.btn}>לאימון</Link> : null}
+      {!mates ? (
+        <button type="button" className={s.btn} onClick={onMates}>עוד תמונות לתייג? כללו גם של חברי הקבוצה</button>
+      ) : null}
+      {caps.can_capture ? <Link href="/capture" className={`${s.btn} ${s.btnGhost}`}>לצילום</Link> : null}
     </div>
   );
 }
@@ -106,7 +115,11 @@ export function TagScreen({ session }: { session: CvSession }) {
       </div>
     );
   }
-  if (!cur) return <Done saved={q.saved} skipped={q.skipped} caps={caps} onReload={() => void q.reload()} />;
+  if (!cur) {
+    return (
+      <Done saved={q.saved} skipped={q.skipped} caps={caps} mates={mates} onMates={() => setMates(true)} onReload={() => void q.reload()} />
+    );
+  }
 
   const actions: ActionsProps = {
     box, lastBox, busy: q.busy,
@@ -119,7 +132,10 @@ export function TagScreen({ session }: { session: CvSession }) {
   return (
     <div className={s.stack}>
       <div className={t.progress}>
-        <h1 className={s.h2}>נשארו <span className="num">{q.remaining}</span> לתיוג</h1>
+        <h1 className={`${s.h2} ${t.titleRow}`}>
+          תיוג
+          <span className={`${s.chip} ${s.chipMuted}`} role="status">נותרו <span className="num">{q.remaining}</span></span>
+        </h1>
         {q.saved > 0 ? <span className={s.chip}>תויגו <span className="num">{q.saved}</span></span> : null}
       </div>
       {choices.length > 1 ? (

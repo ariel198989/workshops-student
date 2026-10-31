@@ -69,9 +69,12 @@ export function TrainScreen({ session }: { session: CvSession }) {
 
   if (!pool && !jobs) return <div className={s.spin}><Spinner large /></div>;
   const canStart = !reason && !busy;
+  // the latest job finished and the group has a model: the next step goes first
+  const modelReady = jobs?.[0]?.status === 'done' && !!ctx.progress?.model;
   return (
     <div className={s.stack}>
       <h1 className={s.h1}>אימון המודל</h1>
+      {modelReady ? <Link href="/results" className={`${s.btn} ${s.btnPrimary}`}>לשלב הבא: תוצאות</Link> : null}
       <div className={s.card}>
         <div className={s.cardHead}>
           תמונות מתויגות · {pool?.total ?? 0} מ-{pool?.contributors ?? 0} חברים

@@ -5,7 +5,6 @@ import { imageFromFile } from '@/lib/cv/camera';
 import type { Engine } from '@/lib/cv/infer';
 import type { Decoded } from '@/lib/cv/yolo';
 import { DetectionBoxes } from './DetectionBoxes';
-import { LiveTest } from './LiveTest';
 import type { EngineStatus } from './useEngine';
 import s from './cv.module.css';
 import r from './results.module.css';
@@ -16,6 +15,8 @@ interface Props {
   status: EngineStatus;
   error: string;
   ensure: () => Promise<Engine | null>;
+  /** opens the live camera test (owned by the results screen, which also offers it at the top) */
+  onLive: () => Promise<void>;
 }
 
 interface Shot { url: string; result: Decoded; classes: string[] }
@@ -30,18 +31,12 @@ function photoSummary(shot: Shot): string {
 }
 
 /** The two ways to try the model: live camera, or a single photo (pick or take). */
-export function TestPanel({ status, error, ensure }: Props) {
-  const [live, setLive] = useState<Engine | null>(null);
+export function TestPanel({ status, error, ensure, onLive }: Props) {
   const [shot, setShot] = useState<Shot | null>(null);
   const [problem, setProblem] = useState('');
   const loading = status === 'loading';
 
   useEffect(() => () => { if (shot) URL.revokeObjectURL(shot.url); }, [shot]);
-
-  async function openLive() {
-    setProblem('');
-    setLive(await ensure());
-  }
 
   async function onPhoto(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -68,7 +63,7 @@ export function TestPanel({ status, error, ensure }: Props) {
       <div className={s.cardHead}>בדקו את המודל</div>
       <p className={`${s.small} ${s.lead}`}>הדרך הכי כנה לבדוק: אובייקט אחר מזה שצילמתם, רקע אחר ותאורה אחרת.</p>
       <div className={s.btnRow}>
-        <button type="button" className={`${s.btn} ${s.btnPrimary}`} disabled={loading} onClick={() => void openLive()}>
+        <button type="button" className={`${s.btn} ${s.btnPrimary}`} disabled={loading} onClick={() => { setProblem(''); void onLive(); }}>
           {loading ? 'טוענים מודל' : 'בדיקה חיה'}
         </button>
         <label className={`${s.btn} ${r.fileBtn}`} aria-disabled={loading}>
@@ -88,7 +83,6 @@ export function TestPanel({ status, error, ensure }: Props) {
           <p className={s.lead} role="status">{photoSummary(shot)}</p>
         </div>
       ) : null}
-      {live ? <LiveTest engine={live} onClose={() => setLive(null)} /> : null}
     </div>
   );
 }

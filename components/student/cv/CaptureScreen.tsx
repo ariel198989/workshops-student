@@ -1,9 +1,13 @@
 'use client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, CloudUploadIcon } from '@hugeicons/core-free-icons';
 import { coachTip, STUCK_HINT, TARGET_FIRST, TARGET_STRONG, uploadStuck, validateClassName } from '@/lib/cv/capture-utils';
+import { toast } from '@/lib/store';
+import { nextAfterCapture } from '@/lib/student/flow';
+import { CaptureNextBar } from './CaptureNextBar';
 import { ClassPicker } from './ClassPicker';
 import { useCamera } from './useCamera';
 import { useCapture } from './useCapture';
@@ -11,6 +15,8 @@ import type { CvSession } from './CvGate';
 import c from './camera.module.css';
 
 const BAR_MAX = TARGET_STRONG + 50;
+const LEFT_BEHIND = 'חלק מהתמונות עוד לא עלו. בדקו רשת ונסו שוב';
+const UPLOADING_LAST = 'מעלים את התמונות האחרונות...';
 
 function GoalBar({ count }: { count: number }) {
   const pct = Math.min(100, (count / BAR_MAX) * 100);
@@ -39,8 +45,11 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
   });
   const classes = useMemo(() => [...new Set([...targets, ...custom])], [targets, custom]);
   const [active, setActive] = useState('');
-  const { videoRef, state, error, retry } = useCamera();
+  const [leaving, setLeaving] = useState(false);
+  const router = useRouter();
+  const { videoRef, state, error, retry, stop } = useCamera();
   const cap = useCapture({ videoRef, team: session.team, userId: session.userId, className: active });
+  const next = nextAfterCapture(session.ctx.caps, { total: cap.uploaded, active: active ? cap.countOf(active) : undefined });
 
   useEffect(() => {
     if (active && classes.includes(active)) return;
@@ -55,7 +64,17 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
   }, [cap.stats.queued]);
 
   const addCustom = (cls: string) => { setCustom((l) => [...l, cls]); setActive(cls); };
-  const ready = state === 'live' && !!active;
+  const ready = state === 'live' && !!active && !leaving;
+
+  /** Stop shooting, let the last uploads land, release the camera, move on. Nothing is lost on the way. */
+  async function goNext() {
+    setLeaving(true);
+    cap.setRunning(false);
+    const left = await cap.idle();
+    if (left > 0) { toast(LEFT_BEHIND); setLeaving(false); return; }
+    stop();
+    router.push(next.href);
+  }
   const leave = (e: React.MouseEvent) => {
     if (cap.stats.queued > 0 && !window.confirm('יש תמונות שעוד לא עלו. אם תצאו הן יאבדו. לצאת בכל זאת?')) e.preventDefault();
   };
@@ -85,7 +104,12 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
       ) : <div className={c.spacer} />}
 
       <div className={c.bottom}>
-        {uploadStuck(cap.stats) ? (
+        {cap.uploaded > 0 ? (
+          <CaptureNextBar next={next} loaded={cap.loaded} activeClass={active} leaving={leaving} onNext={() => void goNext()} />
+        ) : null}
+        {leaving && cap.stats.queued > 0 ? (
+          <div className={c.coach} role="status">{UPLOADING_LAST}</div>
+        ) : uploadStuck(cap.stats) ? (
           <div className={`${c.coach} ${c.coachWarn}`} role="alert">{STUCK_HINT}</div>
         ) : cap.issueText ? (
           <div className={`${c.coach} ${c.coachWarn}`} role="status">{cap.issueText}</div>

@@ -3,10 +3,13 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import { friendlyError } from '@/lib/cv/capture-utils';
+import type { Engine } from '@/lib/cv/infer';
 import { fetchBestTeamModel, type TeamModel } from '@/lib/cv/model';
 import type { StudentCaps } from '@/lib/student/caps';
 import { formatMetric } from '@/lib/student/metric';
+import { markResultsSeen } from '@/lib/student/results-seen';
 import { ClassStatsList } from './ClassStatsList';
+import { LiveTest } from './LiveTest';
 import { ModelCard } from './ModelCard';
 import { TestPanel } from './TestPanel';
 import { useEngine } from './useEngine';
@@ -36,8 +39,10 @@ export function ResultsScreen({ session }: { session: CvSession }) {
   const { caps } = ctx;
   const [model, setModel] = useState<TeamModel | null | undefined>(undefined);
   const [error, setError] = useState('');
+  const [live, setLive] = useState<Engine | null>(null);
   const modelId = ctx.progress?.model?.id ?? null; // changes when a training run finishes
   const engine = useEngine(model ?? null);
+  const loadingEngine = engine.status === 'loading';
 
   const load = useCallback(async () => {
     setError('');
@@ -50,6 +55,10 @@ export function ResultsScreen({ session }: { session: CvSession }) {
   }, [userId, team]);
 
   useEffect(() => { void load(); }, [load, modelId]);
+  // the stepper ticks "results" once the team has looked at its model
+  useEffect(() => { if (model) markResultsSeen(team); }, [model, team]);
+
+  const openLive = async () => { setLive(await engine.ensure()); };
 
   if (model === undefined) return <div className={s.spin}><Spinner large /></div>;
   return (
@@ -63,9 +72,14 @@ export function ResultsScreen({ session }: { session: CvSession }) {
       ) : null}
       {model ? (
         <>
+          <button type="button" className={`${s.btn} ${s.btnPrimary}`} disabled={loadingEngine} onClick={() => void openLive()}>
+            {loadingEngine ? 'טוענים מודל' : 'בדיקה במצלמה חיה'}
+          </button>
           <ModelCard model={model} mode={caps.metric_mode} canCapture={caps.can_capture} />
           <ClassStatsList view={formatMetric(caps.metric_mode, model)} canCapture={caps.can_capture} />
-          <TestPanel status={engine.status} error={engine.error} ensure={engine.ensure} />
+          <TestPanel status={engine.status} error={engine.error} ensure={engine.ensure} onLive={openLive} />
+          {caps.can_capture ? <Link href="/capture" className={s.btn}>חזרה לצילום: עוד תמונות לשיפור</Link> : null}
+          {live ? <LiveTest engine={live} onClose={() => setLive(null)} /> : null}
         </>
       ) : !error ? <NoModel caps={caps} /> : null}
     </div>
