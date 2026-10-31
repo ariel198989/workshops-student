@@ -21,6 +21,9 @@ interface Props {
   onToggleAgenda: (id: string) => void;
   onToggleModule: () => void;
   onReset: () => void;
+  /** live broadcast (a real workshop only) */
+  liveLabel?: string | null;
+  onBroadcast?: (entry: AgendaEntry) => void;
 }
 
 function Lines({ text }: { text: string }) {
@@ -72,7 +75,9 @@ function ExerciseBlock({ ex }: { ex: Exercise }) {
   );
 }
 
-export function ModuleCard({ module: m, parsed, entries, open, moduleDone, done, nowId, onOpen, onToggleAgenda, onToggleModule, onReset }: Props) {
+export function ModuleCard({
+  module: m, parsed, entries, open, moduleDone, done, nowId, onOpen, onToggleAgenda, onToggleModule, onReset, liveLabel = null, onBroadcast,
+}: Props) {
   const c = safeContent(m.content);
   const type = he(TYPE_HE, m.module_type);
   const stage = he(STAGE_HE, m.pipeline_stage);
@@ -110,7 +115,7 @@ export function ModuleCard({ module: m, parsed, entries, open, moduleDone, done,
 
           <section className={g.section}>
             <h3 className={g.sectionTitle}>סדר יום</h3>
-            <AgendaList entries={entries} done={done} nowId={nowId} onToggle={onToggleAgenda} />
+            <AgendaList entries={entries} done={done} nowId={nowId} onToggle={onToggleAgenda} liveLabel={liveLabel} onBroadcast={onBroadcast} />
           </section>
 
           {c.exercises.length > 0 ? (

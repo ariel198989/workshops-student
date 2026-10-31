@@ -5,6 +5,7 @@ import { minutesHe, type ModuleRow } from '@/lib/facilitator/guide';
 import { AgendaList, type AgendaEntry } from './AgendaList';
 import { NowBar } from './NowBar';
 import type { Countdown } from './useCountdown';
+import type { LiveControls } from './NowBar';
 import { Tpl } from './Tpl';
 import g from './guide.module.css';
 
@@ -18,9 +19,14 @@ interface Props {
   initialModuleId: string | null;
   onToggle: (id: string) => void;
   onExit: () => void;
+  /** live broadcast (a real workshop only) */
+  live?: LiveControls | null;
+  onBroadcast?: (entry: AgendaEntry) => void;
 }
 
-export function Projector({ sessionLabel, modules, entriesByModule, done, now, clock, initialModuleId, onToggle, onExit }: Props) {
+export function Projector({
+  sessionLabel, modules, entriesByModule, done, now, clock, initialModuleId, onToggle, onExit, live = null, onBroadcast,
+}: Props) {
   const startAt = Math.max(0, modules.findIndex((m) => m.id === initialModuleId));
   const [idx, setIdx] = useState(startAt);
   const m = modules[Math.min(idx, modules.length - 1)];
@@ -62,9 +68,9 @@ export function Projector({ sessionLabel, modules, entriesByModule, done, now, c
         {m.duration_minutes ? <span className={g.projDur}> · {minutesHe(m.duration_minutes)}</span> : null}
       </h2>
       <div className={g.projBody}>
-        <AgendaList entries={entries} done={done} nowId={now?.id ?? null} big onToggle={onToggle} />
+        <AgendaList entries={entries} done={done} nowId={now?.id ?? null} big onToggle={onToggle} liveLabel={live?.label ?? null} onBroadcast={onBroadcast} />
       </div>
-      <NowBar now={now} clock={clock} total={entries.length} doneCount={doneCount} big onDone={onToggle} />
+      <NowBar now={now} clock={clock} total={entries.length} doneCount={doneCount} big onDone={onToggle} live={live} />
     </div>
   );
 }

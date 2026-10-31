@@ -9,12 +9,15 @@ import {
   type ModuleRow, type ParsedNotes, type SessionRow,
 } from '@/lib/facilitator/guide';
 import { fetchSessionPlan, type SessionPlan } from '@/lib/facilitator/guide-api';
+import { clearLiveStep, fetchLiveState, setLiveStep } from '@/lib/facilitator/live-api';
+import { breakArgs, liveLabelOf, liveStepArgs } from '@/lib/facilitator/live-step';
+import { toast } from '@/lib/store';
 import {
   agendaId, emptyProgress, loadProgress, nextUndone, resetModule, saveProgress, toggleAgenda, toggleModule, type GuideProgress,
 } from '@/lib/facilitator/progress';
 import type { AgendaEntry } from './AgendaList';
 import { ModuleCard } from './ModuleCard';
-import { itemSeconds, NowBar } from './NowBar';
+import { itemSeconds, NowBar, type LiveControls } from './NowBar';
 import { useCountdown } from './useCountdown';
 import { Projector } from './Projector';
 import g from './guide.module.css';
@@ -47,6 +50,8 @@ export function GuideStep({ workshopId }: { workshopId: string }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [progress, setProgress] = useState<GuideProgress>(emptyProgress);
   const [projector, setProjector] = useState(false);
+  const [liveLabel, setLiveLabel] = useState<string | null>(null);
+  const [liveBusy, setLiveBusy] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -63,6 +68,38 @@ export function GuideStep({ workshopId }: { workshopId: string }) {
   }, [workshopId, tick]);
 
   useEffect(() => { setProgress(loadProgress(workshopId)); }, [workshopId]);
+
+  // what the students see right now; a failure here is silent (the bar just shows ״לא משודר״)
+  useEffect(() => {
+    let alive = true;
+    fetchLiveState(workshopId)
+      .then((row) => { if (alive) setLiveLabel(liveLabelOf(row)); })
+      .catch(() => { if (alive) setLiveLabel(null); });
+    return () => { alive = false; };
+  }, [workshopId]);
+
+  const runLive = useCallback(async (work: () => Promise<string | null>, okText: string) => {
+    setLiveBusy(true);
+    try {
+      setLiveLabel(await work());
+      toast(okText, true);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'השידור לכיתה לא הצליח.');
+    } finally {
+      setLiveBusy(false);
+    }
+  }, []);
+
+  const onBroadcast = useCallback((entry: AgendaEntry) => {
+    void runLive(async () => liveLabelOf(await setLiveStep(liveStepArgs(workshopId, entry.moduleId, entry.item.title))), 'שודר לכיתה');
+  }, [runLive, workshopId]);
+
+  const live: LiveControls = useMemo(() => ({
+    label: liveLabel,
+    busy: liveBusy,
+    onBreak: () => void runLive(async () => liveLabelOf(await setLiveStep(breakArgs(workshopId))), 'הכיתה בהפסקה'),
+    onClear: () => void runLive(async () => { await clearLiveStep(workshopId); return null; }, 'השידור נוקה'),
+  }), [liveLabel, liveBusy, runLive, workshopId]);
 
   const update = useCallback((next: GuideProgress) => {
     setProgress(next);
@@ -143,16 +180,18 @@ export function GuideStep({ workshopId }: { workshopId: string }) {
               onOpen={() => setOpenId(openId === p.module.id ? null : p.module.id)}
               onToggleAgenda={onToggleAgenda}
               onToggleModule={() => update(toggleModule(progress, p.module.id))}
-              onReset={() => update(resetModule(progress, p.module.id))} />
+              onReset={() => update(resetModule(progress, p.module.id))}
+              liveLabel={liveLabel} onBroadcast={onBroadcast} />
           ))}
         </div>
       )}
 
-      {modules.length > 0 ? <NowBar now={now} clock={clock} total={allEntries.length} doneCount={doneCount} onDone={onToggleAgenda} /> : null}
+      {modules.length > 0 ? <NowBar now={now} clock={clock} total={allEntries.length} doneCount={doneCount} onDone={onToggleAgenda} live={live} /> : null}
 
       {projector ? (
         <Projector sessionLabel={label} modules={modules} entriesByModule={entriesByModule} done={done} now={now} clock={clock}
-          initialModuleId={nowModuleId ?? openId} onToggle={onToggleAgenda} onExit={() => setProjector(false)} />
+          initialModuleId={nowModuleId ?? openId} onToggle={onToggleAgenda} onExit={() => setProjector(false)}
+          live={live} onBroadcast={onBroadcast} />
       ) : null}
     </div>
   );
