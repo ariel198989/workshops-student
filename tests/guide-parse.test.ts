@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  agendaTotal, fmtClock, fmtShortDate, he, KIND_HE, parseAgendaLine, parseNotes, parseSteps, pickDefaultSession,
-  safeContent, sessionChipLabel, sessionTotal, STAGE_HE, TYPE_HE, type SessionRow,
+  agendaTotal, answerIndex, coreTag, fmtClock, fmtShortDate, he, KIND_HE, parseAgendaLine, parseNotes, parseSteps,
+  pickDefaultSession, safeContent, sessionChipLabel, sessionTotal, STAGE_HE, TYPE_HE, type SessionRow,
 } from '../lib/facilitator/guide.ts';
 
 const NOTES = `המטרה במפגש הראשון היא סקרנות, לא הרצאה.
@@ -119,12 +119,33 @@ test('safeContent tolerates missing and malformed jsonb', () => {
   assert.equal(empty.summary, '');
   const c = safeContent({
     summary: 7, objectives: ['א', 3, 'ב'],
-    exercises: [null, { title: 'x', instructions: '1. a', kind: 'group', tool_hook: 'none', questions: [{ q: 'q?', options: ['1', '2'], answer: '2', core: true }, { nope: 1 }] }],
+    exercises: [null, { title: 'x', instructions: '1. a', kind: 'group', tool_hook: 'none', questions: [{ q: 'q?', options: ['1', '2'], answer: 1, core: 'ליבה' }, { nope: 1 }] }],
     materials: [{ label: 'דפים', kind: 'supply' }, { kind: 'x' }],
   });
   assert.equal(c.summary, '');
   assert.deepEqual(c.objectives, ['א', 'ב']);
   assert.equal(c.exercises.length, 1);
-  assert.deepEqual(c.exercises[0].questions, [{ q: 'q?', options: ['1', '2'], answer: '2', core: true }]);
+  assert.deepEqual(c.exercises[0].questions, [{ q: 'q?', options: ['1', '2'], answer: 1, core: 'ליבה' }]);
   assert.deepEqual(c.materials, [{ label: 'דפים', kind: 'supply' }]);
+});
+
+test('question answers are option indexes and core is a tag', () => {
+  const qs = (list: unknown[]) => safeContent({ exercises: [{ title: 't', instructions: '', questions: list }] }).exercises[0].questions ?? [];
+  const [index, scale, legacyText, legacyBool, bad] = qs([
+    { q: 'a', options: ['x', 'y', 'z'], answer: 2, core: 'מושג' },
+    { q: 'scale', options: [], answer: null },
+    { q: 'legacy', options: ['x', 'y'], answer: 'y', core: true },
+    { q: 'bool', options: ['x', 'y'], answer: 0, core: false },
+    { q: 'bad', options: ['x', 'y'], answer: 'not an option', core: '  ' },
+  ]);
+  assert.deepEqual(index, { q: 'a', options: ['x', 'y', 'z'], answer: 2, core: 'מושג' });
+  assert.deepEqual(scale, { q: 'scale', options: [], answer: null, core: null });
+  assert.equal(legacyText.answer, 1, 'a row that stored the option text still marks the right option');
+  assert.equal(legacyText.core, 'ליבה', 'a legacy boolean core keeps its badge');
+  assert.equal(legacyBool.core, null, 'core false is no tag');
+  assert.equal(legacyBool.answer, 0);
+  assert.deepEqual(bad, { q: 'bad', options: ['x', 'y'], answer: null, core: null });
+  assert.equal(answerIndex(-1, ['x', 'y']), null, 'a hidden answer (-1) is not an index');
+  assert.equal(answerIndex(1.5, ['x', 'y']), null);
+  assert.equal(coreTag(''), null);
 });

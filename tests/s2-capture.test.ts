@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  captureFilename, validateClassName, fitWithin, coachTip, COACH_TIPS, createRetryQueue, mergeCounts, friendlyError,
+  captureFilename, validateClassName, fitWithin, coachTip, COACH_TIPS, createRetryQueue, mergeCounts, friendlyError, isAlreadyUploaded, uploadStuck, STUCK_AFTER,
 } from '../lib/cv/capture-utils.ts';
 import { assessPixels } from '../lib/cv/quality.ts';
 
@@ -59,7 +59,7 @@ test('retry queue keeps failed items and delivers them on retry', async () => {
   fail = false;
   await q.retryNow();
   assert.deepEqual(saved, ['one', 'two']);
-  assert.deepEqual(q.stats(), { queued: 0, saved: 2, failing: false, dropped: 0 });
+  assert.deepEqual(q.stats(), { queued: 0, saved: 2, failing: false, dropped: 0, failures: 0 });
 });
 
 test('retry queue refuses new items beyond its cap instead of eating memory', async () => {
@@ -102,4 +102,31 @@ test('friendlyError shows our Hebrew messages and hides raw technical ones', () 
   assert.equal(friendlyError(new Error('אין הרשאה')), 'אין הרשאה');
   assert.equal(friendlyError(new Error('JWT expired')), 'משהו השתבש. נסו שוב בעוד רגע');
   assert.equal(friendlyError('boom', 'ברירת מחדל'), 'ברירת מחדל');
+});
+
+test('retry queue counts consecutive failures of the head item and resets on success', async () => {
+  let fail = true;
+  const q = createRetryQueue<number>(async () => { if (fail) throw new Error('offline'); });
+  q.submit(1);
+  await q.idle();
+  assert.equal(q.stats().failures, 1);
+  assert.equal(uploadStuck(q.stats()), false);
+  for (let i = 1; i < STUCK_AFTER; i++) await q.retryNow();
+  assert.equal(q.stats().failures, STUCK_AFTER);
+  assert.equal(uploadStuck(q.stats()), true, 'after three strikes the UI points at the photo');
+  fail = false;
+  await q.retryNow();
+  assert.deepEqual(q.stats(), { queued: 0, saved: 1, failing: false, dropped: 0, failures: 0 });
+  assert.equal(uploadStuck(q.stats()), false);
+});
+
+test('isAlreadyUploaded recognises a storage object that already landed', () => {
+  assert.equal(isAlreadyUploaded({ statusCode: '409', message: 'The resource already exists' }), true);
+  assert.equal(isAlreadyUploaded({ status: 409, message: 'x' }), true);
+  assert.equal(isAlreadyUploaded(new Error('Duplicate')), true);
+  assert.equal(isAlreadyUploaded(new Error('duplicate key value')), true);
+  assert.equal(isAlreadyUploaded(new Error('Failed to fetch')), false);
+  assert.equal(isAlreadyUploaded({ statusCode: '403', message: 'new row violates row-level security' }), false);
+  assert.equal(isAlreadyUploaded(null), false);
+  assert.equal(isAlreadyUploaded('409'), false);
 });

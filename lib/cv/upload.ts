@@ -2,6 +2,7 @@
 // Upload one captured frame and register it in sc_detections. The exact same
 // row Smart City's SeriesCollect writes for a series frame, minus GPS and campaigns.
 import { sb, uploadBlob } from '../db';
+import { isAlreadyUploaded } from './capture-utils';
 import { DEFAULT_CITY } from './config';
 
 export interface CaptureItem {
@@ -31,9 +32,18 @@ export function detectionRow(item: CaptureItem): Record<string, unknown> {
 
 const uploaded = new Set<string>();
 
+/** The object is in storage after this resolves: a fresh upload, or a 409 from one that landed earlier. */
+async function ensureUploaded(item: CaptureItem): Promise<void> {
+  try {
+    await uploadBlob(item.path, item.blob, 'image/jpeg');
+  } catch (e) {
+    if (!isAlreadyUploaded(e)) throw e;
+  }
+}
+
 export async function saveCapture(item: CaptureItem): Promise<void> {
   if (!uploaded.has(item.path)) {
-    await uploadBlob(item.path, item.blob, 'image/jpeg');
+    await ensureUploaded(item);
     uploaded.add(item.path); // upload ok but insert failed: retry only the insert
   }
   const { error } = await sb.from('sc_detections').insert(detectionRow(item));

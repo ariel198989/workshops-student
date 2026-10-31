@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, CloudUploadIcon } from '@hugeicons/core-free-icons';
-import { coachTip, TARGET_FIRST, TARGET_STRONG, validateClassName } from '@/lib/cv/capture-utils';
+import { coachTip, STUCK_HINT, TARGET_FIRST, TARGET_STRONG, uploadStuck, validateClassName } from '@/lib/cv/capture-utils';
 import { ClassPicker } from './ClassPicker';
 import { useCamera } from './useCamera';
 import { useCapture } from './useCapture';
@@ -85,7 +85,9 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
       ) : <div className={c.spacer} />}
 
       <div className={c.bottom}>
-        {cap.issueText ? (
+        {uploadStuck(cap.stats) ? (
+          <div className={`${c.coach} ${c.coachWarn}`} role="alert">{STUCK_HINT}</div>
+        ) : cap.issueText ? (
           <div className={`${c.coach} ${c.coachWarn}`} role="status">{cap.issueText}</div>
         ) : ready ? (
           <div className={c.coach} role="status">

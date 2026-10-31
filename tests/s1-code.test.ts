@@ -6,9 +6,16 @@ test('uppercases and trims', () => {
   assert.equal(normalizeCode('  ofek-h2-27 '), 'OFEK-H2-27');
 });
 
-test('removes inner spaces', () => {
-  assert.equal(normalizeCode('ofek h2 27'), 'OFEKH227');
+test('whitespace between parts becomes a single hyphen', () => {
+  assert.equal(normalizeCode('ofek h2 27'), 'OFEK-H2-27');
   assert.equal(normalizeCode('OFEK - H2 - 27'), 'OFEK-H2-27');
+  assert.equal(normalizeCode('OFEK\tH2\n27'), 'OFEK-H2-27');
+  assert.equal(normalizeCode('OFEK   H2'), 'OFEK-H2');
+});
+
+test('edge whitespace never leaves a hyphen behind', () => {
+  assert.equal(normalizeCode('  OFEK H2 27  '), 'OFEK-H2-27');
+  assert.equal(normalizeCode(' - OFEK - '), 'OFEK');
 });
 
 test('unifies unicode dashes to a hyphen', () => {

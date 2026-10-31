@@ -10,7 +10,7 @@ import { saveCapture, type CaptureItem } from '@/lib/cv/upload';
 import { toast } from '@/lib/store';
 
 const RETRY_EVERY_MS = 10000;
-const EMPTY_STATS: QueueStats = { queued: 0, saved: 0, failing: false, dropped: 0 };
+const EMPTY_STATS: QueueStats = { queued: 0, saved: 0, failing: false, dropped: 0, failures: 0 };
 
 interface Args { videoRef: RefObject<HTMLVideoElement | null>; team: string; userId: string; className: string }
 

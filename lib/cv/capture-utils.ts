@@ -64,7 +64,31 @@ export function mergeCounts(a: Record<string, number>, b: Record<string, number>
   return out;
 }
 
-export interface QueueStats { queued: number; saved: number; failing: boolean; dropped: number }
+/**
+ * Storage answering "this object already exists" (409 / Duplicate) means an earlier
+ * attempt landed and only the response was lost: the upload is done, not failed.
+ */
+export function isAlreadyUploaded(e: unknown): boolean {
+  if (!e || typeof e !== 'object') return false;
+  const { statusCode, status, message } = e as { statusCode?: unknown; status?: unknown; message?: unknown };
+  if (String(statusCode ?? '') === '409' || String(status ?? '') === '409') return true;
+  return typeof message === 'string' && /already exists|duplicate/i.test(message);
+}
+
+/** Consecutive failures of the same head item before the UI says the photo itself is stuck. */
+export const STUCK_AFTER = 3;
+export const STUCK_HINT = 'התמונה לא עולה. בדקו רשת ונסו שוב';
+
+export interface QueueStats {
+  queued: number;
+  saved: number;
+  failing: boolean;
+  dropped: number;
+  /** how many times in a row the current head item failed; 0 once anything is saved */
+  failures: number;
+}
+
+export const uploadStuck = (s: QueueStats): boolean => s.failing && s.failures >= STUCK_AFTER;
 
 export interface RetryQueue<T> {
   submit: (item: T) => boolean;
@@ -88,9 +112,10 @@ export function createRetryQueue<T>(
   let saved = 0;
   let dropped = 0;
   let failing = false;
+  let failures = 0;
   let running: Promise<void> | null = null;
 
-  const stats = (): QueueStats => ({ queued: items.length, saved, failing, dropped });
+  const stats = (): QueueStats => ({ queued: items.length, saved, failing, dropped, failures });
   const notify = () => opts.onChange?.(stats());
 
   async function drain(): Promise<void> {
@@ -100,9 +125,11 @@ export function createRetryQueue<T>(
         items.shift();
         saved += 1;
         failing = false;
+        failures = 0;
         notify();
       } catch {
         failing = true;
+        failures += 1;
         notify();
         return;
       }

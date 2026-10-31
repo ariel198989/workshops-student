@@ -51,16 +51,16 @@ function ExerciseBlock({ ex }: { ex: Exercise }) {
               <tr key={i}>
                 <td>
                   <Tpl text={q.q} />
-                  {q.core ? <span className={`${g.tag} ${g.tagCore}`}>ליבה</span> : null}
+                  {q.core ? <span className={`${g.tag} ${g.tagCore}`}>{q.core}</span> : null}
                 </td>
                 <td>
                   <ul className={g.options}>
                     {q.options.map((o, j) => (
-                      <li key={j} className={o === q.answer ? g.qCorrect : ''}>
-                        {o === q.answer ? <span aria-label="התשובה הנכונה">✓ </span> : null}{o}
+                      <li key={j} className={j === q.answer ? g.qCorrect : ''}>
+                        {j === q.answer ? <span aria-label="התשובה הנכונה">✓ </span> : null}{o}
                       </li>
                     ))}
-                    {q.answer && !q.options.includes(q.answer) ? <li className={g.qCorrect}>✓ {q.answer}</li> : null}
+                    {q.answer === null && q.options.length === 0 ? <li className={g.quiet}>סולם 1 עד 5</li> : null}
                   </ul>
                 </td>
               </tr>

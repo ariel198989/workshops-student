@@ -12,7 +12,8 @@ export interface SessionRow {
   status: string | null;
 }
 
-export interface Question { q: string; options: string[]; answer: string; core?: boolean }
+/** answer is the index of the correct option (null for an attitude item); core is a short tag such as 'ליבה'. */
+export interface Question { q: string; options: string[]; answer: number | null; core: string | null }
 export interface Exercise {
   title: string;
   instructions: string;
@@ -200,17 +201,40 @@ export interface SafeContent {
   template_notes: string;
 }
 
+const strList = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+
+/** The correct option as an index. A legacy row that stored the option text is mapped to its index; anything else is null. */
+export function answerIndex(answer: unknown, options: readonly string[]): number | null {
+  if (typeof answer === 'number' && Number.isInteger(answer) && answer >= 0) return answer;
+  if (typeof answer === 'string') {
+    const i = options.indexOf(answer);
+    return i >= 0 ? i : null;
+  }
+  return null;
+}
+
+/** core arrives as a tag string; a legacy boolean true becomes the default tag so the badge still shows. */
+export function coreTag(core: unknown): string | null {
+  if (core === true) return 'ליבה';
+  return typeof core === 'string' && core.trim() ? core.trim() : null;
+}
+
+function safeQuestion(q: { q: string; options?: unknown; answer?: unknown; core?: unknown }): Question {
+  const options = strList(q.options);
+  return { q: q.q, options, answer: answerIndex(q.answer, options), core: coreTag(q.core) };
+}
+
 /** Content arrives as jsonb; a row written by hand may be missing keys or have the wrong shape. */
 export function safeContent(c: unknown): SafeContent {
   const o = (c && typeof c === 'object' ? c : {}) as ModuleContent;
   const str = (v: unknown): string => (typeof v === 'string' ? v : '');
-  const strs = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+  const strs = strList;
   const exercises: Exercise[] = Array.isArray(o.exercises)
     ? o.exercises.filter((e): e is Exercise => !!e && typeof e === 'object').map((e) => ({
       title: str(e.title), instructions: str(e.instructions), kind: e.kind ?? null, tool_hook: e.tool_hook ?? null,
       questions: Array.isArray(e.questions)
         ? e.questions.filter((q): q is Question => !!q && typeof q === 'object' && typeof q.q === 'string')
-          .map((q) => ({ q: q.q, options: strs(q.options), answer: str(q.answer), core: q.core === true }))
+          .map((q) => safeQuestion(q))
         : undefined,
     }))
     : [];
