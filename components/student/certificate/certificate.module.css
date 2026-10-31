@@ -20,5 +20,9 @@
 .verify{display:flex;flex-direction:column;align-items:center;gap:.5mm;font-size:8.5pt;color:#64748B}
 .verify code{font-family:"Space Grotesk","Rubik",monospace;font-size:8.5pt;background:none;border:none;padding:0;color:#0F1C2E}
 .no{font-weight:600;color:#0F1C2E}
+/* take-home QR: bottom start corner, next to the verify block, 22 mm as printed */
+.share{position:absolute;bottom:12mm;inset-inline-start:22mm;margin:0;display:flex;flex-direction:column;align-items:center;gap:1.5mm;width:34mm}
+.shareQr{display:block;width:22mm;height:22mm;image-rendering:pixelated}
+.shareCaption{font-size:7.5pt;line-height:1.3;color:#334155;text-align:center}
 .revoked{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;
   font-size:110pt;font-weight:800;color:rgba(220,38,38,.16);transform:rotate(-18deg)}

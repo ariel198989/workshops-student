@@ -103,6 +103,8 @@ export interface CertificateModel {
   certificateNo: string;
   verifyUrl: string;
   revoked: boolean;
+  /** the take-home page as a QR (PNG data URL); absent when the group has no share token or the QR is still rendering */
+  share?: { url: string; qr: string } | null;
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');

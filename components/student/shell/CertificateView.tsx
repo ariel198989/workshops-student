@@ -9,6 +9,8 @@ import { PrintHost } from '@/components/student/certificate/PrintHost';
 import { fetchMyCertificate } from '@/lib/student/certificate';
 import { useStudentContext } from '@/lib/student/context';
 import { certificateVariantFor } from '@/lib/student/labels';
+import { takeHomeUrl } from '@/lib/student/share';
+import { useQrDataUrl } from '@/lib/student/use-qr';
 import { buildCertificateModel } from '@/lib/ws/certificate-templates';
 import type { WsCertificate } from '@/lib/ws/types';
 import k from './kit.module.css';
@@ -64,10 +66,14 @@ export function CertificateView() {
   }, [loaded, participantId]);
 
   const cert = load.state === 'done' ? load.cert : null;
-  const model = useMemo(
-    () => (cert ? buildCertificateModel(cert, certificateVariantFor(format), window.location.origin) : null),
-    [cert, format],
-  );
+  // the take-home QR: skipped quietly when the group has no share token yet
+  const shareUrl = cert ? takeHomeUrl(window.location.origin, ctx?.group?.share_token) : null;
+  const shareQr = useQrDataUrl(shareUrl);
+  const model = useMemo(() => {
+    if (!cert) return null;
+    const base = buildCertificateModel(cert, certificateVariantFor(format), window.location.origin);
+    return shareUrl && shareQr ? { ...base, share: { url: shareUrl, qr: shareQr } } : base;
+  }, [cert, format, shareUrl, shareQr]);
 
   if (load.state === 'loading') return <div className={k.spin}><Spinner large /></div>;
   if (load.state === 'error') {

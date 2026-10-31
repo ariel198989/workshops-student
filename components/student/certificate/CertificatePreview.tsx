@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { TAKE_HOME_QR_CAPTION } from '@/lib/student/share';
 import type { CertificateModel } from '@/lib/ws/certificate-templates';
 import styles from './certificate.module.css';
 
@@ -20,12 +21,22 @@ function detailsOf(m: CertificateModel): Detail[] {
   return items.filter((d): d is Detail => d !== null);
 }
 
-/** A4 landscape, print-ready certificate. The verify URL is printed as text (no QR library installed). */
+/**
+ * A4 landscape, print-ready certificate. The verify URL is printed as text; the take-home page (the group's
+ * model on a family phone) is a 22 mm QR in the corner when the group has a share token.
+ */
 export function CertificatePreview({ model, zoom = 1 }: CertificatePreviewProps) {
   const style: CSSProperties | undefined = zoom === 1 ? undefined : { zoom };
   const details = detailsOf(model);
   return (
     <div className={styles.sheet} style={style} dir="rtl" lang="he">
+      {model.share ? (
+        <figure className={styles.share}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={model.share.qr} alt={`ברקוד לקישור ${model.share.url}`} className={styles.shareQr} />
+          <figcaption className={styles.shareCaption}>{TAKE_HOME_QR_CAPTION}</figcaption>
+        </figure>
+      ) : null}
       <span className={styles.brand}>Corewise</span>
       <h1 className={styles.title}>{model.title}</h1>
       <p className={styles.intro}>{model.intro}</p>
