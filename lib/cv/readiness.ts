@@ -130,6 +130,79 @@ export function accuracyPercent(accuracy: number | null | undefined): number | n
   return Math.round(accuracy <= 1 ? accuracy * 100 : accuracy);
 }
 
+// ── wait states: when a job has been sitting too long, say so and let the requester cancel ──
+
+/** A pending job this old while nothing at all is running means the Colab trainer is not up. */
+export const PENDING_STALE_MS = 30 * 60000;
+/** A running job this old is stuck (a real training run finishes well inside an hour). */
+export const RUNNING_STUCK_MS = 60 * 60000;
+
+export type JobAlert = 'trainer-idle' | 'stuck';
+
+export const JOB_ALERT_HE: Readonly<Record<JobAlert, string>> = {
+  'trainer-idle': 'המאמן לא פעיל כרגע. המדריך צריך להפעיל את האימון',
+  stuck: 'האימון נתקע',
+};
+
+interface AlertJob { status: string; created_at: string; started_at?: string | null }
+
+const ms = (iso: string | null | undefined, fallback: string): number => {
+  const t = Date.parse(iso ?? '');
+  return Number.isNaN(t) ? Date.parse(fallback) : t;
+};
+
+/** null while the wait is normal; `queue` is everyone's pending/running jobs (fetchQueue). */
+export function jobAlert(job: AlertJob, queue: readonly QueueJob[], now: number): JobAlert | null {
+  if (job.status === 'pending') {
+    const anyRunning = queue.some((j) => j.status === 'running');
+    return !anyRunning && now - ms(job.created_at, job.created_at) >= PENDING_STALE_MS ? 'trainer-idle' : null;
+  }
+  if (job.status === 'running') {
+    return now - ms(job.started_at, job.created_at) >= RUNNING_STUCK_MS ? 'stuck' : null;
+  }
+  return null;
+}
+
+/** The requester may cancel a pending job any time, and a running one only once it is stuck. */
+export function canCancelJob(job: Pick<AlertJob, 'status'>, alert: JobAlert | null, mine: boolean): boolean {
+  if (!mine) return false;
+  return job.status === 'pending' || (job.status === 'running' && alert === 'stuck');
+}
+
+interface FailedJob { error?: string | null; error_message?: string | null; failure_reason?: string | null }
+
+/** Whatever column the trainer wrote its reason to, if any. */
+export function jobFailureReason(job: FailedJob): string | null {
+  for (const v of [job.error_message, job.error, job.failure_reason]) {
+    if (typeof v === 'string' && v.trim()) return v.trim();
+  }
+  return null;
+}
+
+export function failedLabel(reason: string | null | undefined): string {
+  return reason ? `האימון נכשל: ${trainErrorHe(reason)}` : 'האימון נכשל';
+}
+
+const TRAIN_ERRORS: readonly [RegExp, string][] = [
+  [/failed to fetch|networkerror|network request failed|load failed|ERR_INTERNET|offline/i, 'אין חיבור לאינטרנט. בדקו את הרשת ונסו שוב'],
+  [/timeout|timed out|504|statement timeout/i, 'השרת לא ענה בזמן. נסו שוב בעוד רגע'],
+  [/row-level security|permission denied|42501|not authorized|jwt|401|403/i, 'אין הרשאה לפתוח אימון מהחשבון הזה. התחברו מחדש'],
+  [/duplicate|already (exists|has)|23505|active job/i, 'כבר יש משימת אימון פתוחה לקבוצה'],
+  [/payload too large|too large|413|exceeded the maximum/i, 'הדאטה גדול מדי להעלאה. נסו עם פחות תמונות'],
+  [/bucket|storage|upload|object/i, 'העלאת הדאטה לענן נכשלה. נסו שוב'],
+  [/out of memory|cuda|gpu|oom/i, 'המאמן נגמר לו הזיכרון. המדריך צריך להפעיל אותו מחדש'],
+  [/no images|empty dataset|not enough|too few/i, 'אין מספיק תמונות מתויגות לאימון'],
+];
+
+/** Raw trainer/database/network text to one Hebrew sentence. Hebrew input passes through untouched. */
+export function trainErrorHe(raw: string | null | undefined, fallback = 'פתיחת האימון נכשלה. בדקו את החיבור ונסו שוב'): string {
+  const text = (raw ?? '').trim();
+  if (!text) return fallback;
+  if (/[֐-׿]/.test(text)) return text;
+  const hit = TRAIN_ERRORS.find(([re]) => re.test(text));
+  return hit ? hit[1] : fallback;
+}
+
 /** "waiting for 12 minutes" style label for a job age in milliseconds. */
 export function waitLabel(ms: number): string {
   const min = Math.max(0, Math.floor(ms / 60000));

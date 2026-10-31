@@ -2,10 +2,9 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Spinner } from '@/components/ui/Spinner';
-import { friendlyError } from '@/lib/cv/capture-utils';
 import { startTeamTrainingJob } from '@/lib/cv/jobs';
 import { fetchPoolStats, type PoolStats } from '@/lib/cv/pool';
-import { coverageRows, overallTier, trainBlockReason } from '@/lib/cv/readiness';
+import { coverageRows, overallTier, trainBlockReason, trainErrorHe } from '@/lib/cv/readiness';
 import { toast } from '@/lib/store';
 import { JobsPanel } from './JobsPanel';
 import { ReadinessList } from './ReadinessList';
@@ -41,7 +40,7 @@ export function TrainScreen({ session }: { session: CvSession }) {
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
-  const { jobs, active, ahead, justDone, refresh } = useTrainJobs(team);
+  const { jobs, active, ahead, alert, failed, justDone, refresh } = useTrainJobs(team);
 
   const loadPool = useCallback(() => fetchPoolStats(team).then(setPool).catch(() => setPool({ total: 0, byClass: [], contributors: 0 })), [team]);
   useEffect(() => { void loadPool(); }, [loadPool]);
@@ -57,10 +56,11 @@ export function TrainScreen({ session }: { session: CvSession }) {
     setError('');
     try {
       const r = await startTeamTrainingJob(userId, team, setProgress);
-      if (!r.ok) setError(r.error);
+      // r.error may be raw database text; the mapper turns it into one Hebrew sentence
+      if (!r.ok) setError(trainErrorHe(r.error));
       else { toast('משימת האימון נפתחה ונכנסה לתור.', true); navigator.vibrate?.(120); await refresh(); }
     } catch (e) {
-      setError(friendlyError(e, 'פתיחת האימון נכשלה. בדקו את החיבור ונסו שוב.'));
+      setError(trainErrorHe(e instanceof Error ? e.message : ''));
     } finally {
       setBusy(false);
       setProgress('');
@@ -68,6 +68,7 @@ export function TrainScreen({ session }: { session: CvSession }) {
   }
 
   if (!pool && !jobs) return <div className={s.spin}><Spinner large /></div>;
+  const canStart = !reason && !busy;
   return (
     <div className={s.stack}>
       <h1 className={s.h1}>אימון המודל</h1>
@@ -82,12 +83,13 @@ export function TrainScreen({ session }: { session: CvSession }) {
         ) : null}
       </div>
       <Explain />
-      <button type="button" className={`${s.btn} ${s.btnPrimary}`} disabled={!!reason || busy} onClick={() => void start()}>
+      <button type="button" className={`${s.btn} ${s.btnPrimary}`} disabled={!canStart} onClick={() => void start()}>
         {busy ? (progress || 'מכינים') : 'אמנו מודל'}
       </button>
       {reason && !busy ? <p className={`${s.small} ${s.center}`}>{reason}</p> : null}
       {error ? <p className={`${s.note} ${s.noteBad}`} role="alert">{error}</p> : null}
-      <JobsPanel jobs={jobs ?? []} active={active} ahead={ahead} userId={userId} justDone={justDone} onChanged={refresh} />
+      <JobsPanel jobs={jobs ?? []} active={active} ahead={ahead} alert={alert} failed={failed} userId={userId} justDone={justDone}
+        onRetry={canStart ? () => void start() : undefined} onChanged={refresh} />
     </div>
   );
 }

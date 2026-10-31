@@ -3,7 +3,67 @@ import assert from 'node:assert/strict';
 import {
   classTier, coverageRows, overallTier, trainBlockReason, queueAhead, jobTone,
   RED_BELOW, STRONG_FROM, MIN_TRAIN_IMAGES, weakClasses, modelVerdict, accuracyPercent, waitLabel,
+  jobAlert, canCancelJob, failedLabel, jobFailureReason, trainErrorHe, JOB_ALERT_HE, PENDING_STALE_MS, RUNNING_STUCK_MS,
 } from '../lib/cv/readiness.ts';
+
+const MIN = 60000;
+const T0 = Date.parse('2026-10-31T10:00:00Z');
+const at = (minutesAgo: number) => new Date(T0 - minutesAgo * MIN).toISOString();
+
+test('jobAlert: a pending job older than 30 minutes with nothing running means the trainer is down', () => {
+  const idle = [{ id: 'me', status: 'pending', created_at: at(31) }];
+  assert.equal(jobAlert({ status: 'pending', created_at: at(31) }, idle, T0), 'trainer-idle');
+  assert.equal(jobAlert({ status: 'pending', created_at: at(29) }, idle, T0), null, 'under 30 minutes is a normal wait');
+  const busy = [...idle, { id: 'x', status: 'running', created_at: at(50) }];
+  assert.equal(jobAlert({ status: 'pending', created_at: at(90) }, busy, T0), null, 'someone else is training: the queue is just long');
+  assert.equal(PENDING_STALE_MS, 30 * MIN);
+  assert.equal(JOB_ALERT_HE['trainer-idle'], 'המאמן לא פעיל כרגע. המדריך צריך להפעיל את האימון');
+});
+
+test('jobAlert: a running job older than 60 minutes is stuck, measured from started_at when present', () => {
+  assert.equal(jobAlert({ status: 'running', created_at: at(61) }, [], T0), 'stuck');
+  assert.equal(jobAlert({ status: 'running', created_at: at(59) }, [], T0), null);
+  assert.equal(jobAlert({ status: 'running', created_at: at(200), started_at: at(10) }, [], T0), null, 'queued long, running briefly');
+  assert.equal(jobAlert({ status: 'running', created_at: at(5), started_at: 'garbage' }, [], T0), null, 'bad started_at falls back');
+  assert.equal(jobAlert({ status: 'done', created_at: at(500) }, [], T0), null);
+  assert.equal(jobAlert({ status: 'failed', created_at: at(500) }, [], T0), null);
+  assert.equal(RUNNING_STUCK_MS, 60 * MIN);
+  assert.equal(JOB_ALERT_HE.stuck, 'האימון נתקע');
+});
+
+test('canCancelJob: the requester cancels pending always and running only when stuck', () => {
+  assert.equal(canCancelJob({ status: 'pending' }, null, true), true);
+  assert.equal(canCancelJob({ status: 'pending' }, 'trainer-idle', true), true);
+  assert.equal(canCancelJob({ status: 'running' }, null, true), false);
+  assert.equal(canCancelJob({ status: 'running' }, 'stuck', true), true);
+  assert.equal(canCancelJob({ status: 'pending' }, null, false), false, 'not my job');
+  assert.equal(canCancelJob({ status: 'done' }, null, true), false);
+});
+
+test('failed jobs render in Hebrew with the reason when there is one', () => {
+  assert.equal(failedLabel(null), 'האימון נכשל');
+  assert.equal(failedLabel('CUDA out of memory'), 'האימון נכשל: המאמן נגמר לו הזיכרון. המדריך צריך להפעיל אותו מחדש');
+  assert.equal(failedLabel('לא נמצאו תמונות'), 'האימון נכשל: לא נמצאו תמונות');
+  assert.equal(jobFailureReason({ error_message: ' boom ' }), 'boom');
+  assert.equal(jobFailureReason({ error: 'x', error_message: '' }), 'x');
+  assert.equal(jobFailureReason({ failure_reason: 'y' }), 'y');
+  assert.equal(jobFailureReason({}), null);
+});
+
+test('trainErrorHe maps raw English errors to one Hebrew sentence and never leaks them', () => {
+  assert.match(trainErrorHe('TypeError: Failed to fetch'), /אין חיבור/);
+  assert.match(trainErrorHe('new row violates row-level security policy for table "sc_training_jobs"'), /הרשאה/);
+  assert.match(trainErrorHe('duplicate key value violates unique constraint'), /כבר יש משימת/);
+  assert.match(trainErrorHe('Payload too large'), /גדול מדי/);
+  assert.match(trainErrorHe('The resource was not found in the bucket'), /העלאת הדאטה/);
+  assert.match(trainErrorHe('canceling statement due to statement timeout'), /בזמן/);
+  assert.equal(trainErrorHe('הודעה בעברית'), 'הודעה בעברית', 'our own copy passes through');
+  const fallback = trainErrorHe('relation sc_x does not exist');
+  assert.doesNotMatch(fallback, /relation|sc_x/);
+  assert.match(fallback, /נסו שוב/);
+  assert.equal(trainErrorHe('', 'ברירת מחדל'), 'ברירת מחדל');
+  assert.equal(trainErrorHe(null, 'ברירת מחדל'), 'ברירת מחדל');
+});
 
 test('classTier uses 50 / 150 thresholds', () => {
   assert.equal(classTier(0), 'red');
