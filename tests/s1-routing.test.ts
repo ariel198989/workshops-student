@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { decideAccess, isPublicPath, STUDENT_HOME, STUDENT_JOIN } from '../lib/student/access.ts';
+import { decideAccess, facilitatorGateMode, isPublicPath, STUDENT_HOME, STUDENT_JOIN } from '../lib/student/access.ts';
+import { FREE_WORKSHOP } from '../lib/pocket/store.ts';
 import type { Whoami } from '../lib/ws/types.ts';
 
 const base = { user_id: 'u1', workshops: [] };
@@ -31,6 +32,17 @@ test('public verify path is always public, even without whoami', () => {
   assert.equal(isPublicPath('/facilitator'), true);
   assert.equal(isPublicPath('/facilitator/free'), true);
   assert.equal(isPublicPath(null), false);
+});
+
+test('facilitator layout: picker and free mode are open, a workshop id needs staff', () => {
+  assert.equal(FREE_WORKSHOP, 'free');
+  assert.equal(facilitatorGateMode(null), 'open', 'the picker renders without a session');
+  assert.equal(facilitatorGateMode(undefined), 'open');
+  assert.equal(facilitatorGateMode(''), 'open');
+  assert.equal(facilitatorGateMode(FREE_WORKSHOP), 'open', '/facilitator/free never touches the database');
+  assert.equal(facilitatorGateMode('6f1c2a3e-1111-4222-8333-444455556666'), 'staff');
+  assert.equal(facilitatorGateMode('FREE'), 'staff', 'the free segment is exact');
+  assert.equal(facilitatorGateMode('not-a-uuid'), 'staff');
 });
 
 test('staff without a participation sees the console notice until they choose to preview', () => {

@@ -5,11 +5,11 @@ import { useStore } from '@/lib/store';
 import { resetStudentContext } from '@/lib/student/context';
 import { whoami as fetchWhoami, wsAuthStore } from '@/lib/ws/staff';
 import { Spinner } from '@/components/ui/Spinner';
-import { AuthCard } from '@/components/student/shell/AuthCard';
+import { AuthCard, type AuthVariant } from '@/components/student/shell/AuthCard';
 
 function NoAccess({ email }: { email?: string }) {
   return (
-    <div className="center-screen">
+    <main className="center-screen">
       <div className="hud denied">
         <h1>לא הצלחנו לטעון את החשבון</h1>
         <p className="muted">
@@ -20,15 +20,21 @@ function NoAccess({ email }: { email?: string }) {
           <button onClick={() => void logout()}>התנתקות</button>
         </div>
       </div>
-    </div>
+    </main>
   );
+}
+
+interface Props {
+  children: ReactNode;
+  /** which signed-out card to show: the student sign-up/login (default) or the staff login */
+  variant?: AuthVariant;
 }
 
 /**
  * Signed out: sign up / login. Signed in: waits for ws_whoami (once per user), then renders children.
  * What the signed-in user sees (student shell, join flow, staff notice) is decided in AppFrame.
  */
-export function AuthGate({ children }: { children: ReactNode }) {
+export function AuthGate({ children, variant = 'student' }: Props) {
   const { user, loaded } = useStore(authStore);
   const { whoami, loaded: whoamiLoaded } = useStore(wsAuthStore);
   const userId = user?.id;
@@ -52,7 +58,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (!loaded || (user && !whoamiLoaded)) {
     return <div className="center-screen"><Spinner large /></div>;
   }
-  if (!user) return <AuthCard />;
+  if (!user) return <AuthCard variant={variant} />;
   if (!whoami) return <NoAccess email={user.email} />;
   return <>{children}</>;
 }

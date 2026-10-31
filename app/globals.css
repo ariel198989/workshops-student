@@ -62,7 +62,10 @@ button.danger:hover:not(:disabled){background:rgba(220,38,38,.16);border-color:v
 button.ghost{background:transparent;border-color:transparent;color:var(--muted)}
 button.ghost:hover:not(:disabled){background:#EEF2F6;border-color:transparent;color:var(--ink)}
 button.sm{padding:4px 10px;min-height:36px;font-size:13px}
-/* a link styled as the primary button (next/link next to a real <button>) */
+/* links styled as buttons (next/link next to a real <button>) */
+a[role=button]{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:8px 14px;
+  border:1px solid #CBD5E1;border-radius:var(--radius);background:#fff;color:var(--ink);font-size:15px;font-weight:500}
+a[role=button]:hover{background:#F1F5F9;border-color:#94A3B8;text-decoration:none}
 a.primary[role=button]{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:8px 14px;
   border:1px solid var(--cy);border-radius:var(--radius);background:var(--cy);color:#fff;font-size:15px;font-weight:600}
 a.primary[role=button]:hover{background:#12807A;border-color:#12807A;color:#fff;text-decoration:none}

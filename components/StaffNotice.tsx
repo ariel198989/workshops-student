@@ -5,7 +5,7 @@ import { CONSOLE_URL } from '@/lib/config';
 /** Shown to staff accounts that have no student side: this app is for students, the console is elsewhere. */
 export function StaffNotice({ onPreview }: { onPreview: () => void }) {
   return (
-    <div className="center-screen">
+    <main className="center-screen">
       <div className="hud denied">
         <h1>זה האזור של התלמידים</h1>
         <p className="muted">
@@ -16,6 +16,6 @@ export function StaffNotice({ onPreview }: { onPreview: () => void }) {
           <button type="button" onClick={() => void logout()}>התנתקות</button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

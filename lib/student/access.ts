@@ -1,4 +1,5 @@
 // Pure routing rules for the student app. No Supabase or React imports, so Node can test it.
+import { FREE_WORKSHOP } from '../pocket/store.ts';
 import type { Whoami } from '../ws/types';
 import { isCaptureOnly, type StudentCaps } from './caps.ts';
 
@@ -11,6 +12,18 @@ export function isPublicPath(pathname: string | null): boolean {
   // /facilitator renders bare: its own layout gates on staff (FacilitatorGate)
   return pathname === '/verify' || pathname.startsWith('/verify/')
     || pathname === '/facilitator' || pathname.startsWith('/facilitator/');
+}
+
+/**
+ * What the facilitator layout does with its child segment: the picker (no segment) and
+ * /facilitator/free are open to anyone and make no database calls; a workshop id needs a
+ * signed-in staff account.
+ */
+export type FacilitatorGateMode = 'open' | 'staff';
+
+export function facilitatorGateMode(segment: string | null | undefined): FacilitatorGateMode {
+  if (!segment || segment === FREE_WORKSHOP) return 'open';
+  return 'staff';
 }
 
 /**
