@@ -1,11 +1,13 @@
 'use client';
-// זום פיקסלים חי: the camera on the class or an object, shown at 8 → 16 → 32 →
-// 64 → 128 columns and then the full picture. Kids guess "מי זה? מה זה?" at
-// every level; 'מספרים' shows the digit the computer gets for each square.
+// זום פיקסלים חי: the camera on an object or a printed picture (never on the
+// children), shown at 8 → 16 → 32 → 64 → 128 columns and then the full picture.
+// Kids guess "מה זה?" at every level; 'מספרים' shows the digit the computer gets
+// for each square.
 import { useCallback, useEffect, useState } from 'react';
 import {
   canShowDigits, cellCountLabel, FULL, fullCountLabel, LEVELS, nextLevel, prevLevel, type PixelLevel,
 } from '@/lib/pixels/pixelate';
+import { CameraFlip } from '../CameraFlip';
 import { useFacilitatorCamera } from '../useFacilitatorCamera';
 import { usePixelCanvas, type PixelInfo } from './usePixelCanvas';
 import s from './pixels.module.css';
@@ -81,6 +83,7 @@ export function PixelStep({ onExit }: PixelStepProps = {}) {
       <div className={s.stage} style={{ '--ar': aspect } as React.CSSProperties}>
         <video ref={cam.videoRef} className={s.hiddenVideo} playsInline muted />
         <canvas ref={canvasRef} className={s.canvas} aria-label="המצלמה בפיקסלים" />
+        <CameraFlip cam={cam} />
         {digitsAllowed ? <DigitGrid info={info} /> : null}
         {frozen ? <span className={s.frozenTag}>הקפאה</span> : null}
         {cam.state === 'error' ? (
@@ -96,6 +99,7 @@ export function PixelStep({ onExit }: PixelStepProps = {}) {
       </div>
 
       <div className={s.count} aria-live="polite">{counterText(level, info)}</div>
+      <p className={s.hint}>כוונו את המצלמה לחפץ או לתמונה מודפסת, לא לאנשים</p>
 
       <LevelButtons level={level} onPick={setLevel} />
 

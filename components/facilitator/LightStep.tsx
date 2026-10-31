@@ -1,11 +1,13 @@
 'use client';
 // Step 4: "אם רואה X אז ירוק/אדום" and a classroom-sized traffic light that
 // follows the live prediction through a 1.5s debounce.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { engineStore, notReadyText } from '@/lib/pocket/engine';
 import {
   defaultRules, initialLight, lightStep, ruleTarget, toggleRule, type LightDebounce, type LightRule,
 } from '@/lib/pocket/score';
 import type { RobotApi } from '@/lib/robot/useRobot';
+import { useStore } from '@/lib/store';
 import { RobotFace } from './robot/RobotFace';
 import { SpeechBubble } from './robot/SpeechBubble';
 import { useFacilitatorCamera } from './useFacilitatorCamera';
@@ -32,12 +34,16 @@ function RuleBuilder({ rules, onToggle }: { rules: LightRule[]; onToggle: (cls: 
   );
 }
 
+/** Full-screen modal: focus lands on the exit button so a keyboard or screen reader is inside it at once. */
 function TrafficLight({ rules, robot, onExit }: { rules: LightRule[]; robot: RobotApi; onExit: () => void }) {
   const cam = useFacilitatorCamera();
   const live = useLivePrediction(cam.videoRef, cam.state === 'live');
   const [light, setLight] = useState<LightDebounce>(initialLight);
+  const exitRef = useRef<HTMLButtonElement>(null);
   const target = ruleTarget(rules, live.prediction?.label ?? null, live.prediction?.confidence ?? 0);
   const { say } = robot;
+
+  useEffect(() => { exitRef.current?.focus(); }, []);
 
   // the reducer is fed on every prediction and on a timer, so a steady target also fires after 1.5s
   useEffect(() => {
@@ -62,8 +68,8 @@ function TrafficLight({ rules, robot, onExit }: { rules: LightRule[]; robot: Rob
   useEffect(() => () => say('idle'), [say]);
 
   return (
-    <div className={f.lightScreen} role="dialog" aria-label="רמזור">
-      <button type="button" className={f.exitLight} onClick={onExit}>יציאה</button>
+    <div className={f.lightScreen} role="dialog" aria-modal="true" aria-label="רמזור">
+      <button ref={exitRef} type="button" className={f.exitLight} onClick={onExit}>יציאה</button>
       <div className={f.lightRobot}>
         <RobotFace size="sm" mood={robot.mood} speaking={robot.speaking} gaze={0.5} />
         <SpeechBubble line={robot.line} size="sm" />
@@ -82,6 +88,7 @@ function TrafficLight({ rules, robot, onExit }: { rules: LightRule[]; robot: Rob
 }
 
 export function LightStep({ classes, ready, robot }: { classes: string[]; ready: boolean; robot: RobotApi }) {
+  const engine = useStore(engineStore);
   const [rules, setRules] = useState<LightRule[]>(() => defaultRules(classes));
   const [open, setOpen] = useState(false);
 
@@ -94,7 +101,7 @@ export function LightStep({ classes, ready, robot }: { classes: string[]; ready:
       <p className={f.lead}>הרמזור מקשיב למודל</p>
       <p className={f.sub}>לחיצה על הצבע מחליפה בין ירוק ואדום. כשהמודל לא בטוח, הרמזור לא משתנה.</p>
       <RuleBuilder rules={rules} onToggle={(cls) => setRules((r) => toggleRule(r, cls))} />
-      {!ready ? <p className={f.err}>עוד אין מודל. למדו לפחות שתי מחלקות קודם.</p> : null}
+      {!ready ? <p className={f.err} role={engine.status === 'error' ? 'alert' : undefined}>{notReadyText(engine.status)}</p> : null}
       <div className={f.actions}>
         <button type="button" className={`primary ${f.bigBtn}`} disabled={!ready} onClick={() => setOpen(true)}>הדלקת הרמזור</button>
       </div>

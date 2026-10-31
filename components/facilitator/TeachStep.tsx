@@ -2,6 +2,7 @@
 // Step 2: tap-tap-tap frames into the selected class, then one "למד" pass.
 import { useRef, useState } from 'react';
 import { dotStates, RECOMMENDED_PER_CLASS } from '@/lib/pocket/score';
+import { CameraFlip } from './CameraFlip';
 import { grabFrame, useFacilitatorCamera } from './useFacilitatorCamera';
 import f from './facilitator.module.css';
 
@@ -22,6 +23,8 @@ interface Props {
   onNext: () => void;
 }
 
+const THUMBS_SHOWN = 12;
+
 function ClassCard({ name, learned, queued, on, onPick }: { name: string; learned: number; queued: number; on: boolean; onPick: () => void }) {
   const total = learned + queued;
   return (
@@ -36,6 +39,25 @@ function ClassCard({ name, learned, queued, on, onPick }: { name: string; learne
         ))}
       </span>
     </button>
+  );
+}
+
+/** The last few queued frames; each thumbnail is a real button that removes its frame. */
+function QueuedThumbs({ queue, onDrop }: { queue: QueuedFrame[]; onDrop: (index: number) => void }) {
+  const first = Math.max(0, queue.length - THUMBS_SHOWN);
+  return (
+    <div className={f.thumbs} role="group" aria-label="תמונות שמחכות ללמידה">
+      {queue.slice(first).map((q, i) => {
+        const index = first + i;
+        return (
+          <button key={`${index}-${q.durl.length}`} type="button" className={f.thumbBtn} onClick={() => onDrop(index)}
+            aria-label={`מחיקת תמונה ${index + 1}`} title={`${q.label}: לחיצה מוחקת`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={q.durl} alt="" className={f.thumb} />
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -63,6 +85,7 @@ export function TeachStep(p: Props) {
       <div className={f.teachRow}>
         <div className={f.stage}>
           <video ref={cam.videoRef} className={f.video} playsInline muted />
+          <CameraFlip cam={cam} />
           {flashAt ? <div key={flashAt} className={f.flash} /> : null}
           {cam.state === 'error' ? (
             <div className={f.stageMsg} role="alert">
@@ -103,18 +126,7 @@ export function TeachStep(p: Props) {
           <button type="button" className={`primary ${f.learn}`} onClick={p.onNext}>הלאה, בודקים</button>
         ) : null}
       </div>
-      {p.queue.length > 0 ? (
-        <div className={f.thumbs} aria-label="תמונות שמחכות ללמידה">
-          {p.queue.slice(-12).map((q, i) => {
-            const index = p.queue.length - Math.min(12, p.queue.length) + i;
-            return (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img key={`${index}-${q.durl.length}`} src={q.durl} alt={q.label} title="לחיצה מוחקת" className={f.thumb}
-                onClick={() => p.onDropShot(index)} />
-            );
-          })}
-        </div>
-      ) : null}
+      {p.queue.length > 0 ? <QueuedThumbs queue={p.queue} onDrop={p.onDropShot} /> : null}
     </>
   );
 }

@@ -4,6 +4,7 @@
 // moment for grades 1-4, and a general classroom voting tool. Counts only,
 // never percentages.
 import { useEffect, useRef, useState } from 'react';
+import { CameraFlip } from '../CameraFlip';
 import { useFacilitatorCamera } from '../useFacilitatorCamera';
 import { useFullscreen } from './useFullscreen';
 import { useVoteCount } from './useVoteCount';
@@ -15,6 +16,8 @@ export interface VoteStepProps {
 }
 
 const QUESTION_MAX = 120;
+/** Default on-screen instruction: cards go on the table so the camera never frames the children. */
+const TABLE_INSTRUCTION = 'שימו את הכרטיסים על השולחן. המצלמה מצלמת שולחנות בלבד, לא ילדים';
 
 function CountTile({ colour, value }: { colour: 'green' | 'red'; value: number }) {
   const [pop, setPop] = useState(false);
@@ -49,11 +52,12 @@ export function VoteStep({ question: initialQuestion = '' }: VoteStepProps) {
 
   return (
     <section ref={rootRef} className={`${s.root} ${fs.fallback ? s.fixed : ''}`} aria-label="הצבעה במצלמה">
-      <h2 className={`${s.question} ${question ? '' : s.questionEmpty}`}>{question || 'הרימו כרטיס: ירוק או אדום'}</h2>
+      <h2 className={`${s.question} ${question ? '' : s.questionEmpty}`}>{question || TABLE_INSTRUCTION}</h2>
 
       <div className={s.stage}>
         <video ref={cam.videoRef} className={s.video} playsInline muted />
         <canvas ref={vote.overlayRef} className={s.tint} aria-hidden />
+        <CameraFlip cam={cam} />
         {cam.state === 'error' ? (
           <div className={s.stageMsg} role="alert">
             <div>

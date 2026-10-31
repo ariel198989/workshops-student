@@ -14,14 +14,19 @@ export function cameraErrorMessage(e: unknown): string {
   return 'המצלמה לא נפתחה. נסו לרענן את הדף.';
 }
 
-/** Rear camera, 720p-ish; the caller owns the stream and must stop it. */
-export async function openRearCamera(): Promise<MediaStream> {
+export type Facing = 'environment' | 'user';
+
+/** A camera by facing (ideal, so a laptop with one webcam still opens), 720p-ish; the caller owns the stream and must stop it. */
+export async function openCamera(facing: Facing = 'environment'): Promise<MediaStream> {
   if (!navigator.mediaDevices?.getUserMedia) throw new Error('unsupported');
   return navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+    video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } },
     audio: false,
   });
 }
+
+/** Rear camera on phones, the only webcam on laptops. */
+export const openRearCamera = (): Promise<MediaStream> => openCamera('environment');
 
 export const stopStream = (s: MediaStream | null): void => s?.getTracks().forEach((t) => t.stop());
 

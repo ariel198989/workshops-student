@@ -2,16 +2,29 @@
 // Same contract as components/student/cv/useCamera, kept separate so the
 // facilitator surface does not depend on files under active student work.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { cameraErrorMessage, openRearCamera, stopStream } from '@/lib/cv/camera';
+import { cameraErrorMessage, openCamera, stopStream, type Facing } from '@/lib/cv/camera';
 
 export type CameraState = 'starting' | 'live' | 'error';
 
-/** Rear camera on phones, the only webcam on laptops; tracks always stop on unmount. */
-export function useFacilitatorCamera() {
+export interface FacilitatorCamera {
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  state: CameraState;
+  error: string;
+  retry: () => void;
+  /** which camera is open; flip() switches rear <-> front (a laptop with one webcam just reopens it) */
+  facing: Facing;
+  flip: () => void;
+}
+
+const other = (f: Facing): Facing => (f === 'environment' ? 'user' : 'environment');
+
+/** Rear camera by default, the only webcam on laptops; tracks always stop on unmount or flip. */
+export function useFacilitatorCamera(initial: Facing = 'environment'): FacilitatorCamera {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [state, setState] = useState<CameraState>('starting');
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
+  const [facing, setFacing] = useState<Facing>(initial);
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -20,7 +33,7 @@ export function useFacilitatorCamera() {
     setState('starting');
     (async () => {
       try {
-        stream = await openRearCamera();
+        stream = await openCamera(facing);
         if (disposed || !video) { stopStream(stream); return; }
         video.srcObject = stream;
         await video.play();
@@ -36,10 +49,11 @@ export function useFacilitatorCamera() {
       stopStream(stream);
       if (video) video.srcObject = null;
     };
-  }, [attempt]);
+  }, [attempt, facing]);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
-  return { videoRef, state, error, retry };
+  const flip = useCallback(() => setFacing(other), []);
+  return { videoRef, state, error, retry, facing, flip };
 }
 
 const GRAB_WIDTH = 480;

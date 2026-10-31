@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
 import {
-  addExample, clearExamples, dropClass, engineStore, imageFromDataUrl, preloadEngine, restore, serialize,
+  addExample, clearExamples, dropClass, ENGINE_MISSING, engineStore, imageFromDataUrl, preloadEngine, restore, serialize,
 } from '@/lib/pocket/engine';
 import { canClassify } from '@/lib/pocket/score';
 import { clearTrainer, FREE_WORKSHOP, loadTrainer, saveTrainer } from '@/lib/pocket/store';
@@ -109,7 +109,9 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
       navigator.vibrate?.(150);
       say('learned', { count: items.length, className: joinHe([...new Set(items.map((x) => x.label))]) });
     } catch (e) {
-      setNote(e instanceof Error && /[֐-׿]/.test(e.message) ? e.message : 'הלמידה נעצרה. נסו שוב.');
+      // the engine, not the facilitator, is the usual reason: say so instead of a vague "try again"
+      if (engineStore.get().status === 'error') setNote(`${ENGINE_MISSING}. התמונות שצילמתם נשמרו, למדו שוב כשהמנוע יעלה.`);
+      else setNote(e instanceof Error && /[֐-׿]/.test(e.message) ? e.message : 'הלמידה נעצרה. נסו שוב.');
     } finally {
       setLearning(null);
     }
@@ -172,6 +174,12 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
       </header>
 
       <main className={f.main}>
+        {engine.status === 'error' ? (
+          <div className={f.engineBanner} role="alert">
+            <span>{ENGINE_MISSING}</span>
+            <button type="button" onClick={preloadEngine}>ניסיון נוסף</button>
+          </div>
+        ) : null}
         {note ? <p className={f.ok} role="status">{note}</p> : null}
         {step === 'guide' && hasGuide && workshopId ? <GuideStep workshopId={workshopId} /> : null}
         {step === 'classes' ? (

@@ -1,6 +1,6 @@
 'use client';
 // ״מקרן״: big type, agenda only, one module at a time with prev/next.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { minutesHe, type ModuleRow } from '@/lib/facilitator/guide';
 import { AgendaList, type AgendaEntry } from './AgendaList';
 import { NowBar } from './NowBar';
@@ -24,6 +24,10 @@ export function Projector({ sessionLabel, modules, entriesByModule, done, now, c
   const startAt = Math.max(0, modules.findIndex((m) => m.id === initialModuleId));
   const [idx, setIdx] = useState(startAt);
   const m = modules[Math.min(idx, modules.length - 1)];
+  const exitRef = useRef<HTMLButtonElement>(null);
+
+  // a modal takes focus with it: the exit button is the first stop
+  useEffect(() => { exitRef.current?.focus(); }, []);
 
   // Escape leaves; arrows move between modules (keyboard on the projector laptop)
   useEffect(() => {
@@ -43,7 +47,7 @@ export function Projector({ sessionLabel, modules, entriesByModule, done, now, c
   return (
     <div className={g.proj} role="dialog" aria-modal="true" aria-label="מצב מקרן">
       <header className={g.projHead}>
-        <button type="button" className={g.projBtn} onClick={onExit}>יציאה ממקרן</button>
+        <button ref={exitRef} type="button" className={g.projBtn} onClick={onExit}>יציאה ממקרן</button>
         <span className={g.projSession}>{sessionLabel}</span>
         {modules.length > 1 ? (
           <nav className={g.projNav} aria-label="מודולים">

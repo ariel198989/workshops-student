@@ -5,8 +5,11 @@ import { useEffect, useState } from 'react';
 import {
   barLevel, confidenceWord, emptyTally, recordResult, TALLY_SIZE, tallyFull, tallyLabel, type Tally,
 } from '@/lib/pocket/score';
+import { engineStore, notReadyText } from '@/lib/pocket/engine';
 import { moodFromPrediction } from '@/lib/robot/mood';
 import type { RobotApi } from '@/lib/robot/useRobot';
+import { useStore } from '@/lib/store';
+import { CameraFlip } from './CameraFlip';
 import { RobotFace } from './robot/RobotFace';
 import { SpeechBubble } from './robot/SpeechBubble';
 import { useFacilitatorCamera } from './useFacilitatorCamera';
@@ -54,6 +57,7 @@ function TallyPanel({ tally, onMark, onReset }: { tally: Tally; onMark: (ok: boo
 
 export function TestStep({ ready, robot, onNext }: { ready: boolean; robot: RobotApi; onNext: () => void }) {
   const cam = useFacilitatorCamera();
+  const engine = useStore(engineStore);
   const liveOn = ready && cam.state === 'live';
   const live = useLivePrediction(cam.videoRef, liveOn);
   const [tally, setTally] = useState<Tally>(emptyTally);
@@ -77,6 +81,7 @@ export function TestStep({ ready, robot, onNext }: { ready: boolean; robot: Robo
       <div className={f.testRow}>
         <div className={f.stage}>
           <video ref={cam.videoRef} className={f.video} playsInline muted />
+          <CameraFlip cam={cam} />
           {cam.state === 'error' ? (
             <div className={f.stageMsg} role="alert">
               <div>
@@ -85,7 +90,7 @@ export function TestStep({ ready, robot, onNext }: { ready: boolean; robot: Robo
               </div>
             </div>
           ) : !ready ? (
-            <div className={f.stageMsg}><p>עוד אין מודל. למדו לפחות שתי מחלקות קודם.</p></div>
+            <div className={f.stageMsg} role={engine.status === 'error' ? 'alert' : undefined}><p>{notReadyText(engine.status)}</p></div>
           ) : null}
           {live.frozen ? <span className={f.frozenTag}>עצור</span> : null}
           {liveOn ? (

@@ -70,9 +70,18 @@ export function ensureEngine(): Promise<void> {
   return loading;
 }
 
-/** Start downloading while the facilitator is still naming classes. */
+/** Start downloading while the facilitator is still naming classes. Calling it again after an error retries. */
 export function preloadEngine(): void {
   ensureEngine().catch(() => undefined);
+}
+
+export const ENGINE_MISSING = 'המנוע לא נטען. בדקו חיבור לאינטרנט';
+
+/** Why the live steps cannot run yet: the engine (network) before the model (not enough classes taught). */
+export function notReadyText(status: EngineStatus): string {
+  if (status === 'error') return `${ENGINE_MISSING} ונסו שוב.`;
+  if (status === 'loading' || status === 'idle') return 'המנוע נטען, עוד רגע.';
+  return 'עוד אין מודל. למדו לפחות שתי מחלקות קודם.';
 }
 
 const syncCounts = (): void => { engineStore.set({ counts: knn ? { ...knn.getClassExampleCount() } : {} }); };

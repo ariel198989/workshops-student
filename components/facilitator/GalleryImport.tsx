@@ -2,7 +2,7 @@
 // L1 flow: the groups photographed on school tablets; the facilitator picks
 // which gallery classes become trainer classes and the frames are embedded
 // here, in the browser. Downloads only; nothing is written anywhere.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { addExample, imageFromUrl } from '@/lib/pocket/engine';
 import {
   fetchGalleryRows, fetchWorkshopGroups, frameUrl, GALLERY_CAP_PER_CLASS, galleryClasses,
@@ -20,12 +20,26 @@ interface Props {
 }
 
 interface Loaded { groups: GalleryGroup[]; rows: GalleryRow[]; classes: GalleryClass[] }
+interface Progress { done: number; total: number; failed: number }
+
+const ALL_FAILED = 'אף תמונה לא נפתחה, לא נוספו מחלקות. בדקו את החיבור ונסו שוב.';
 
 export function GalleryImport({ workshopId, classes, onImported, onClose }: Props) {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
-  const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const importing = !!progress && progress.done < progress.total;
+
+  useEffect(() => { closeRef.current?.focus(); }, []);
+
+  // Escape closes the sheet, except while frames are still being embedded
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !importing) onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [importing, onClose]);
 
   useEffect(() => {
     let alive = true;
@@ -59,9 +73,11 @@ export function GalleryImport({ workshopId, classes, onImported, onClose }: Prop
     });
   };
 
+  /** Embeds every picked frame. When not one of them opened, no class is added and the sheet stays. */
   const run = async () => {
     if (!loaded || picked.length === 0) return;
     const rows = capPerClass(loaded.rows, picked, GALLERY_CAP_PER_CLASS);
+    setError(null);
     setProgress({ done: 0, total: rows.length, failed: 0 });
     let failed = 0;
     for (let i = 0; i < rows.length; i++) {
@@ -73,6 +89,11 @@ export function GalleryImport({ workshopId, classes, onImported, onClose }: Prop
       }
       setProgress({ done: i + 1, total: rows.length, failed });
     }
+    if (rows.length > 0 && failed === rows.length) {
+      setProgress(null);
+      setError(ALL_FAILED);
+      return;
+    }
     onImported(picked);
   };
 
@@ -81,7 +102,7 @@ export function GalleryImport({ workshopId, classes, onImported, onClose }: Prop
       <div className={f.sheetBox}>
         <div className={f.tallyHead}>
           <span className={f.sheetTitle}>מהגלריה של הקבוצות</span>
-          <button type="button" onClick={onClose} disabled={!!progress && progress.done < progress.total}>סגירה</button>
+          <button ref={closeRef} type="button" onClick={onClose} disabled={importing}>סגירה</button>
         </div>
         {error ? <p className={f.err} role="alert">{error}</p> : null}
         {!loaded && !error ? <Spinner large /> : null}
