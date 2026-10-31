@@ -31,6 +31,9 @@ test('public verify path is always public, even without whoami', () => {
   assert.equal(isPublicPath('/verifying'), false);
   assert.equal(isPublicPath('/facilitator'), true);
   assert.equal(isPublicPath('/facilitator/free'), true);
+  assert.equal(isPublicPath('/g'), true);
+  assert.equal(isPublicPath('/g/abcdefghjkmnpqrstuvw'), true);
+  assert.equal(isPublicPath('/go'), false);
   assert.equal(isPublicPath(null), false);
 });
 

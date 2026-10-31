@@ -7,5 +7,12 @@
 .by{text-align:center;margin:2px 0 8px;font-size:12px;letter-spacing:.04em;color:var(--muted)}
 .intro{margin-bottom:18px}
 .foot{margin-top:16px;text-align:center;font-size:14px;color:var(--muted)}
+/* the email account is the third door: folded away behind one link until it is needed */
+.emailLink{display:block;width:100%;min-height:48px;margin-top:14px;padding:0 8px;border:0;border-radius:12px;background:transparent;
+  color:var(--cy-text);font-size:15px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.emailLink:hover:not(:disabled){background:#EEF2F6;border-color:transparent;color:var(--cy-text)}
+.emailBlock{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.codeNote{margin:0 0 14px;padding:10px 14px;border-radius:14px;background:var(--cy-soft);color:#0B5F5A;font-size:14.5px;text-align:center}
+.codeNote b{font-family:var(--font-num);letter-spacing:.08em}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.card{animation:none}}

@@ -22,11 +22,32 @@ export interface DeviceLoginOk {
   group: { id: string; number: number; label: string };
 }
 
+/** Why the sign-in failed, so a screen can decide between retry, manual entry and a plain message. */
+export type DeviceLoginFailure = 'network' | 'bad_request' | 'not_found' | 'bad_pin' | 'locked' | 'server';
+
 /** Error whose message is already safe, Hebrew copy for the group. */
-export class DeviceLoginError extends Error {}
+export class DeviceLoginError extends Error {
+  readonly kind: DeviceLoginFailure;
+  constructor(message: string, kind: DeviceLoginFailure = 'server') {
+    super(message);
+    this.kind = kind;
+  }
+}
+
+export function deviceLoginFailureKind(status: number): DeviceLoginFailure {
+  switch (status) {
+    case 400: return 'bad_request';
+    case 404: return 'not_found';
+    case 401: return 'bad_pin';
+    case 429: return 'locked';
+    default: return 'server';
+  }
+}
 
 // ── Hebrew for every answer of the edge function ──
-const GENERIC = 'השרת לא זמין כרגע. נסו שוב בעוד רגע';
+export const SERVER_UNAVAILABLE = 'השרת לא זמין כרגע. נסו שוב בעוד רגע';
+export const OFFLINE = 'אין חיבור לאינטרנט. בדקו את הרשת ונסו שוב';
+const GENERIC = SERVER_UNAVAILABLE;
 const BAD_REQUEST = 'משהו בפרטים לא תקין. בדקו את הקוד, את מספר הקבוצה ואת הקוד הסודי';
 const NOT_FOUND = 'לא מצאנו סדנה פתוחה עם הקוד והקבוצה האלה';
 const BAD_PIN = 'הקוד הסודי לא נכון';
@@ -63,7 +84,13 @@ export function validateDeviceLogin(input: DeviceLoginInput): string | null {
   return null;
 }
 
-type FetchLike = (url: string, init: RequestInit) => Promise<{ status: number; ok: boolean; json: () => Promise<unknown> }>;
+export type FetchLike = (url: string, init: RequestInit) => Promise<{ status: number; ok: boolean; json: () => Promise<unknown> }>;
+
+/** Either body the edge function accepts: the tablet's three fields, or the group's QR token. */
+export type DeviceLoginBody = { code: string; group: number; pin: string } | { join_token: string };
+
+/** Turns a non-200 status and its JSON body into the Hebrew the screen shows. */
+export type ErrorMessageOf = (status: number, body: unknown) => string;
 
 function isOkBody(v: unknown): v is DeviceLoginOk & { ok: true } {
   if (!v || typeof v !== 'object') return false;
@@ -72,24 +99,31 @@ function isOkBody(v: unknown): v is DeviceLoginOk & { ok: true } {
     && !!b.workshop && typeof b.workshop === 'object' && !!b.group && typeof b.group === 'object';
 }
 
-/** POSTs to the edge function. Throws DeviceLoginError with Hebrew text; never logs the password. */
-export async function requestDeviceLogin(input: DeviceLoginInput, fetchImpl: FetchLike = fetch): Promise<DeviceLoginOk> {
-  const invalid = validateDeviceLogin(input);
-  if (invalid) throw new DeviceLoginError(invalid);
+/** POSTs one accepted body to the edge function. Throws DeviceLoginError with Hebrew text; never logs the password. */
+export async function postDeviceLogin(
+  body: DeviceLoginBody, messageOf: ErrorMessageOf = deviceLoginErrorMessage, fetchImpl: FetchLike = fetch,
+): Promise<DeviceLoginOk> {
   let res: Awaited<ReturnType<FetchLike>>;
   try {
     res = await fetchImpl(DEVICE_LOGIN_URL, {
       method: 'POST',
       headers: { 'content-type': 'application/json', apikey: SB_KEY, authorization: `Bearer ${SB_KEY}` },
-      body: JSON.stringify({ code: normalizeCode(input.code), group: input.group, pin: input.pin }),
+      body: JSON.stringify(body),
     });
   } catch {
-    throw new DeviceLoginError('אין חיבור לאינטרנט. בדקו את הרשת ונסו שוב');
+    throw new DeviceLoginError(OFFLINE, 'network');
   }
-  const body = await res.json().catch(() => null);
-  if (!res.ok) throw new DeviceLoginError(deviceLoginErrorMessage(res.status, body));
-  if (!isOkBody(body)) throw new DeviceLoginError(GENERIC);
-  return { email: body.email, password: body.password, workshop: body.workshop, group: body.group };
+  const answer = await res.json().catch(() => null);
+  if (!res.ok) throw new DeviceLoginError(messageOf(res.status, answer), deviceLoginFailureKind(res.status));
+  if (!isOkBody(answer)) throw new DeviceLoginError(GENERIC, 'server');
+  return { email: answer.email, password: answer.password, workshop: answer.workshop, group: answer.group };
+}
+
+/** Code + group + PIN → credentials. Validates first, then POSTs. */
+export async function requestDeviceLogin(input: DeviceLoginInput, fetchImpl: FetchLike = fetch): Promise<DeviceLoginOk> {
+  const invalid = validateDeviceLogin(input);
+  if (invalid) throw new DeviceLoginError(invalid, 'bad_request');
+  return postDeviceLogin({ code: normalizeCode(input.code), group: input.group, pin: input.pin }, deviceLoginErrorMessage, fetchImpl);
 }
 
 // ── PIN keypad ──

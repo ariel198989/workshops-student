@@ -9,3 +9,10 @@
 .groupText b{font-size:17px;font-weight:600;overflow:hidden;text-overflow:ellipsis}
 .groupText span{font-size:14px;color:var(--muted)}
 .notice{margin-bottom:16px;padding:12px 14px;border-radius:14px;background:var(--cy-soft);color:#0B5F5A;font-size:15px}
+
+/* the code that came from a link or a QR: shown, not typed */
+.codeRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.codeChip{min-height:40px;padding:0 14px;font-family:var(--font-num);font-size:16px;font-weight:700;letter-spacing:.08em}
+.linkBtn{min-height:44px;padding:0 10px;border:0;border-radius:10px;background:transparent;color:var(--cy-text);
+  font-size:15px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.linkBtn:hover:not(:disabled){background:transparent;border-color:transparent;color:#12807A}
