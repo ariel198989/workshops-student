@@ -54,7 +54,7 @@ export function StudentHome() {
         </button>
       </div>
       <HomeBanner />
-      <NextStepCard progress={ctx.progress} caps={ctx.caps} />
+      <NextStepCard progress={ctx.progress} caps={ctx.caps} live={ctx.live} checksCount={ctx.checks.length} />
       {ctx.certificate ? <CertificateTeaser /> : null}
       <MissionCard ctx={ctx} />
       <ProgressCard progress={ctx.progress} />

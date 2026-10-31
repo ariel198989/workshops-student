@@ -103,3 +103,42 @@ test('no target classes: train once total tagged reaches 50', () => {
   assert.equal(pickNextStep(progress({ photos: 60, tagged: 60 })).href, '/train');
   assert.equal(pickNextStep(progress({ photos: 30, tagged: 30 })).href, '/capture');
 });
+
+// ── live step preference (migration 0013) ──
+import { pickHomeStep, type LiveState } from '../lib/student/live.ts';
+import { capsForDepth } from '../lib/student/caps.ts';
+
+const live = (over: Partial<LiveState> = {}): LiveState => ({
+  session_module_id: null, step_key: 'tag', label: 'מתייגים', allowed_routes: ['tag'], message: null, updated_at: 't', ...over,
+});
+
+test('pickHomeStep without live is pickNextStep', () => {
+  const p = progress({ photos: 12, untagged: 7 });
+  assert.deepEqual(pickHomeStep(p, capsForDepth('L3'), null), pickNextStep(p));
+});
+
+test('pickHomeStep prefers the live step over the computed one', () => {
+  const p = progress({ photos: 100, tagged: 100, coverage: [{ name: 'a', tagged: 100 }], model });
+  assert.equal(pickNextStep(p).href, '/results');
+  const s = pickHomeStep(p, capsForDepth('L3'), live());
+  assert.equal(s.href, '/tag');
+  assert.equal(s.title, 'תייגו עכשיו');
+});
+
+test('pickHomeStep: a live step the caps keep closed falls back to the computed step', () => {
+  const p = progress({ photos: 20, untagged: 20 });
+  const s = pickHomeStep(p, capsForDepth('L1'), live({ step_key: 'train', allowed_routes: ['train'] }));
+  assert.equal(s.href, '/capture', 'L1 students never see /train, whatever the facilitator broadcast');
+});
+
+test('pickHomeStep: /check needs checks in this workshop', () => {
+  const l = live({ step_key: 'check', allowed_routes: ['check'], label: 'שאלון' });
+  assert.equal(pickHomeStep(progress(), capsForDepth('L3'), l, 0).href, '/capture');
+  assert.equal(pickHomeStep(progress(), capsForDepth('L3'), l, 2).href, '/check');
+});
+
+test('pickHomeStep: a break points home and names it', () => {
+  const s = pickHomeStep(progress({ photos: 5, untagged: 5 }), capsForDepth('L3'), live({ step_key: null, label: 'הפסקה', allowed_routes: [] }));
+  assert.equal(s.href, '/');
+  assert.equal(s.title, 'עכשיו: הפסקה');
+});

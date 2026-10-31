@@ -6,9 +6,11 @@ import { sb } from '../db';
 import { createStore, useStore } from '../store';
 import { normalizeCaps, type CycleDepth, type StudentCaps } from './caps';
 import { normalizeChecks, type ConceptCheck } from './concept';
+import { normalizeLive, type LiveState } from './live';
 
 export type { StudentCaps, CycleDepth, MetricMode, TagMode } from './caps';
 export type { ConceptCheck, ConceptQuestion } from './concept';
+export type { LiveState } from './live';
 
 export interface StudentCoverage { name: string; tagged: number }
 
@@ -39,8 +41,14 @@ export interface StudentContext {
   caps: StudentCaps;
   /** concept-check modules of this workshop; [] when none (or before the migration) */
   checks: ConceptCheck[];
+  /** the facilitator's current step (ws_live_state); null means no lock, today's behaviour */
+  live: LiveState | null;
   me: { participant_id: string; full_name: string; roles: string[] };
-  group: { id: string; number: number; display_name: string | null; team_name: string } | null;
+  group: {
+    id: string; number: number; display_name: string | null; team_name: string;
+    /** token of the public take-home page /model/<token>; absent on contexts served before migration 0013 */
+    share_token?: string | null;
+  } | null;
   teammates: { full_name: string; roles: string[] }[];
   problem: { title: string; statement: string; client_name: string | null } | null;
   subproblem: { title: string; statement: string | null; task_type: string; target_classes: string[]; success_metric: string | null } | null;
@@ -53,7 +61,7 @@ interface State { ctx: StudentContext | null; loading: boolean; loaded: boolean;
 
 export const studentStore = createStore<State>({ ctx: null, loading: false, loaded: false, error: null });
 
-/** Fills caps and checks so every screen can rely on them, whatever the server's version. Pure. */
+/** Fills caps, checks and live so every screen can rely on them, whatever the server's version. Pure. */
 export function normalizeStudentContext(raw: unknown): StudentContext | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown> & { workshop?: { cycle_depth?: unknown } };
@@ -61,7 +69,15 @@ export function normalizeStudentContext(raw: unknown): StudentContext | null {
     ...(r as unknown as StudentContext),
     caps: normalizeCaps(r.caps, r.workshop?.cycle_depth),
     checks: normalizeChecks(r.checks),
+    live: normalizeLive(r.live),
   };
+}
+
+/** Replaces only the live step of the loaded context (realtime event); a no-op before the context exists. */
+export function setStudentLive(live: LiveState | null): void {
+  const { ctx } = studentStore.get();
+  if (!ctx) return;
+  studentStore.set({ ctx: { ...ctx, live } });
 }
 
 export async function reloadStudentContext(): Promise<StudentContext | null> {
