@@ -23,7 +23,7 @@
 .chipBtn{flex-shrink:0;min-height:48px;padding:0 18px;border-radius:999px;border:1.5px solid #CBD5E1;
   background:#fff;color:var(--ink);font-size:16px;font-weight:500}
 .chipBtn:hover:not(:disabled){background:var(--cy-soft);border-color:var(--cy)}
-.chipOn,.chipOn:hover:not(:disabled){background:var(--cy);border-color:var(--cy);color:#fff}
+.chipOn,.chipOn:hover:not(:disabled){background:var(--cy-text);border-color:var(--cy-text);color:#fff}
 .toggle{display:flex;align-items:center;gap:10px;min-height:48px;font-size:15px;color:var(--body)}
 .toggle input{width:22px;height:22px;accent-color:var(--cy)}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}

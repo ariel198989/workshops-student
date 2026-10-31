@@ -9,11 +9,11 @@
 .banner{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:14px;background:var(--cy-soft);color:#0B5F5A}
 .banner svg{flex-shrink:0;margin-top:2px}
 .bannerText{flex:1;min-width:0;font-size:15px;line-height:1.5}
-.bannerClose{display:grid;place-items:center;width:36px;height:36px;margin:-7px -8px -7px 0;border:0;border-radius:10px;background:transparent;color:inherit;cursor:pointer}
+.bannerClose{display:grid;place-items:center;width:44px;height:44px;margin:-10px -10px -10px 0;border:0;border-radius:10px;background:transparent;color:inherit;cursor:pointer}
 .bannerClose:hover:not(:disabled){background:rgba(23,148,140,.14);border-color:transparent}
 
 /* next step: the one big call to action */
-.next{display:flex;align-items:center;gap:14px;padding:18px;border-radius:18px;background:var(--cy);color:#fff;
+.next{display:flex;align-items:center;gap:14px;padding:18px;border-radius:18px;background:var(--cy-text);color:#fff;
   text-decoration:none;box-shadow:0 6px 18px rgba(23,148,140,.28)}
 .next:hover{background:#12807A;color:#fff;text-decoration:none}
 .nextText{flex:1;min-width:0}
@@ -56,7 +56,7 @@
 .avatar{flex-shrink:0;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;
   background:var(--cy-soft);color:#0B5F5A;font-weight:700}
 .personName{flex:1;min-width:0;font-weight:500;color:var(--ink)}
-.me{font-size:12.5px;color:var(--cy);font-weight:600}
+.me{font-size:12.5px;color:var(--cy-text);font-weight:600}
 
 .nextSession{padding:14px;border-radius:14px;background:var(--cy-soft);margin-bottom:10px}
 .nextSession b{display:block;font-size:17px;color:var(--ink)}
@@ -64,7 +64,7 @@
 .sessions{list-style:none;margin:0;padding:0}
 .sessionRow{display:flex;align-items:baseline;gap:10px;min-height:44px;padding:8px 0;font-size:15px}
 .sessionRow + .sessionRow{border-top:1px solid var(--line)}
-.sessionNo{flex-shrink:0;width:24px;font-family:var(--font-num);font-weight:700;color:var(--cy)}
+.sessionNo{flex-shrink:0;width:24px;font-family:var(--font-num);font-weight:700;color:var(--cy-text)}
 .sessionTitle{flex:1;min-width:0;color:var(--ink)}
 .sessionWhen{font-size:13px;color:var(--muted);text-align:end}
 .done{opacity:.55}

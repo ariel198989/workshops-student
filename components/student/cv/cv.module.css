@@ -14,7 +14,7 @@
   padding:0 20px;border-radius:14px;border:1px solid #CBD5E1;background:#fff;color:var(--ink);
   font-size:16px;font-weight:600;text-decoration:none;cursor:pointer}
 .btn:hover:not(:disabled){background:#F1F5F9;border-color:#94A3B8;text-decoration:none}
-.btnPrimary{background:var(--cy);border-color:var(--cy);color:#fff}
+.btnPrimary{background:var(--cy-text);border-color:var(--cy-text);color:#fff}
 .btnPrimary:hover:not(:disabled){background:#12807A;border-color:#12807A;color:#fff}
 .btnWarn{background:var(--gold-soft);border-color:var(--gold-line);color:#92400E}
 .btnWarn:hover:not(:disabled){background:rgba(217,119,6,.18);border-color:var(--gold);color:#92400E}
@@ -55,7 +55,7 @@
 .tierTextOk{color:#0F766E}
 .tierTextStrong{color:#0B5F5A}
 .rowFoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
-.link{display:inline-flex;align-items:center;min-height:44px;font-size:14px;font-weight:600;color:var(--cy)}
+.link{display:inline-flex;align-items:center;min-height:44px;font-size:14px;font-weight:600;color:var(--cy-text)}
 
 /* model / stats */
 .bigNum{font-family:var(--font-num);font-size:44px;font-weight:700;line-height:1;color:var(--ink)}

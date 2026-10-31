@@ -30,13 +30,13 @@
 .optionOn,.optionOn:hover:not(:disabled){background:var(--cy-soft);border-color:var(--cy)}
 .letter{flex-shrink:0;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#EEF2F6;
   color:var(--ink);font-size:18px;font-weight:700}
-.optionOn .letter{background:var(--cy);color:#fff}
+.optionOn .letter{background:var(--cy-text);color:#fff}
 
 .scale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .scaleBtn{min-height:64px;border-radius:16px;border:1.5px solid #CBD5E1;background:#fff;color:var(--ink);
   font-family:var(--font-num);font-size:22px;font-weight:700;cursor:pointer}
 .scaleBtn:hover:not(:disabled){background:#F6F8FA;border-color:#94A3B8}
-.scaleOn,.scaleOn:hover:not(:disabled){background:var(--cy);border-color:var(--cy);color:#fff}
+.scaleOn,.scaleOn:hover:not(:disabled){background:var(--cy-text);border-color:var(--cy-text);color:#fff}
 .scaleEnds{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
 
 .navRow{display:grid;grid-template-columns:1fr 2fr;gap:10px}

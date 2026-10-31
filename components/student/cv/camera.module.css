@@ -25,7 +25,7 @@
 .cls{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;
   border:1.5px solid rgba(255,255,255,.4);background:rgba(11,18,32,.45);color:#fff;font-size:16px;font-weight:500}
 .cls:hover:not(:disabled){background:rgba(255,255,255,.2);border-color:#fff}
-.clsOn,.clsOn:hover:not(:disabled){background:var(--cy);border-color:var(--cy);color:#fff}
+.clsOn,.clsOn:hover:not(:disabled){background:var(--cy-text);border-color:var(--cy-text);color:#fff}
 .addForm{display:flex;gap:8px}
 .addInput{flex:1;min-width:0;min-height:44px;padding:0 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.5);
   background:rgba(11,18,32,.6);color:#fff;font-size:16px}

@@ -14,7 +14,7 @@
   padding:0 20px;border-radius:14px;border:1px solid #CBD5E1;background:#fff;color:var(--ink);
   font-size:16px;font-weight:600;text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s}
 .btn:hover:not(:disabled){background:#F1F5F9;border-color:#94A3B8;text-decoration:none}
-.btnPrimary{background:var(--cy);border-color:var(--cy);color:#fff}
+.btnPrimary{background:var(--cy-text);border-color:var(--cy-text);color:#fff}
 .btnPrimary:hover:not(:disabled){background:#12807A;border-color:#12807A;color:#fff}
 .btnGhost{background:transparent;border-color:transparent;color:var(--muted)}
 .btnGhost:hover:not(:disabled){background:#EEF2F6;border-color:transparent;color:var(--ink)}
@@ -32,7 +32,7 @@
 .tab{min-height:48px;padding:0 8px;border-radius:11px;border:0;background:transparent;color:var(--muted);
   font-size:15px;font-weight:600}
 .tab:hover:not(:disabled){background:rgba(255,255,255,.6);border-color:transparent}
-.tabOn,.tabOn:hover:not(:disabled){background:#fff;color:var(--cy);box-shadow:0 1px 3px rgba(15,28,46,.12)}
+.tabOn,.tabOn:hover:not(:disabled){background:#fff;color:var(--cy-text);box-shadow:0 1px 3px rgba(15,28,46,.12)}
 
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;

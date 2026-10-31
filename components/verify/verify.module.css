@@ -3,7 +3,7 @@
   background:#F6F8FA}
 .card{width:100%;max-width:440px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;
   padding:32px 28px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-card)}
-.brand{font-size:15px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);margin-bottom:6px}
+.brand{font-size:15px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--cy-text);margin-bottom:6px}
 .card h1{font-size:clamp(21px,6vw,24px);font-weight:600}
 .note{color:var(--muted);font-size:15px;max-width:340px}
 .badge{display:grid;place-items:center;width:60px;height:60px;border-radius:50%;margin-top:4px}
@@ -14,5 +14,5 @@
 .row{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--line);text-align:start}
 .row dt{color:var(--muted);font-size:14px;flex-shrink:0}
 .row dd{margin:0;min-width:0;color:var(--ink);font-weight:500;font-size:15px;text-align:end;overflow-wrap:anywhere}
-.foot{font-size:13px;color:var(--faint);text-align:center}
+.foot{font-size:14px;color:var(--muted);text-align:center}
 @media (max-width:480px){.card{padding:26px 18px}}

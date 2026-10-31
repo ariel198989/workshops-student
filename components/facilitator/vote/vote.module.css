@@ -4,7 +4,7 @@
 .root button{font-size:20px;min-height:52px;padding:10px 22px;border-radius:10px}
 
 /* fullscreen: real API or the fixed fallback */
-.root:fullscreen,.fixed{background:#FBFBF8;padding:24px 28px;overflow:auto}
+.root:fullscreen,.fixed{background:#FBFBF8;padding:max(24px,env(safe-area-inset-top)) max(28px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(28px,env(safe-area-inset-left));overflow:auto}
 .root:fullscreen{width:100vw;height:100vh}
 .fixed{position:fixed;inset:0;z-index:70}
 

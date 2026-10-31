@@ -1,7 +1,7 @@
 /* זום פיקסלים: same paper, Rubik, teal and hairlines as the rest of מצב מדריך.
    The canvas is the only loud thing; controls are big (≥56px) for a projector. */
 .wrap{display:flex;flex-direction:column;gap:18px;--stage-h:62vh}
-.wrapFull{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;gap:16px;padding:18px 28px 22px;background:#FBFBF8;overflow:auto;--stage-h:calc(100vh - 230px)}
+.wrapFull{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;gap:16px;padding:max(18px,env(safe-area-inset-top)) max(28px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(28px,env(safe-area-inset-left));background:#FBFBF8;overflow:auto;--stage-h:calc(100vh - 230px)}
 .wrap button{font-size:22px;min-height:56px;padding:10px 22px;border-radius:12px}
 
 .stage{position:relative;container-type:inline-size;width:min(100%,calc(var(--stage-h) * var(--ar,1.3333)));aspect-ratio:var(--ar,1.3333);
@@ -23,15 +23,15 @@
 
 .levels{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .wrap .levelBtn{min-width:104px;min-height:64px;font-size:30px;font-weight:600;font-family:var(--font-num);border:1.5px solid var(--line);background:#fff;color:var(--ink)}
-.wrap .levelOn{background:var(--cy);border-color:var(--cy);color:#fff}
-.wrap .levelBtn:hover:not(:disabled):not(.levelOn){border-color:var(--cy);color:var(--cy)}
+.wrap .levelOn{background:var(--cy-text);border-color:var(--cy-text);color:#fff}
+.wrap .levelBtn:hover:not(:disabled):not(.levelOn){border-color:var(--cy);color:var(--cy-text)}
 
 .toggles{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center}
 .wrap .toggle{min-height:60px;font-size:24px;font-weight:500;border:1.5px solid var(--line);background:#fff;color:var(--ink)}
-.wrap .toggleOn{border-color:var(--cy);background:var(--cy-soft);color:var(--cy)}
+.wrap .toggleOn{border-color:var(--cy);background:var(--cy-soft);color:var(--cy-text)}
 .wrap .nextBtn{min-height:64px;font-size:26px;font-weight:600;padding:10px 34px}
 .grow{flex:1}
-.exitFull{position:fixed;top:18px;inset-inline-start:28px;z-index:71}
+.exitFull{position:fixed;top:max(18px,env(safe-area-inset-top));inset-inline-start:max(28px,env(safe-area-inset-right));z-index:71}
 
 /* phone: canvas full width, level buttons in two rows of three, toggles in pairs */
 @media (max-width:640px){
