@@ -1,21 +1,26 @@
 'use client';
 import { useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { CheckmarkCircle02Icon } from '@hugeicons/core-free-icons';
+import { ArrowRight01Icon, CheckmarkCircle02Icon } from '@hugeicons/core-free-icons';
 import {
-  PHASE_LABEL, SCALE_MAX, THANKS, buildAnswers, isComplete, isScale, optionLetter, phasesOf,
+  ALREADY_SUBMITTED, PHASE_LABEL, SCALE_MAX, THANKS, buildAnswers, isComplete, isScale, optionLetter, phasesOf,
   type CheckPhase, type ConceptCheck, type ConceptQuestion,
 } from '@/lib/student/concept';
-import { isPhaseLocked, lockPhase, submitConceptCheck } from '@/lib/student/concept-api';
+import { isPhaseLocked, submitConceptCheck } from '@/lib/student/concept-api';
 import k from '@/components/student/shell/kit.module.css';
 import c from './check.module.css';
 
 const PHASE_SUB: Record<CheckPhase, string> = { pre: 'לפני הפעילות', post: 'אחרי הפעילות' };
 const LOCKED = 'כבר ענו מהמכשיר הזה';
 
-function PhasePick({ check, onPick }: { check: ConceptCheck; onPick: (phase: CheckPhase) => void }) {
+/** Phase first. Only the phases the workshop offers (phase_available) are rendered at all. */
+function PhasePick({ check, onPick, onBack }: { check: ConceptCheck; onPick: (phase: CheckPhase) => void; onBack: () => void }) {
   return (
     <div className={k.stack}>
+      <button type="button" className={`${k.btn} ${k.btnGhost} ${k.btnInline}`} onClick={onBack}>
+        <HugeiconsIcon icon={ArrowRight01Icon} size={20} />
+        לרשימת הבדיקות
+      </button>
       <h1 className={k.h2}>{check.module_title}</h1>
       <p className={k.lead}>המדריך אומר אם זה לפני או אחרי. בחרו:</p>
       <div className={c.phaseRow}>
@@ -48,6 +53,7 @@ function Options({ q, pick, onPick }: { q: ConceptQuestion; pick: number | null;
       </div>
     );
   }
+  // q.answer is -1 for students: the options are shown, nothing here knows which one is right
   return (
     <div className={c.options} role="radiogroup" aria-label="תשובות">
       {q.options.map((text, i) => (
@@ -61,11 +67,11 @@ function Options({ q, pick, onPick }: { q: ConceptQuestion; pick: number | null;
   );
 }
 
-function Thanks({ onBack }: { onBack: () => void }) {
+function Thanks({ title, onBack }: { title: string; onBack: () => void }) {
   return (
     <div className={`${k.card} ${k.center} ${k.stack}`}>
       <span className={c.thanks}><HugeiconsIcon icon={CheckmarkCircle02Icon} size={36} /></span>
-      <h1 className={k.h2}>{THANKS}</h1>
+      <h1 className={k.h2}>{title}</h1>
       <button type="button" className={`${k.btn} ${k.btnPrimary}`} onClick={onBack}>חזרה לרשימה</button>
     </div>
   );
@@ -81,10 +87,10 @@ export function CheckForm({ check, onBack }: Props) {
   const [picks, setPicks] = useState<(number | null)[]>(() => questions.map(() => null));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<string | null>(null);
 
-  if (done) return <Thanks onBack={onBack} />;
-  if (!phase) return <PhasePick check={check} onPick={setPhase} />;
+  if (done) return <Thanks title={done} onBack={onBack} />;
+  if (!phase) return <PhasePick check={check} onPick={setPhase} onBack={onBack} />;
 
   const q = questions[index];
   const last = index === questions.length - 1;
@@ -96,9 +102,8 @@ export function CheckForm({ check, onBack }: Props) {
     setBusy(true);
     setError('');
     try {
-      await submitConceptCheck(check.session_module_id, phase, buildAnswers(questions, picks));
-      lockPhase(check.session_module_id, phase);
-      setDone(true);
+      const r = await submitConceptCheck(check.session_module_id, phase, buildAnswers(questions, picks));
+      setDone(r.already ? ALREADY_SUBMITTED : THANKS);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'משהו השתבש. נסו שוב בעוד רגע');
     } finally {

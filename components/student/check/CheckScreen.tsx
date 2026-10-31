@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import type { ConceptCheck } from '@/lib/student/concept';
 import { useStudentContext } from '@/lib/student/context';
@@ -11,7 +12,11 @@ import { CheckList } from './CheckList';
 /** /check: the workshop's concept checks. The route guard already sent students of check-less workshops home. */
 export function CheckScreen() {
   const { ctx, loaded, error, reload } = useStudentContext();
+  const pathname = usePathname();
   const [open, setOpen] = useState<ConceptCheck | null>(null);
+
+  // a route change (bottom nav tap, back button) always lands on the list, never inside a half-filled form
+  useEffect(() => { setOpen(null); }, [pathname]);
 
   if (!loaded) return <div className={k.spin}><Spinner large /></div>;
   if (!ctx) {

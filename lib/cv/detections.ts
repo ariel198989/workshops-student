@@ -17,6 +17,13 @@ export interface QueueRow {
 const COUNT_LIMIT = 1500;
 const QUEUE_LIMIT = 300;
 
+/**
+ * ws_tag_detection raised P0002: the photo is gone, was rejected by someone else, or is no
+ * longer training material. Either way there is nothing left to tag here; the queue moves on.
+ */
+export const ALREADY_HANDLED = 'התמונה הזאת כבר טופלה';
+export const isAlreadyHandled = (e: unknown): boolean => e instanceof Error && e.message === ALREADY_HANDLED;
+
 /** Photos per class the group has captured (tagged or not, rejected excluded). */
 export async function fetchCaptureCounts(team: string): Promise<Record<string, number>> {
   const { data, error } = await sb.from('sc_detections')
@@ -51,6 +58,7 @@ async function tag(id: string, bbox: NBox | null, className: string | null, reje
   });
   if (!error) return;
   if (error.code === '42501') throw new Error('אפשר לתייג רק תמונות של הקבוצה שלכם.');
+  if (error.code === 'P0002') throw new Error(ALREADY_HANDLED); // 'photo not found' and 'photo already handled'
   if (error.code === '22023') throw new Error('התיבה לא תקינה. ציירו אותה שוב בתוך התמונה.');
   throw new Error(error.message);
 }
@@ -61,3 +69,6 @@ export async function saveBox(id: string, bbox: NBox, className: string, origina
 
 /** "No object in this photo": drops it from the dataset. */
 export const rejectFrame = (id: string): Promise<void> => tag(id, null, null, true);
+
+/** Undo of rejectFrame: a REJECTED row called with no box, no class and p_reject false goes back to 'dataset'. */
+export const restoreFrame = (id: string): Promise<void> => tag(id, null, null, false);

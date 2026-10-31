@@ -90,9 +90,14 @@ a.primary[role=button]:hover{background:#12807A;border-color:#12807A;color:#fff;
 @keyframes ws-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));inset-inline-start:max(16px,env(safe-area-inset-left));z-index:100;
   max-width:min(420px,calc(100vw - 32px));
+  display:flex;align-items:center;gap:14px;
   padding:11px 16px;background:#fff;border:1px solid var(--danger);border-radius:var(--radius);color:var(--ink);
   font-size:15px;box-shadow:0 4px 14px rgba(15,28,46,.12);animation:ws-in .25s ease}
 .toast.info{border-color:var(--cy)}
+.toast > span{flex:1;min-width:0}
+/* the undo button inside a toast: compact but still a 44px target */
+.toast .toast-action{flex:none;min-height:44px;padding:6px 14px;font-size:15px;font-weight:600;
+  border-color:var(--cy);color:var(--cy-text)}
 
 /* ---------- denied / public pages ---------- */
 .denied{text-align:center;padding:34px 28px;max-width:420px;width:100%}

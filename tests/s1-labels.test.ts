@@ -30,6 +30,8 @@ test('groupChip joins number and display name with a middle dot', () => {
 test('join errors map to Hebrew by code', () => {
   assert.equal(joinErrorMessage({ code: 'P0002' }), 'הקוד לא נמצא או שהסדנה עוד לא נפתחה');
   assert.equal(joinErrorMessage({ code: '23505' }), 'כבר הצטרפת לקבוצה אחרת. בקשו מהמדריך להעביר אתכם');
+  assert.equal(joinErrorMessage({ code: 'P0005', message: 'too many attempts, try again later' }), 'יותר מדי ניסיונות. נסו שוב בעוד כמה דקות');
+  assert.equal(joinErrorMessage({ code: 'P0006', message: 'group is full' }), 'הקבוצה מלאה. בחרו קבוצה אחרת');
   assert.match(joinErrorMessage({ code: '22023' }), /שם|קבוצה/);
   assert.match(joinErrorMessage({ code: 'XX000', message: 'boom' }), /נסו שוב/);
   assert.match(joinErrorMessage(null), /נסו שוב/);

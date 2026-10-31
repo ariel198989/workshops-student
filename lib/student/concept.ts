@@ -9,7 +9,10 @@ export interface ConceptQuestion {
   id?: string;
   q: string;
   options: string[];
-  /** index of the correct option; null marks an attitude scale (1..5), not a knowledge question */
+  /**
+   * Knowledge question: ws_my_context sends -1 to students (the correct index never reaches the client, so
+   * nothing here scores). null marks an attitude scale (1..5). A non-negative index only appears in staff data.
+   */
   answer: number | null;
   core?: string;
   note?: string;
@@ -103,11 +106,15 @@ export const isComplete = (questions: ConceptQuestion[], picks: ReadonlyArray<nu
 export const lockKey = (sessionModuleId: string, phase: CheckPhase): string => `ws_check:${sessionModuleId}:${phase}`;
 
 export const THANKS = 'תודה, התשובות נשמרו בלי שם';
+/** ws_submit_concept_check raised 23505: this device (or another) already answered this phase. */
+export const ALREADY_SUBMITTED = 'כבר ענית על השאלון הזה';
+export const ALREADY_SUBMITTED_CODE = '23505';
 
 export function submitErrorMessage(err: { code?: string; message?: string } | null): string {
   switch (err?.code) {
     case '42501': return 'אפשר לענות רק כמשתתפים פעילים בסדנה. התחברו מחדש ונסו שוב';
     case 'P0002': return 'הבדיקה הזאת כבר לא פעילה בסדנה';
+    case ALREADY_SUBMITTED_CODE: return ALREADY_SUBMITTED;
     case '22023': return 'התשובות לא נשמרו. נסו למלא שוב';
     default: return 'משהו השתבש. נסו שוב בעוד רגע';
   }

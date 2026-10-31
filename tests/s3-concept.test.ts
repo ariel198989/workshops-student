@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   optionLetter, isScale, questionKey, phasesOf, normalizeQuestions, normalizeChecks, buildAnswers, isComplete,
-  lockKey, submitErrorMessage, THANKS, type ConceptQuestion,
+  lockKey, submitErrorMessage, THANKS, ALREADY_SUBMITTED, ALREADY_SUBMITTED_CODE, type ConceptQuestion,
 } from '../lib/student/concept.ts';
 import { pointBox, POINT_BOX_FRACTION } from '../lib/cv/geometry.ts';
 
@@ -67,7 +67,35 @@ test('lock key and copy', () => {
   assert.equal(lockKey('sm1', 'pre'), 'ws_check:sm1:pre');
   assert.equal(THANKS, 'תודה, התשובות נשמרו בלי שם');
   assert.match(submitErrorMessage({ code: '42501' }), /משתתפים/);
+  assert.equal(submitErrorMessage({ code: '23505', message: 'already submitted' }), ALREADY_SUBMITTED);
+  assert.equal(ALREADY_SUBMITTED_CODE, '23505');
   assert.match(submitErrorMessage(null), /השתבש/);
+});
+
+test('students get answer -1: still a knowledge question, never a scale, never scored here', () => {
+  const [hidden, scale] = normalizeQuestions([
+    { id: 'k', q: 'ידע', options: ['א', 'ב', 'ג'], answer: -1 },
+    { q: 'עמדה', options: [], answer: null },
+  ]);
+  assert.equal(hidden.answer, -1);
+  assert.equal(isScale(hidden), false, '-1 keeps the options visible');
+  assert.equal(isScale(scale), true);
+  assert.equal(isScale({ q: 'x', options: ['a', 'b'], answer: undefined as unknown as null }), true, 'a missing answer is a scale');
+  // the picks go out unchanged; nothing compares them to answer
+  assert.deepEqual(buildAnswers([hidden, scale], [2, 5]), { k: 2, '1': 5 });
+  // a hidden-answer question with fewer than two options cannot be shown and is dropped, like any knowledge question
+  assert.deepEqual(normalizeQuestions([{ q: 'bad', options: ['one'], answer: -1 }]), []);
+});
+
+test('phasesOf hides the phase the workshop does not offer', () => {
+  const [pre, post, both] = normalizeChecks([
+    { session_module_id: 'a', questions: [knowledge], phase_available: 'pre' },
+    { session_module_id: 'b', questions: [knowledge], phase_available: 'post' },
+    { session_module_id: 'c', questions: [knowledge], phase_available: 'both' },
+  ]);
+  assert.deepEqual(phasesOf(pre), ['pre']);
+  assert.deepEqual(phasesOf(post), ['post']);
+  assert.deepEqual(phasesOf(both), ['pre', 'post']);
 });
 
 test('pointBox: 38% of the shorter side, centered, clamped inside the image', () => {

@@ -29,5 +29,24 @@ export function useStore<T extends object>(store: Store<T>): T {
 
 
 // toast bus
-export const toastStore = createStore<{ msg: string; info: boolean; at: number }>({ msg: '', info: false, at: 0 });
-export const toast = (msg: string, info = false) => toastStore.set({ msg, info, at: Date.now() });
+export const TOAST_MS = 4000;
+
+export interface ToastAction { label: string; onClick: () => void }
+
+export interface ToastState {
+  msg: string;
+  info: boolean;
+  at: number;
+  /** optional button inside the toast (undo); `ms` overrides the default duration */
+  action: ToastAction | null;
+  ms: number;
+}
+
+export const toastStore = createStore<ToastState>({ msg: '', info: false, at: 0, action: null, ms: TOAST_MS });
+
+export const toast = (msg: string, info = false): void =>
+  toastStore.set({ msg, info, at: Date.now(), action: null, ms: TOAST_MS });
+
+/** An info toast with one action button that stays up for `ms` (an undo, for example). */
+export const toastWithAction = (msg: string, action: ToastAction, ms: number): void =>
+  toastStore.set({ msg, info: true, at: Date.now(), action, ms });
