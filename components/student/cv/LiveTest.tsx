@@ -1,20 +1,15 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon } from '@hugeicons/core-free-icons';
-import { videoReady } from '@/lib/cv/camera';
-import { containRect, type Rect } from '@/lib/cv/geometry';
 import type { Engine } from '@/lib/cv/infer';
 import type { Decoded } from '@/lib/cv/yolo';
 import { DetectionBoxes } from './DetectionBoxes';
 import { useCamera } from './useCamera';
+import { useDetectLoop } from './useDetectLoop';
 import c from './camera.module.css';
 
-/** ~4 detections per second: enough to feel live, light enough for a phone GPU. */
-const FRAME_MS = 250;
 const DEFAULT_CONF = 0.3;
-
-interface Frame { result: Decoded; area: Rect }
 
 function summary(result: Decoded | null, classes: string[]): string {
   if (!result) return 'מכוונים את המצלמה לאובייקט';
@@ -28,35 +23,8 @@ function summary(result: Decoded | null, classes: string[]): string {
 export function LiveTest({ engine, onClose }: { engine: Engine; onClose: () => void }) {
   const { videoRef, state, error, retry } = useCamera();
   const stage = useRef<HTMLDivElement>(null);
-  const [frame, setFrame] = useState<Frame | null>(null);
-  const [failed, setFailed] = useState(false);
   const [conf, setConf] = useState(DEFAULT_CONF);
-  const confRef = useRef(conf);
-  useEffect(() => { confRef.current = conf; }, [conf]);
-
-  useEffect(() => {
-    if (state !== 'live') return;
-    let stop = false;
-    let timer: ReturnType<typeof setTimeout>;
-    const run = async () => {
-      const video = videoRef.current;
-      const host = stage.current;
-      const started = performance.now();
-      if (videoReady(video) && host) {
-        try {
-          const result = await engine.detect(video, confRef.current);
-          const r = host.getBoundingClientRect();
-          if (!stop) setFrame({ result, area: containRect(r.width, r.height, video.videoWidth, video.videoHeight) });
-        } catch {
-          if (!stop) setFailed(true);
-          return;
-        }
-      }
-      if (!stop) timer = setTimeout(() => void run(), Math.max(30, FRAME_MS - (performance.now() - started)));
-    };
-    void run();
-    return () => { stop = true; clearTimeout(timer); };
-  }, [state, engine, videoRef]);
+  const { frame, failed } = useDetectLoop({ engine, videoRef, stageRef: stage, state, conf });
 
   return (
     <div className={c.cam}>

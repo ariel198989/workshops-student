@@ -10,8 +10,10 @@ export const STUDENT_JOIN = '/join';
 export function isPublicPath(pathname: string | null): boolean {
   if (!pathname) return false;
   // /facilitator renders bare: its own layout gates on staff (FacilitatorGate)
+  // /model/<token> is the take-home page: anon RPC, no session at all
   return pathname === '/verify' || pathname.startsWith('/verify/')
-    || pathname === '/facilitator' || pathname.startsWith('/facilitator/');
+    || pathname === '/facilitator' || pathname.startsWith('/facilitator/')
+    || pathname === '/model' || pathname.startsWith('/model/');
 }
 
 /**

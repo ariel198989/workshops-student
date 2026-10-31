@@ -1,0 +1,41 @@
+/* Take-home page: one card on the family phone, portrait or landscape tablet. Same paper and teal as /verify. */
+.screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+  background:#F6F8FA;color:var(--body);font-size:16px;line-height:1.55}
+.card{width:100%;max-width:460px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;
+  padding:28px 22px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-card)}
+.brand{font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--cy-text)}
+.h1{font-size:clamp(24px,6.5vw,30px);font-weight:700;line-height:1.2;color:var(--ink)}
+.h2{font-size:16px;font-weight:600;color:var(--muted)}
+.lead{font-size:16px;color:var(--body)}
+.small{font-size:13.5px;color:var(--muted)}
+.error{font-size:15px;color:var(--danger)}
+.spin{display:grid;place-items:center;padding:48px 0}
+
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:72px;margin-top:6px;padding:0 24px;
+  border-radius:18px;border:1px solid var(--cy-text);background:var(--cy-text);color:#fff;font-size:20px;font-weight:700;
+  box-shadow:0 6px 18px rgba(23,148,140,.28)}
+.cta:hover:not(:disabled){background:#12807A;border-color:#12807A;color:#fff}
+.btn{min-height:52px;padding:0 22px;border-radius:14px;font-size:16px;font-weight:600}
+
+.classes{width:100%;margin-top:8px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px;text-align:start}
+.classList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.classRow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:6px 0;border-bottom:1px solid var(--line)}
+.classRow:last-child{border-bottom:0}
+.className{font-weight:600;color:var(--ink)}
+.classCount{font-family:var(--font-num);font-size:14px;color:var(--muted);white-space:nowrap}
+
+.privacy{margin-top:6px;font-size:13.5px;color:var(--muted)}
+.privacyDark{font-size:13px;text-align:center;color:rgba(255,255,255,.78)}
+.guess{font-size:18px;font-weight:600;text-align:center}
+.foot{font-size:13.5px;color:var(--muted);text-align:center}
+
+/* landscape tablet / phone: card beside nothing, keep it short so the button stays above the fold */
+@media (max-height:520px) and (orientation:landscape){
+  .screen{justify-content:flex-start;padding-top:16px}
+  .card{max-width:640px;padding:18px 22px;gap:8px}
+  .cta{min-height:60px;font-size:18px}
+  .classes{display:grid;grid-template-columns:1fr 1fr;column-gap:24px}
+  .h2{grid-column:1 / -1}
+  .classList{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;column-gap:24px}
+}

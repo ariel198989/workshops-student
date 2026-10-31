@@ -61,19 +61,21 @@ async function downloadZip(zipPath: string): Promise<Blob> {
 let live: { path: string; engine: Engine } | null = null;
 let inflight: { path: string; promise: Promise<Engine> } | null = null;
 
-/** Returns the engine for this model; a new zip_path replaces (and disposes) the running one. */
-export function loadEngine(model: TeamModel): Promise<Engine> {
-  if (live?.path === model.zip_path) return Promise.resolve(live.engine);
-  if (inflight?.path === model.zip_path) return inflight.promise;
+/** Returns the engine for this zip; a new zip_path replaces (and disposes) the running one. */
+export function loadEngineFromPath(zipPath: string, classes: readonly string[]): Promise<Engine> {
+  if (live?.path === zipPath) return Promise.resolve(live.engine);
+  if (inflight?.path === zipPath) return inflight.promise;
   const promise = (async () => {
-    const engine = await createEngine(await downloadZip(model.zip_path), model.classes ?? []);
+    const engine = await createEngine(await downloadZip(zipPath), [...classes]);
     live?.engine.dispose();
-    live = { path: model.zip_path, engine };
+    live = { path: zipPath, engine };
     return engine;
   })().finally(() => { inflight = null; });
-  inflight = { path: model.zip_path, promise };
+  inflight = { path: zipPath, promise };
   return promise;
 }
+
+export const loadEngine = (model: TeamModel): Promise<Engine> => loadEngineFromPath(model.zip_path, model.classes ?? []);
 
 export function disposeEngine(): void {
   live?.engine.dispose();
