@@ -5,6 +5,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { RefreshIcon } from '@hugeicons/core-free-icons';
 import { Spinner } from '@/components/ui/Spinner';
 import { useStudentContext } from '@/lib/student/context';
+import { shownName } from '@/lib/student/device-account';
 import { firstName } from '@/lib/student/labels';
 import { CertificateTeaser } from './CertificateTeaser';
 import { HomeBanner } from './HomeBanner';
@@ -43,7 +44,7 @@ export function StudentHome() {
         action={<Link href="/join" className={`${k.btn} ${k.btnPrimary}`}>הצטרפות עם קוד</Link>} />
     );
   }
-  const name = firstName(ctx.me.full_name);
+  const name = firstName(shownName(ctx.me.full_name)); // a device account's placeholder is never a greeting
   return (
     <div className={k.stack}>
       <div className={h.greetRow}>

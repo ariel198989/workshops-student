@@ -1,12 +1,13 @@
 'use client';
 // The whole device sign-in: edge function → supabase password sign-in → auth store → whoami + context.
-// Two doors into the same sequence: code + group + PIN (the tablet keypad) and join_token (the group QR).
-// The password lives only inside this call.
+// Three doors into the same sequence: code + group + PIN (the tablet keypad), join_token (the group QR)
+// and the spoken 4-digit workshop number (this device's own account). The password lives only inside this call.
 import { initAuth } from '../auth';
 import { sb } from '../db';
 import { DeviceLoginError, requestDeviceLogin, type DeviceLoginInput, type DeviceLoginOk } from './device-login';
 import { refreshAfterJoin } from './join';
 import { requestJoinTokenLogin, SIGN_IN_FAILED } from './join-token';
+import { requestNumberLogin, type NumberLoginWorkshop } from './number-login';
 
 export type DeviceLoginResult = Pick<DeviceLoginOk, 'workshop' | 'group'>;
 
@@ -22,13 +23,28 @@ async function signOutOtherUser(email: string): Promise<void> {
   }
 }
 
-async function signInAsDevice({ email, password, workshop, group }: DeviceLoginOk): Promise<DeviceLoginResult> {
+/** Password sign-in for any device credentials, then the auth store. */
+async function signInWithCredentials(email: string, password: string): Promise<void> {
   await signOutOtherUser(email);
   const { error } = await sb.auth.signInWithPassword({ email, password });
   if (error) throw new DeviceLoginError(SIGN_IN_FAILED, 'server');
   await initAuth();
+}
+
+async function signInAsDevice({ email, password, workshop, group }: DeviceLoginOk): Promise<DeviceLoginResult> {
+  await signInWithCredentials(email, password);
   await refreshAfterJoin(); // the participant row already exists server-side; whoami and the context just need a refresh
   return { workshop, group };
+}
+
+/**
+ * Signs this phone in as its own device account with the spoken workshop number. No participant row yet:
+ * the auth gate reloads whoami on its own and the join flow (group → name) takes it from there.
+ */
+export async function numberLogin(number: string, deviceId: string): Promise<NumberLoginWorkshop> {
+  const { email, password, workshop } = await requestNumberLogin(number, deviceId);
+  await signInWithCredentials(email, password);
+  return workshop;
 }
 
 /** Signs the group device in with code + group + PIN. Throws DeviceLoginError with Hebrew text. */

@@ -69,6 +69,11 @@ export function takePendingCode(storage: StorageLike | null): string | null {
   return code;
 }
 
+/** Drops the stored code (after the join went through, or when the student chose another code). */
+export function clearPendingCode(storage: StorageLike | null): void {
+  write(storage, PENDING_CODE_KEY, null);
+}
+
 export function storeEntryHint(storage: StorageLike | null, hint: EntryHint): void {
   write(storage, ENTRY_HINT_KEY, hint);
 }

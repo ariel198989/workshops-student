@@ -53,8 +53,10 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface SignupInput { fullName: string; email: string; password: string }
 
-export function validateJoinName(name: string): string | null {
-  return name.trim().length >= MIN_NAME ? null : 'כתבו את השם המלא שלכם';
+/** Two characters at least. Children (device accounts) are asked for a first name, so the copy says so. */
+export function validateJoinName(name: string, child = false): string | null {
+  if (name.trim().length >= MIN_NAME) return null;
+  return child ? 'כתבו את השם שלכם, לפחות 2 אותיות' : 'כתבו את השם המלא שלכם';
 }
 
 export function validateSignup(input: SignupInput): string | null {

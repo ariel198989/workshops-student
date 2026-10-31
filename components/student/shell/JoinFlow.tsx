@@ -4,7 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useStudentContext } from '@/lib/student/context';
 import { joinGroup, refreshAfterJoin, type FoundGroup, type FoundWorkshop } from '@/lib/student/join';
-import { codeFromSearch, sessionStorageOrNull, takePendingCode } from '@/lib/student/pending';
+import { isWorkshopNumber } from '@/lib/student/number-login';
+import { clearPendingCode, codeFromSearch, peekPendingCode, sessionStorageOrNull } from '@/lib/student/pending';
 import { CodeChip, CodeStep } from './CodeStep';
 import { GroupStep } from './GroupStep';
 import { NameStep } from './NameStep';
@@ -15,8 +16,9 @@ interface Found { code: string; workshop: FoundWorkshop }
 
 /**
  * Three steps: code, group, confirm name. Ends on / with a fresh whoami and student context.
- * A code that arrived in the URL (/join?code=...) or survived sign-up in sessionStorage skips the typing.
- * Renders inside a Suspense boundary (useSearchParams).
+ * A code that arrived in the URL (/join?code=...) or waits in sessionStorage (sign-up, or the 4-digit workshop
+ * number the child just typed) skips the typing. The stored code stays until the join goes through, so a
+ * reload mid-flow starts again at the group step. Renders inside a Suspense boundary (useSearchParams).
  */
 export function JoinFlow() {
   const router = useRouter();
@@ -30,7 +32,7 @@ export function JoinFlow() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const code = codeFromSearch(params) ?? takePendingCode(sessionStorageOrNull());
+    const code = codeFromSearch(params) ?? peekPendingCode(sessionStorageOrNull());
     if (code) setPrefill(code);
   }, [params]);
 
@@ -41,6 +43,7 @@ export function JoinFlow() {
 
   const backToCode = () => {
     if (found) setLastCode(found.code);
+    clearPendingCode(sessionStorageOrNull()); // the student wants another code, so a reload must not bring this one back
     setPrefill(null);
     setFound(null);
   };
@@ -51,6 +54,7 @@ export function JoinFlow() {
     setError('');
     try {
       await joinGroup(found.code, group.id, fullName);
+      clearPendingCode(sessionStorageOrNull());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'משהו השתבש. נסו שוב בעוד רגע');
       setBusy(false);
@@ -80,7 +84,7 @@ export function JoinFlow() {
           <GroupStep workshop={found.workshop} onPick={setGroup} onBack={backToCode} />
         </>
       ) : (
-        <NameStep group={group} busy={busy} error={error} onConfirm={(n) => void join(n)}
+        <NameStep group={group} child={isWorkshopNumber(found.code)} busy={busy} error={error} onConfirm={(n) => void join(n)}
           onBack={() => { setGroup(null); setError(''); }} />
       )}
     </div>

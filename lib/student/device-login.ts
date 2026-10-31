@@ -53,7 +53,7 @@ const NOT_FOUND = 'לא מצאנו סדנה פתוחה עם הקוד והקבו�
 const BAD_PIN = 'הקוד הסודי לא נכון';
 const DEFAULT_LOCK_MINUTES = 15;
 
-const attemptsLeft = (n: number): string => (n === 1 ? 'נשאר ניסיון אחד' : `נשארו ${n} ניסיונות`);
+export const attemptsLeft = (n: number): string => (n === 1 ? 'נשאר ניסיון אחד' : `נשארו ${n} ניסיונות`);
 
 /** status + the JSON body of a non-200 answer → one Hebrew sentence. Unknown shapes get the generic line. */
 export function deviceLoginErrorMessage(status: number, body: unknown): string {
@@ -86,8 +86,11 @@ export function validateDeviceLogin(input: DeviceLoginInput): string | null {
 
 export type FetchLike = (url: string, init: RequestInit) => Promise<{ status: number; ok: boolean; json: () => Promise<unknown> }>;
 
-/** Either body the edge function accepts: the tablet's three fields, or the group's QR token. */
-export type DeviceLoginBody = { code: string; group: number; pin: string } | { join_token: string };
+/** The bodies the edge function accepts: the tablet's three fields, the group's QR token, or the spoken workshop number + this device. */
+export type DeviceLoginBody =
+  | { code: string; group: number; pin: string }
+  | { join_token: string }
+  | { workshop_number: string; device_id: string };
 
 /** Turns a non-200 status and its JSON body into the Hebrew the screen shows. */
 export type ErrorMessageOf = (status: number, body: unknown) => string;
@@ -99,10 +102,20 @@ function isOkBody(v: unknown): v is DeviceLoginOk & { ok: true } {
     && !!b.workshop && typeof b.workshop === 'object' && !!b.group && typeof b.group === 'object';
 }
 
-/** POSTs one accepted body to the edge function. Throws DeviceLoginError with Hebrew text; never logs the password. */
-export async function postDeviceLogin(
-  body: DeviceLoginBody, messageOf: ErrorMessageOf = deviceLoginErrorMessage, fetchImpl: FetchLike = fetch,
-): Promise<DeviceLoginOk> {
+/** Any 200 answer: ok plus the credentials. Each door checks the rest of its own shape. */
+export function hasCredentials(v: unknown): v is { ok: true; email: string; password: string } & Record<string, unknown> {
+  if (!v || typeof v !== 'object') return false;
+  const b = v as Record<string, unknown>;
+  return b.ok === true && typeof b.email === 'string' && typeof b.password === 'string';
+}
+
+/**
+ * POSTs one accepted body to the edge function and returns the answer once `isOk` accepts it.
+ * Throws DeviceLoginError with Hebrew text (network, the mapped status, or 'server' for an unexpected 200). Never logs the password.
+ */
+export async function postDeviceLoginAs<T>(
+  body: DeviceLoginBody, messageOf: ErrorMessageOf, isOk: (v: unknown) => v is T, fetchImpl: FetchLike = fetch,
+): Promise<T> {
   let res: Awaited<ReturnType<FetchLike>>;
   try {
     res = await fetchImpl(DEVICE_LOGIN_URL, {
@@ -115,7 +128,15 @@ export async function postDeviceLogin(
   }
   const answer = await res.json().catch(() => null);
   if (!res.ok) throw new DeviceLoginError(messageOf(res.status, answer), deviceLoginFailureKind(res.status));
-  if (!isOkBody(answer)) throw new DeviceLoginError(GENERIC, 'server');
+  if (!isOk(answer)) throw new DeviceLoginError(GENERIC, 'server');
+  return answer;
+}
+
+/** The group doors (code + group + PIN, join_token): credentials plus workshop and group. */
+export async function postDeviceLogin(
+  body: DeviceLoginBody, messageOf: ErrorMessageOf = deviceLoginErrorMessage, fetchImpl: FetchLike = fetch,
+): Promise<DeviceLoginOk> {
+  const answer = await postDeviceLoginAs(body, messageOf, isOkBody, fetchImpl);
   return { email: answer.email, password: answer.password, workshop: answer.workshop, group: answer.group };
 }
 

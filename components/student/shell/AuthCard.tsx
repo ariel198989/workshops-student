@@ -1,22 +1,23 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { QrCodeIcon } from '@hugeicons/core-free-icons';
 import { CONSOLE_URL } from '@/lib/config';
+import { STUDENT_ENTRY_LINKS, type StudentEntryLink } from '@/lib/student/entry';
+import { isWorkshopNumber } from '@/lib/student/number-login';
 import { peekPendingCode, sessionStorageOrNull, storePendingCode, takeEntryHint } from '@/lib/student/pending';
 import { GroupLogin } from './GroupLogin';
+import { NumberEntry } from './NumberEntry';
 import { StudentLogin } from './StudentLogin';
 import { StudentSignup } from './StudentSignup';
 import k from './kit.module.css';
 import a from './auth.module.css';
-import gl from './group-login.module.css';
+import ne from './number-entry.module.css';
 
 type Tab = 'signup' | 'login';
 export type AuthVariant = 'student' | 'staff';
 
 interface Props {
-  /** student: scan first, code + PIN second, email account folded away. staff: login only, titled כניסת צוות, with a link to the console. */
+  /** student: the workshop number first, QR / code + PIN / email as quiet links. staff: login only, titled כניסת צוות, with a link to the console. */
   variant?: AuthVariant;
 }
 
@@ -51,15 +52,45 @@ function EmailAuth({ staff, tab, onTab }: { staff: boolean; tab: Tab; onTab: (t:
   );
 }
 
+interface LinksProps {
+  qrOpen: boolean;
+  emailOpen: boolean;
+  onPick: (link: StudentEntryLink) => void;
+}
+
+/** The other doors, in STUDENT_ENTRY_LINKS order. The QR item only unfolds a sentence: the camera app does the work. */
+function EntryLinks({ qrOpen, emailOpen, onPick }: LinksProps) {
+  const qr = STUDENT_ENTRY_LINKS.find((l) => l.id === 'qr');
+  return (
+    <>
+      <nav className={ne.links} aria-label="דרכים אחרות להיכנס">
+        {STUDENT_ENTRY_LINKS.map((link, i) => (
+          <span key={link.id} className={ne.linkItem}>
+            {i > 0 ? <span className={ne.dotSep} aria-hidden="true">·</span> : null}
+            <button type="button" className={ne.link} onClick={() => onPick(link)}
+              aria-expanded={link.id === 'qr' ? qrOpen : link.id === 'email' ? emailOpen : undefined}>
+              {link.label}
+            </button>
+          </span>
+        ))}
+      </nav>
+      {qrOpen && qr?.explainer ? <p className={ne.explainer}>{qr.explainer}</p> : null}
+    </>
+  );
+}
+
 /** Signed-out screen. Rendered as the page's <main> because nothing else is on screen with it. */
 export function AuthCard({ variant = 'student' }: Props) {
   const staff = variant === 'staff';
   const [tab, setTab] = useState<Tab>(staff ? 'login' : 'signup');
   const [groupEntry, setGroupEntry] = useState(false);
   const [emailOpen, setEmailOpen] = useState(staff);
+  const [qrOpen, setQrOpen] = useState(false);
   const [pendingCode, setPendingCode] = useState<string | null>(null);
 
+  // a saved workshop number belongs to the keypad flow; only a real code (OFEK-H2-27) opens the email account
   const onPendingCode = useCallback((code: string) => {
+    if (isWorkshopNumber(code)) return;
     setPendingCode(code);
     setEmailOpen(true);
   }, []);
@@ -71,6 +102,12 @@ export function AuthCard({ variant = 'student' }: Props) {
     const code = peekPendingCode(storage);
     if (code) onPendingCode(code);
   }, [staff, onPendingCode]);
+
+  const pick = (link: StudentEntryLink) => {
+    if (link.id === 'qr') setQrOpen((v) => !v);
+    else if (link.id === 'pin') setGroupEntry(true);
+    else setEmailOpen((v) => !v);
+  };
 
   if (groupEntry && !staff) {
     return (
@@ -105,29 +142,18 @@ export function AuthCard({ variant = 'student' }: Props) {
       <div className={a.card}>
         <h1 className={a.brand}>Workshops</h1>
         <p className={a.by}>by Corewise</p>
-        {pendingCode ? (
-          <p className={a.codeNote}>
-            הקוד <b dir="ltr">{pendingCode}</b> שמור. אחרי הכניסה תצטרפו ישר לקבוצה.
-          </p>
-        ) : null}
-        <section className={gl.scan} aria-labelledby="scan-title">
-          <HugeiconsIcon icon={QrCodeIcon} size={40} />
-          <h2 id="scan-title" className={gl.scanTitle}>יש לי קישור או QR מהמדריך? סרקו אותו</h2>
-          <p className={gl.scanText}>הטלפון או הטאבלט נכנסים לקבוצה לבד, בלי להקליד כלום.</p>
-        </section>
-        <button type="button" className={gl.entry} onClick={() => setGroupEntry(true)}>
-          כניסה עם קוד ו-PIN
-          <small>לטאבלט של הקבוצה, בלי אימייל</small>
-        </button>
+        <NumberEntry />
+        <EntryLinks qrOpen={qrOpen} emailOpen={emailOpen} onPick={pick} />
         {emailOpen ? (
           <div className={a.emailBlock}>
+            {pendingCode ? (
+              <p className={a.codeNote}>
+                הקוד <b dir="ltr">{pendingCode}</b> שמור. אחרי הכניסה תצטרפו ישר לקבוצה.
+              </p>
+            ) : null}
             <EmailAuth staff={false} tab={tab} onTab={setTab} />
           </div>
-        ) : (
-          <button type="button" className={a.emailLink} aria-expanded={false} onClick={() => setEmailOpen(true)}>
-            יש לי חשבון עם אימייל
-          </button>
-        )}
+        ) : null}
       </div>
     </main>
   );
