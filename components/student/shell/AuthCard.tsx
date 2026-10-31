@@ -1,16 +1,18 @@
 'use client';
 import { useState } from 'react';
 import { CONSOLE_URL } from '@/lib/config';
+import { GroupLogin } from './GroupLogin';
 import { StudentLogin } from './StudentLogin';
 import { StudentSignup } from './StudentSignup';
 import k from './kit.module.css';
 import a from './auth.module.css';
+import gl from './group-login.module.css';
 
 type Tab = 'signup' | 'login';
 export type AuthVariant = 'student' | 'staff';
 
 interface Props {
-  /** student: sign up first, login second. staff: login only, titled כניסת צוות, with a link to the console. */
+  /** student: sign up first, login second, plus the group tablet entry. staff: login only, titled כניסת צוות, with a link to the console. */
   variant?: AuthVariant;
 }
 
@@ -18,7 +20,21 @@ interface Props {
 export function AuthCard({ variant = 'student' }: Props) {
   const staff = variant === 'staff';
   const [tab, setTab] = useState<Tab>(staff ? 'login' : 'signup');
+  const [groupEntry, setGroupEntry] = useState(false);
   const tabClass = (t: Tab) => (tab === t ? `${k.tab} ${k.tabOn}` : k.tab);
+
+  if (groupEntry && !staff) {
+    return (
+      <main className={a.screen}>
+        <div className={a.card}>
+          <h1 className={a.brand}>Workshops</h1>
+          <p className={a.by}>by Corewise</p>
+          <GroupLogin onBack={() => setGroupEntry(false)} />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className={a.screen}>
       <div className={a.card}>
@@ -40,7 +56,12 @@ export function AuthCard({ variant = 'student' }: Props) {
           <p className={a.foot}>
             אין לכם חשבון צוות? <a href={CONSOLE_URL}>לקונסולת הצוות</a>
           </p>
-        ) : null}
+        ) : (
+          <button type="button" className={gl.entry} onClick={() => setGroupEntry(true)}>
+            כניסה עם קוד ו-PIN
+            <small>לטאבלט של הקבוצה, בלי אימייל</small>
+          </button>
+        )}
       </div>
     </main>
   );

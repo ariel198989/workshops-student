@@ -1,0 +1,31 @@
+/* כניסת קבוצה: a tablet on a desk, several children around it. Big numbers, big keys (56px+). */
+.entry{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;min-height:68px;padding:12px 16px;margin-top:16px;
+  border-radius:16px;border:1.5px dashed var(--cy);background:var(--cy-soft);color:var(--cy-text);font-size:17px;font-weight:700;cursor:pointer}
+.entry:hover:not(:disabled){background:rgba(23,148,140,.16);border-color:var(--cy-text);color:var(--cy-text)}
+.entry small{font-size:13px;font-weight:500;color:var(--muted)}
+
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.num{display:grid;place-items:center;min-height:68px;border-radius:16px;border:1.5px solid var(--line);background:#fff;color:var(--ink);
+  font-family:var(--font-num);font-size:28px;font-weight:700;padding:0}
+.num:hover:not(:disabled){background:var(--cy-soft);border-color:var(--cy)}
+
+.pad{display:flex;flex-direction:column;align-items:center;gap:18px}
+.dots{display:flex;gap:16px;min-height:24px}
+.dot{width:18px;height:18px;border-radius:50%;border:2px solid #CBD5E1;background:#fff;transition:background .12s,border-color .12s}
+.dotOn{background:var(--cy-text);border-color:var(--cy-text)}
+.keys{display:grid;grid-template-columns:repeat(3,minmax(72px,88px));gap:10px;justify-content:center;width:100%}
+.key{display:grid;place-items:center;min-height:64px;padding:0;border-radius:16px;border:1.5px solid var(--line);background:#fff;color:var(--ink);
+  font-family:var(--font-num);font-size:28px;font-weight:700}
+.key:hover:not(:disabled){background:var(--cy-soft);border-color:var(--cy)}
+.key:active:not(:disabled){transform:scale(.96)}
+.keyGhost{border-color:transparent;background:transparent;color:var(--muted);font-family:inherit;font-size:16px;font-weight:600}
+.keyGhost:hover:not(:disabled){background:#EEF2F6;border-color:transparent;color:var(--ink)}
+
+/* landscape tablet: keep the whole pad on screen without scrolling */
+@media (max-height:600px) and (orientation:landscape){
+  .pad{gap:10px}
+  .key{min-height:56px;font-size:24px}
+  .num{min-height:56px;font-size:24px}
+  .grid{grid-template-columns:repeat(6,1fr)}
+}
+@media (prefers-reduced-motion:reduce){.dot{transition:none}.key:active:not(:disabled){transform:none}}
