@@ -15,14 +15,14 @@ import f from './facilitator.module.css';
 
 interface WorkshopRow {
   id: string; title: string; code: string; status: string;
-  cycle_depth: number | null; band: string | null; device_mode: string | null;
+  cycle_depth: string | null; band: string | null; device_mode: string | null; short_code: string | null;
 }
 
 const STATUS_HE: Record<string, string> = { confirmed: 'מאושרת', live: 'פעילה' };
 
 async function fetchWorkshops(): Promise<WorkshopRow[]> {
   const { data, error } = await sb.from('ws_workshops')
-    .select('id,title,code,status,cycle_depth,band,device_mode')
+    .select('id,title,code,status,cycle_depth,band,device_mode,short_code')
     .in('status', ['confirmed', 'live'])
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
@@ -42,11 +42,18 @@ function WorkshopCard({ w }: { w: WorkshopRow }) {
   return (
     <Link href={`/facilitator/${w.id}`} className={f.card}>
       <span className={f.cardTitle}>{w.title}</span>
+      {w.short_code ? (
+        <span className={f.numberRow}>
+          <span className={f.numberLabel}>מספר הסדנה לתלמידים</span>
+          <span className={f.numberBig} dir="ltr">{w.short_code}</span>
+        </span>
+      ) : (
+        <span className={f.sub}>המספר לתלמידים יינתן כשהסדנה תיפתח</span>
+      )}
       <span className={f.cardMeta}>
-        <span className={f.tag} dir="ltr">{w.code}</span>
         <span className={f.tag}>{STATUS_HE[w.status] ?? w.status}</span>
-        {w.band ? <span className={f.tag}>{w.band}</span> : null}
-        {w.cycle_depth !== null && w.cycle_depth !== undefined ? <span className={f.tag}>רמה {w.cycle_depth}</span> : null}
+        {w.band ? <span className={f.tag}>כיתות {w.band}</span> : null}
+        <span className={f.tag} dir="ltr">{w.code}</span>
       </span>
     </Link>
   );

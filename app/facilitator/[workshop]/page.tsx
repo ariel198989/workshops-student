@@ -11,14 +11,19 @@ export default function FacilitatorWorkshopPage() {
   const raw = useParams<{ workshop: string }>().workshop;
   const workshopId = raw && raw !== FREE_WORKSHOP && UUID.test(raw) ? raw : null;
   const [title, setTitle] = useState(workshopId ? 'סדנה' : 'מצב חופשי');
+  const [number, setNumber] = useState<string | null>(null);
 
   useEffect(() => {
     if (!workshopId) return;
     let alive = true;
-    sb.from('ws_workshops').select('title').eq('id', workshopId).maybeSingle()
-      .then(({ data }) => { if (alive && data?.title) setTitle(data.title); });
+    sb.from('ws_workshops').select('title,short_code').eq('id', workshopId).maybeSingle()
+      .then(({ data }) => {
+        if (!alive) return;
+        if (data?.title) setTitle(data.title);
+        setNumber(data?.short_code ?? null);
+      });
     return () => { alive = false; };
   }, [workshopId]);
 
-  return <Trainer workshopId={workshopId} title={title} />;
+  return <Trainer workshopId={workshopId} title={title} number={number} />;
 }

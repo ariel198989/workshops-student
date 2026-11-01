@@ -34,7 +34,7 @@ const STEPS: { id: Step; label: string }[] = [
 const DEFAULT_CLASSES = ['כוס', 'נעל'];
 const ENGINE_HE = { idle: 'המנוע מחכה', loading: 'המנוע נטען', ready: 'המנוע מוכן', error: 'המנוע לא נטען' } as const;
 
-export function Trainer({ workshopId, title }: { workshopId: string | null; title: string }) {
+export function Trainer({ workshopId, title, number = null }: { workshopId: string | null; title: string; number?: string | null }) {
   const engine = useStore(engineStore);
   const hasGuide = !!workshopId && workshopId !== FREE_WORKSHOP;
   const steps = hasGuide ? [GUIDE_STEP, ...STEPS] : STEPS;
@@ -146,6 +146,12 @@ export function Trainer({ workshopId, title }: { workshopId: string | null; titl
         <div className={f.titleRow}>
           <Link href="/facilitator" className={f.back}>סדנה אחרת</Link>
           <span className={f.title}>{title}</span>
+          {number ? (
+            <span className={f.numberPill} title="התלמידים מקלידים את המספר במסך הראשון של האפליקציה">
+              <span className={f.numberLabel}>אמרו לתלמידים</span>
+              <span className={f.numberBig} dir="ltr">{number}</span>
+            </span>
+          ) : null}
           <div className={f.robotHead}>
             <RobotFace size="sm" mood={robot.mood} speaking={robot.speaking} />
             <span className={f.robotLine} role="status" aria-live="polite">{robot.line}</span>
