@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  classTier, coverageRows, overallTier, trainBlockReason, queueAhead, jobTone,
+  classTier, coverageRows, overallTier, trainBlockReason, queueAhead, jobTone, activeJobOf,
   RED_BELOW, STRONG_FROM, MIN_TRAIN_IMAGES, weakClasses, modelVerdict, accuracyPercent, waitLabel,
   jobAlert, canCancelJob, failedLabel, jobFailureReason, trainErrorHe, JOB_ALERT_HE, PENDING_STALE_MS, RUNNING_STUCK_MS,
 } from '../lib/cv/readiness.ts';
@@ -168,4 +168,23 @@ test('waitLabel reads naturally in Hebrew', () => {
   assert.equal(waitLabel(12 * 60000), '12 דקות');
   assert.equal(waitLabel(60 * 60000), 'שעה');
   assert.equal(waitLabel(130 * 60000), '2 שעות ו-10 דקות');
+});
+
+test('trainBlockReason in personal scope speaks about my own job and tags', () => {
+  assert.match(trainBlockReason(40, true, true) ?? '', /יש לך/);
+  assert.doesNotMatch(trainBlockReason(40, true, true) ?? '', /לקבוצה/);
+  assert.match(trainBlockReason(0, false, true) ?? '', /תייגת/);
+  assert.equal(trainBlockReason(MIN_TRAIN_IMAGES, false, true), null);
+});
+
+test('activeJobOf: any pending or running job blocks the group; in personal scope only mine does', () => {
+  const jobs = [
+    { id: 'done', status: 'done', requested_by: 'me' },
+    { id: 'mate', status: 'running', requested_by: 'mate' },
+    { id: 'mine', status: 'pending', requested_by: 'me' },
+  ];
+  assert.equal(activeJobOf(jobs, null)?.id, 'mate');
+  assert.equal(activeJobOf(jobs, 'me')?.id, 'mine');
+  assert.equal(activeJobOf(jobs.filter((j) => j.id !== 'mine'), 'me'), null, 'a teammate training does not block me');
+  assert.equal(activeJobOf([], null), null);
 });

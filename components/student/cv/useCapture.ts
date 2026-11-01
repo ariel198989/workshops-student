@@ -12,10 +12,17 @@ import { toast } from '@/lib/store';
 const RETRY_EVERY_MS = 10000;
 const EMPTY_STATS: QueueStats = { queued: 0, saved: 0, failing: false, dropped: 0, failures: 0 };
 
-interface Args { videoRef: RefObject<HTMLVideoElement | null>; team: string; userId: string; className: string }
+interface Args {
+  videoRef: RefObject<HTMLVideoElement | null>;
+  team: string;
+  userId: string;
+  /** whose photos the counts cover: me (personal pool scope) or null for the whole group */
+  me: string | null;
+  className: string;
+}
 
 /** Single shots, the auto-shoot series, per-class counts and the offline retry queue. */
-export function useCapture({ videoRef, team, userId, className }: Args) {
+export function useCapture({ videoRef, team, userId, me, className }: Args) {
   const [base, setBase] = useState<Record<string, number>>({});
   const [loaded, setLoaded] = useState(false);
   const [taken, setTaken] = useState<Record<string, number>>({});
@@ -30,8 +37,8 @@ export function useCapture({ videoRef, team, userId, className }: Args) {
 
   useEffect(() => { classRef.current = className; }, [className]);
   useEffect(() => {
-    fetchCaptureCounts(team).then(setBase).catch(() => undefined).finally(() => setLoaded(true));
-  }, [team]);
+    fetchCaptureCounts(team, me).then(setBase).catch(() => undefined).finally(() => setLoaded(true));
+  }, [team, me]);
 
   useEffect(() => {
     const q = createRetryQueue<CaptureItem>(saveCapture, { onChange: setStats });
@@ -84,7 +91,7 @@ export function useCapture({ videoRef, team, userId, className }: Args) {
 
   const countOf = (cls: string) => (base[cls] ?? 0) + (taken[cls] ?? 0);
   const sessionTotal = Object.values(taken).reduce((a, b) => a + b, 0);
-  /** photos of the group that are really on the server: the count at mount plus this session's finished uploads */
+  /** photos (the group's, or mine in personal scope) really on the server: the count at mount plus this session's finished uploads */
   const uploaded = Object.values(base).reduce((a, b) => a + b, 0) + stats.saved;
   const issueText = issue ? QUALITY_MESSAGES[issue] : null;
 

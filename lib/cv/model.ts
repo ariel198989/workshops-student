@@ -4,7 +4,7 @@
 // a newer zip_path appears. Ported from Smart City lib/patrol.ts ensureCityModel.
 import { sb, publicUrl } from '../db';
 import { MODEL_CACHE } from './config';
-import { pickTeamModel, teamScope } from './dataset';
+import { pickScopedModels, teamScope, type ModelPick } from './dataset';
 import { createEngine, type Engine } from './infer';
 
 export interface TeamModel {
@@ -34,8 +34,9 @@ export async function fetchTeamModels(userId: string, team: string): Promise<Tea
   return (data ?? []) as TeamModel[];
 }
 
-export async function fetchBestTeamModel(userId: string, team: string): Promise<TeamModel | null> {
-  return pickTeamModel(await fetchTeamModels(userId, team), userId, team);
+/** The model(s) the results screen shows: mine (plus the group's, quieter) in personal scope, the group's otherwise. */
+export async function fetchModelPick(userId: string, team: string, personal: boolean): Promise<ModelPick<TeamModel>> {
+  return pickScopedModels(await fetchTeamModels(userId, team), userId, team, personal);
 }
 
 async function downloadZip(zipPath: string): Promise<Blob> {

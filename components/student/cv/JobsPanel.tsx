@@ -21,6 +21,8 @@ interface Props {
   alert: JobAlert | null;
   failed: TrainJob | null;
   userId: string;
+  /** personal pool scope: the list holds my jobs only */
+  personal: boolean;
   justDone: TrainJob | null;
   /** re-open a training job after a failure; undefined when training is blocked right now */
   onRetry?: () => void;
@@ -67,7 +69,7 @@ const fmtWhen = (iso: string): string =>
   new Date(iso).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
 /** The live job status plus the group's recent jobs. Only the requester cancels, and only when the rules allow. */
-export function JobsPanel({ jobs, active, ahead, alert, failed, userId, justDone, onRetry, onChanged }: Props) {
+export function JobsPanel({ jobs, active, ahead, alert, failed, userId, personal, justDone, onRetry, onChanged }: Props) {
   const [busy, setBusy] = useState(false);
 
   async function cancel() {
@@ -98,7 +100,7 @@ export function JobsPanel({ jobs, active, ahead, alert, failed, userId, justDone
       {failed && !justDone ? <FailedJob job={failed} onRetry={onRetry} /> : null}
       {jobs.length > 0 ? (
         <div className={s.card}>
-          <div className={s.cardHead}>משימות אחרונות של הקבוצה</div>
+          <div className={s.cardHead}>{personal ? 'המשימות האחרונות שלי' : 'משימות אחרונות של הקבוצה'}</div>
           <ul className={s.jobs}>
             {jobs.map((j) => (
               <li key={j.id} className={s.job}>

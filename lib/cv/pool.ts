@@ -25,22 +25,22 @@ export type BuiltZip =
   | { ok: true; blob: Blob; count: number; negatives: number; classes: string[] }
   | { ok: false; error: string };
 
-// training-grade = a full frame + a human box, not rejected
-async function fetchPoolRows(team: string): Promise<PoolRow[]> {
-  const { data, error } = await sb.from('sc_detections')
+// training-grade = a full frame + a human box, not rejected. `me` set = only the photos I shot (personal scope).
+async function fetchPoolRows(team: string, me: string | null): Promise<PoolRow[]> {
+  let q = sb.from('sc_detections')
     .select('class_name, frame_path, bbox, detected_by, created_at')
     .in('team_name', teamScope(team))
     .not('frame_path', 'is', null)
     .not('bbox', 'is', null)
-    .neq('status', 'rejected')
-    .order('created_at', { ascending: false })
-    .limit(POOL_LIMIT);
+    .neq('status', 'rejected');
+  if (me) q = q.eq('detected_by', me);
+  const { data, error } = await q.order('created_at', { ascending: false }).limit(POOL_LIMIT);
   if (error) throw new Error(error.message);
   return (data ?? []) as PoolRow[];
 }
 
-export async function fetchPoolStats(team: string): Promise<PoolStats> {
-  const rows = await fetchPoolRows(team);
+export async function fetchPoolStats(team: string, me: string | null): Promise<PoolStats> {
+  const rows = await fetchPoolRows(team, me);
   const counts = new Map<string, number>();
   const people = new Set<string>();
   for (const r of rows) {
@@ -69,9 +69,10 @@ async function fetchBytes(path: string): Promise<Uint8Array | null> {
 
 const yieldToUi = () => new Promise<void>((r) => setTimeout(r, 0));
 
-export async function buildTeamPoolZip(team: string, onProgress: (done: number, total: number) => void): Promise<BuiltZip> {
+/** The YOLO dataset ZIP of the group's tagged photos, or of mine only when `me` is set. */
+export async function buildTeamPoolZip(team: string, me: string | null, onProgress: (done: number, total: number) => void): Promise<BuiltZip> {
   const JSZip = (await import('jszip')).default;
-  const rows = await fetchPoolRows(team);
+  const rows = await fetchPoolRows(team, me);
   if (!rows.length) return { ok: false, error: 'אין עדיין תמונות מתויגות. תייגו קודם.' };
 
   const { names, idx } = classIndexMap(rows);

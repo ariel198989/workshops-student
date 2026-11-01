@@ -49,15 +49,23 @@ const EXPLAIN: Record<MetricMode, string> = {
   map_pr: 'דיוק (mAP50): כמה מהאובייקטים המודל מוצא ומסמן נכון.',
 };
 
-/** The group's model, said honestly and in the band's language: a weak model is called weak and sent back to capture. */
-export function ModelCard({ model, mode, canCapture }: { model: TeamModel; mode: MetricMode; canCapture: boolean }) {
+interface Props {
+  model: TeamModel;
+  mode: MetricMode;
+  canCapture: boolean;
+  /** whose model this is, as the card head says it */
+  title?: string;
+}
+
+/** The model, said honestly and in the band's language: a weak model is called weak and sent back to capture. */
+export function ModelCard({ model, mode, canCapture, title = 'המודל של הקבוצה' }: Props) {
   const view = formatMetric(mode, model);
   const verdict = modelVerdict(model.image_count, model.honest_val);
   const day = new Date(model.created_at).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' });
   const numbers = showsNumbers(mode);
   return (
     <div className={s.card}>
-      <div className={s.cardHead}>המודל של הקבוצה · אומן ב-{day}</div>
+      <div className={s.cardHead}>{title} · אומן ב-{day}</div>
       <MetricView view={view} />
       <p className={s.small} style={{ marginTop: 10 }}>
         {EXPLAIN[mode]} {numbers ? honestNote(model.honest_val) : ''}

@@ -47,9 +47,14 @@ export function overallTier(rows: CoverageRow[]): Tier {
   return own.every((r) => r.tier === 'strong') ? 'strong' : 'ok';
 }
 
-export function trainBlockReason(taggedTotal: number, jobActive: boolean): string | null {
-  if (jobActive) return 'יש כבר משימת אימון ממתינה או רצה לקבוצה. אפשר לבטל ממתינה כדי לפתוח חדשה.';
-  if (taggedTotal <= 0) return 'עוד לא תויגו תמונות. צלמו ותייגו קודם.';
+/** Why the train button is off; `personal` phrases it for one student's own photos and jobs. */
+export function trainBlockReason(taggedTotal: number, jobActive: boolean, personal = false): string | null {
+  if (jobActive) {
+    return personal
+      ? 'יש לך כבר משימת אימון ממתינה או רצה. אפשר לבטל ממתינה כדי לפתוח חדשה.'
+      : 'יש כבר משימת אימון ממתינה או רצה לקבוצה. אפשר לבטל ממתינה כדי לפתוח חדשה.';
+  }
+  if (taggedTotal <= 0) return personal ? 'עוד לא תייגת תמונות. צלמו ותייגו קודם.' : 'עוד לא תויגו תמונות. צלמו ותייגו קודם.';
   if (taggedTotal < MIN_TRAIN_IMAGES) {
     return `תויגו רק ${taggedTotal} תמונות. צריך לפחות ${MIN_TRAIN_IMAGES} כדי שהאימון ייצא משהו.`;
   }
@@ -57,6 +62,16 @@ export function trainBlockReason(taggedTotal: number, jobActive: boolean): strin
 }
 
 interface QueueJob { id: string; status: string; created_at: string }
+
+const ACTIVE_STATUSES: readonly string[] = ['pending', 'running'];
+
+/**
+ * The job that blocks a new one: a pending or running job of the group, or, when `me` is set
+ * (personal scope), only one that I requested. Other students' jobs never block me there.
+ */
+export function activeJobOf<T extends { status: string; requested_by: string | null }>(jobs: readonly T[], me: string | null): T | null {
+  return jobs.find((j) => ACTIVE_STATUSES.includes(j.status) && (me == null || j.requested_by === me)) ?? null;
+}
 
 /** How many pending jobs (any group) sit ahead of this pending job. null if it is not pending. */
 export function queueAhead(all: QueueJob[], jobId: string): number | null {

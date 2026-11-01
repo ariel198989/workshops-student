@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  EMPTY_FLOW_PROGRESS, flowCta, flowHidden, flowNext, flowSteps, MIN_TRAIN_IMAGES, nextAfterCapture, photosLabel,
+  EMPTY_FLOW_PROGRESS, flowCta, flowHidden, flowNext, flowProgressOf, flowSteps, MIN_TRAIN_IMAGES, nextAfterCapture, photosLabel,
   readResultsSeen, resultsSeenKey, writeResultsSeen, type FlowProgress,
 } from '../lib/student/flow.ts';
+import type { StudentProgress } from '../lib/student/context.ts';
 import { capsForDepth } from '../lib/student/caps.ts';
 import { normalizeLive } from '../lib/student/live.ts';
 import type { StorageLike } from '../lib/student/pending.ts';
@@ -53,6 +54,26 @@ test('photosLabel counts in Hebrew, singular included', () => {
 });
 
 // ── stepper ──
+
+const groupProgress: StudentProgress = {
+  photos: 120, tagged: 90, untagged: 30, today: 0, contributors: 4, coverage: [], off_target_classes: [], readiness: 'ok',
+  jobs: { pending: 0, running: 0, done: 1, last: null },
+  model: { id: 'm1', name: 'm', accuracy: 0.8, approved: true, image_count: 100, honest_val: true, class_stats: null, personal: false, created_at: '2026-10-01' },
+};
+
+test('flowProgressOf reads the group progress; a missing progress is nothing done', () => {
+  assert.deepEqual(flowProgressOf(groupProgress, false, true), { photos: 120, tagged: 90, model: true, resultsSeen: true, certificate: false });
+  assert.deepEqual(flowProgressOf(null, true, false), { ...EMPTY_FLOW_PROGRESS, certificate: true });
+});
+
+test('flowProgressOf in personal scope ticks from my own counts, not the group', () => {
+  const mine = { photos: 3, tagged: 0, models: 0, active_job: null };
+  assert.deepEqual(flowProgressOf(groupProgress, false, false, mine), { photos: 3, tagged: 0, model: false, resultsSeen: false, certificate: false });
+  const trained = { photos: 60, tagged: 55, models: 1, active_job: null };
+  assert.deepEqual(flowSteps(L3, flowProgressOf(groupProgress, false, false, trained), null, '/').map((s) => s.done), [true, true, true, false]);
+  // the group has a model but I do not: my train step is still ahead of me
+  assert.equal(flowNext(flowSteps(L3, flowProgressOf(groupProgress, false, false, { ...trained, models: 0 }), null, '/'))?.id, 'train');
+});
 
 test('L3 shows the four cycle steps in order; the certificate joins once issued', () => {
   assert.deepEqual(ids(), ['capture', 'tag', 'train', 'results']);

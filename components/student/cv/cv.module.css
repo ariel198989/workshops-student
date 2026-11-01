@@ -83,3 +83,12 @@
 .pulse{animation:pulse 1.4s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.35}}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none}.fill{transition:none}}
+
+/* a quieter, folded section (the group's model under "no model of mine yet") */
+.fold{border:1px solid var(--line);border-radius:18px;padding:0 18px;background:#F6F8FA}
+.fold[open]{padding-bottom:18px}
+.foldHead{display:flex;align-items:center;min-height:52px;cursor:pointer;list-style:none;font-size:14px;font-weight:600;color:var(--muted)}
+.foldHead::-webkit-details-marker{display:none}
+.foldHead::before{content:'';flex-shrink:0;width:8px;height:8px;margin-inline-end:10px;border-inline-end:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+.fold[open] .foldHead::before{transform:rotate(45deg)}
+.fold[open] .foldHead{margin-bottom:12px}

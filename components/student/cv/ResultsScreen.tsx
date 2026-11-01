@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import { friendlyError } from '@/lib/cv/capture-utils';
 import type { Engine } from '@/lib/cv/infer';
-import { fetchBestTeamModel, type TeamModel } from '@/lib/cv/model';
+import { fetchModelPick, type TeamModel } from '@/lib/cv/model';
 import type { StudentCaps } from '@/lib/student/caps';
+import { scopeOf } from '@/lib/student/context';
 import { formatMetric } from '@/lib/student/metric';
 import { markResultsSeen } from '@/lib/student/results-seen';
 import { ClassStatsList } from './ClassStatsList';
@@ -16,15 +17,18 @@ import { useEngine } from './useEngine';
 import type { CvSession } from './CvGate';
 import s from './cv.module.css';
 
-function NoModel({ caps }: { caps: StudentCaps }) {
+function noModelLead(caps: StudentCaps, personal: boolean): string {
+  if (personal) return 'עוד אין לך מודל. אחרי האימון הראשון הוא יופיע כאן, וגם אפשר יהיה לבדוק אותו במצלמה.';
+  return caps.can_train
+    ? 'המודל נולד באימון: מצלמים, מסמנים תיבות, ושולחים לאימון בענן. כשהאימון מסתיים, המודל מופיע כאן וגם אפשר לבדוק אותו במצלמה.'
+    : 'המודל נולד באימון: מצלמים, מסמנים, והמדריך שולח לאימון בענן. כשהאימון מסתיים, המודל מופיע כאן וגם אפשר לבדוק אותו במצלמה.';
+}
+
+function NoModel({ caps, personal }: { caps: StudentCaps; personal: boolean }) {
   return (
     <div className={`${s.card} ${s.stack}`}>
-      <h2 className={s.h2}>עוד אין מודל לקבוצה</h2>
-      <p className={s.lead}>
-        {caps.can_train
-          ? 'המודל נולד באימון: מצלמים, מסמנים תיבות, ושולחים לאימון בענן. כשהאימון מסתיים, המודל מופיע כאן וגם אפשר לבדוק אותו במצלמה.'
-          : 'המודל נולד באימון: מצלמים, מסמנים, והמדריך שולח לאימון בענן. כשהאימון מסתיים, המודל מופיע כאן וגם אפשר לבדוק אותו במצלמה.'}
-      </p>
+      <h2 className={s.h2}>{personal ? 'עוד אין לך מודל' : 'עוד אין מודל לקבוצה'}</h2>
+      <p className={s.lead}>{noModelLead(caps, personal)}</p>
       {caps.can_train ? <Link href="/train" className={`${s.btn} ${s.btnPrimary}`}>לאימון</Link> : null}
       {caps.can_capture ? (
         <Link href="/capture" className={caps.can_train ? s.btn : `${s.btn} ${s.btnPrimary}`}>לצילום</Link>
@@ -33,28 +37,51 @@ function NoModel({ caps }: { caps: StudentCaps }) {
   );
 }
 
-/** Results: the group's best model, honest quality in the band's language, per-object scores, and live testing. */
+interface GroupModelProps { model: TeamModel; caps: StudentCaps; loadingEngine: boolean; onLive: () => void }
+
+/** Personal scope without a model of my own: the group's model, folded away under a quiet heading. */
+function GroupModel({ model, caps, loadingEngine, onLive }: GroupModelProps) {
+  return (
+    <details className={s.fold}>
+      <summary className={s.foldHead}>המודל של הקבוצה</summary>
+      <div className={s.stack}>
+        <ModelCard model={model} mode={caps.metric_mode} canCapture={caps.can_capture} />
+        <ClassStatsList view={formatMetric(caps.metric_mode, model)} canCapture={caps.can_capture} />
+        <button type="button" className={s.btn} disabled={loadingEngine} onClick={onLive}>
+          {loadingEngine ? 'טוענים מודל' : 'בדיקת המודל של הקבוצה במצלמה'}
+        </button>
+      </div>
+    </details>
+  );
+}
+
+/** Results: my model (personal scope) or the group's, honest quality in the band's language, per-object scores, live testing. */
 export function ResultsScreen({ session }: { session: CvSession }) {
   const { team, userId, ctx } = session;
   const { caps } = ctx;
+  const { personal } = scopeOf(ctx);
   const [model, setModel] = useState<TeamModel | null | undefined>(undefined);
+  const [group, setGroup] = useState<TeamModel | null>(null);
   const [error, setError] = useState('');
   const [live, setLive] = useState<Engine | null>(null);
-  const modelId = ctx.progress?.model?.id ?? null; // changes when a training run finishes
-  const engine = useEngine(model ?? null);
+  // changes when a training run finishes: the group's newest model, and my own model count
+  const modelKey = `${ctx.progress?.model?.id ?? ''}|${ctx.mine.models}`;
+  const engine = useEngine(model ?? group);
   const loadingEngine = engine.status === 'loading';
 
   const load = useCallback(async () => {
     setError('');
     try {
-      setModel(await fetchBestTeamModel(userId, team));
+      const pick = await fetchModelPick(userId, team, personal);
+      setModel(pick.model);
+      setGroup(pick.group);
     } catch (e) {
       setError(friendlyError(e, 'לא הצלחנו לטעון את המודל. בדקו את החיבור.'));
       setModel(null);
     }
-  }, [userId, team]);
+  }, [userId, team, personal]);
 
-  useEffect(() => { void load(); }, [load, modelId]);
+  useEffect(() => { void load(); }, [load, modelKey]);
   // the stepper ticks "results" once the team has looked at its model
   useEffect(() => { if (model) markResultsSeen(team); }, [model, team]);
 
@@ -75,13 +102,18 @@ export function ResultsScreen({ session }: { session: CvSession }) {
           <button type="button" className={`${s.btn} ${s.btnPrimary}`} disabled={loadingEngine} onClick={() => void openLive()}>
             {loadingEngine ? 'טוענים מודל' : 'בדיקה במצלמה חיה'}
           </button>
-          <ModelCard model={model} mode={caps.metric_mode} canCapture={caps.can_capture} />
+          <ModelCard model={model} mode={caps.metric_mode} canCapture={caps.can_capture} title={personal ? 'המודל שלי' : undefined} />
           <ClassStatsList view={formatMetric(caps.metric_mode, model)} canCapture={caps.can_capture} />
           <TestPanel status={engine.status} error={engine.error} ensure={engine.ensure} onLive={openLive} />
           {caps.can_capture ? <Link href="/capture" className={s.btn}>חזרה לצילום: עוד תמונות לשיפור</Link> : null}
-          {live ? <LiveTest engine={live} onClose={() => setLive(null)} /> : null}
         </>
-      ) : !error ? <NoModel caps={caps} /> : null}
+      ) : !error ? (
+        <>
+          <NoModel caps={caps} personal={personal} />
+          {group ? <GroupModel model={group} caps={caps} loadingEngine={loadingEngine} onLive={() => void openLive()} /> : null}
+        </>
+      ) : null}
+      {live ? <LiveTest engine={live} onClose={() => setLive(null)} /> : null}
     </div>
   );
 }

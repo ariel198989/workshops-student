@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { RefreshIcon } from '@hugeicons/core-free-icons';
 import { Spinner } from '@/components/ui/Spinner';
-import { useStudentContext } from '@/lib/student/context';
+import { progressForScope, scopeOf, useStudentContext } from '@/lib/student/context';
 import { shownName } from '@/lib/student/device-account';
 import { firstName } from '@/lib/student/labels';
 import { CertificateTeaser } from './CertificateTeaser';
@@ -45,6 +45,8 @@ export function StudentHome() {
     );
   }
   const name = firstName(shownName(ctx.me.full_name)); // a device account's placeholder is never a greeting
+  const scope = scopeOf(ctx);
+  const mine = scope.personal ? ctx.mine : null; // personal pool scope: the home speaks about my own photos and model
   return (
     <div className={k.stack}>
       <div className={h.greetRow}>
@@ -55,11 +57,11 @@ export function StudentHome() {
         </button>
       </div>
       <HomeBanner />
-      <NextStepCard progress={ctx.progress} caps={ctx.caps} live={ctx.live} checksCount={ctx.checks.length}
+      <NextStepCard progress={progressForScope(scope, ctx.progress, ctx.mine)} caps={ctx.caps} live={ctx.live} checksCount={ctx.checks.length}
         team={ctx.group?.team_name ?? null} certificate={!!ctx.certificate} />
       {ctx.certificate ? <CertificateTeaser /> : null}
       <MissionCard ctx={ctx} />
-      <ProgressCard progress={ctx.progress} />
+      <ProgressCard progress={ctx.progress} mine={mine} />
       <TeamCard ctx={ctx} />
       <ScheduleCard sessions={ctx.sessions} />
     </div>

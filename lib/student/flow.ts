@@ -9,6 +9,7 @@ import { liveAllows, type LiveState } from './live.ts';
 import type { StudentProgress } from './context';
 import { isStudentNavActive } from './nav.ts';
 import type { StorageLike } from './pending.ts';
+import type { MyStats } from './scope.ts';
 
 export { MIN_TRAIN_IMAGES };
 
@@ -78,8 +79,12 @@ export interface FlowProgress {
 
 export const EMPTY_FLOW_PROGRESS: FlowProgress = { photos: 0, tagged: 0, model: false, resultsSeen: false, certificate: false };
 
-/** The stepper's view of ws_my_context().progress; a missing progress counts as nothing done. */
-export function flowProgressOf(progress: StudentProgress | null, certificate: boolean, resultsSeen: boolean): FlowProgress {
+/**
+ * The stepper's view of ws_my_context(): the group's progress, or my own counts when `mine` is given
+ * (personal pool scope). A missing progress counts as nothing done.
+ */
+export function flowProgressOf(progress: StudentProgress | null, certificate: boolean, resultsSeen: boolean, mine: MyStats | null = null): FlowProgress {
+  if (mine) return { photos: mine.photos, tagged: mine.tagged, model: mine.models > 0, resultsSeen, certificate };
   return {
     photos: progress?.photos ?? 0,
     tagged: progress?.tagged ?? 0,

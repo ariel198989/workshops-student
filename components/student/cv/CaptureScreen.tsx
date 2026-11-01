@@ -6,6 +6,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, CloudUploadIcon } from '@hugeicons/core-free-icons';
 import { coachTip, STUCK_HINT, TARGET_FIRST, TARGET_STRONG, uploadStuck, validateClassName } from '@/lib/cv/capture-utils';
 import { toast } from '@/lib/store';
+import { poolUser, scopeOf } from '@/lib/student/context';
 import { nextAfterCapture } from '@/lib/student/flow';
 import { CaptureNextBar } from './CaptureNextBar';
 import { ClassPicker } from './ClassPicker';
@@ -48,7 +49,8 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
   const [leaving, setLeaving] = useState(false);
   const router = useRouter();
   const { videoRef, state, error, retry, stop } = useCamera();
-  const cap = useCapture({ videoRef, team: session.team, userId: session.userId, className: active });
+  const scope = scopeOf(session.ctx);
+  const cap = useCapture({ videoRef, team: session.team, userId: session.userId, me: poolUser(scope, session.userId), className: active });
   const next = nextAfterCapture(session.ctx.caps, { total: cap.uploaded, active: active ? cap.countOf(active) : undefined });
 
   useEffect(() => {
@@ -88,7 +90,7 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
           <Link href="/" className={c.close} onClick={leave} aria-label="יציאה מהצילום">
             <HugeiconsIcon icon={Cancel01Icon} size={22} />
           </Link>
-          <span className={c.title}>צילום לקבוצה</span>
+          <span className={c.title}>{scope.personal ? 'צילום' : 'צילום לקבוצה'}</span>
           {cap.sessionTotal > 0 ? <span className={c.pill}>צולמו עכשיו <span className="num">{cap.sessionTotal}</span></span> : null}
         </div>
         <ClassPicker classes={classes} active={active} counts={cap.countOf} onPick={setActive}

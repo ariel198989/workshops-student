@@ -7,10 +7,13 @@ import { createStore, useStore } from '../store';
 import { normalizeCaps, type CycleDepth, type StudentCaps } from './caps';
 import { normalizeChecks, type ConceptCheck } from './concept';
 import { normalizeLive, type LiveState } from './live';
+import { normalizeMine, normalizePoolScope, normalizeUserId, type MyStats, type PoolScope } from './scope';
 
 export type { StudentCaps, CycleDepth, MetricMode, TagMode } from './caps';
 export type { ConceptCheck, ConceptQuestion } from './concept';
 export type { LiveState } from './live';
+export type { MyStats, PoolScope, Scope } from './scope';
+export { scopeOf, poolUser, progressForScope } from './scope';
 
 export interface StudentCoverage { name: string; tagged: number }
 
@@ -33,6 +36,10 @@ export interface StudentWorkshop {
   cycle_depth?: CycleDepth;
   band?: string | null;
   device_mode?: string;
+  /** the 4-digit workshop number (migration 0015) */
+  short_code?: string | null;
+  /** always present after normalizeStudentContext(); 'personal' when the server sent none (migration 0016) */
+  pool_scope: PoolScope;
 }
 
 export interface StudentContext {
@@ -43,7 +50,9 @@ export interface StudentContext {
   checks: ConceptCheck[];
   /** the facilitator's current step (ws_live_state); null means no lock, today's behaviour */
   live: LiveState | null;
-  me: { participant_id: string; full_name: string; roles: string[] };
+  me: { participant_id: string; full_name: string; roles: string[]; /** auth.users id; null before migration 0016 */ user_id: string | null };
+  /** my own counts inside the group; always present after normalizeStudentContext(), zeros when the server sent none */
+  mine: MyStats;
   group: {
     id: string; number: number; display_name: string | null; team_name: string;
     /** token of the public take-home page /model/<token>; absent on contexts served before migration 0013 */
@@ -61,12 +70,16 @@ interface State { ctx: StudentContext | null; loading: boolean; loaded: boolean;
 
 export const studentStore = createStore<State>({ ctx: null, loading: false, loaded: false, error: null });
 
-/** Fills caps, checks and live so every screen can rely on them, whatever the server's version. Pure. */
+/** Fills caps, checks, live, pool scope and my counts so every screen can rely on them, whatever the server's version. Pure. */
 export function normalizeStudentContext(raw: unknown): StudentContext | null {
   if (!raw || typeof raw !== 'object') return null;
-  const r = raw as Record<string, unknown> & { workshop?: { cycle_depth?: unknown } };
+  const r = raw as Record<string, unknown> & { workshop?: Record<string, unknown>; me?: Record<string, unknown> };
+  const base = r as unknown as StudentContext;
   return {
-    ...(r as unknown as StudentContext),
+    ...base,
+    workshop: { ...base.workshop, pool_scope: normalizePoolScope(r.workshop?.pool_scope) },
+    me: { ...base.me, user_id: normalizeUserId(r.me?.user_id) },
+    mine: normalizeMine(r.mine),
     caps: normalizeCaps(r.caps, r.workshop?.cycle_depth),
     checks: normalizeChecks(r.checks),
     live: normalizeLive(r.live),

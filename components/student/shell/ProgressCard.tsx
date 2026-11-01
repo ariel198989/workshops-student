@@ -1,7 +1,8 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ChartLineData01Icon } from '@hugeicons/core-free-icons';
-import type { StudentProgress } from '@/lib/student/context';
+import type { MyStats, StudentProgress } from '@/lib/student/context';
 import { MIN_TAGGED, STRONG_TAGGED, barFill, classLevel, type ClassLevel } from '@/lib/student/next-step';
+import { untaggedOf } from '@/lib/student/scope';
 import k from './kit.module.css';
 import h from './home.module.css';
 
@@ -31,8 +32,33 @@ function ClassBar({ name, tagged }: { name: string; tagged: number }) {
   );
 }
 
+/** Personal pool scope: my photos, my tags, my model, and one bar of my tagged total against the 50 / 150 marks. */
+function MyProgress({ mine }: { mine: MyStats }) {
+  return (
+    <section className={k.card}>
+      <div className={k.cardHead}><HugeiconsIcon icon={ChartLineData01Icon} size={18} />ההתקדמות שלי</div>
+      <div className={h.stats}>
+        <div className={h.stat}><b>{mine.photos}</b><span>התמונות שלי</span></div>
+        <div className={h.stat}><b>{mine.tagged}</b><span>תייגתי</span></div>
+        <div className={h.stat}><b>{mine.models > 0 ? 'מוכן' : 'עוד לא'}</b><span>המודל שלי</span></div>
+      </div>
+      <div className={h.bars}>
+        <ClassBar name="התמונות המתויגות שלי" tagged={mine.tagged} />
+      </div>
+      {untaggedOf(mine) > 0 ? <p className={k.small}>עוד {untaggedOf(mine)} תמונות שלי מחכות לתיוג.</p> : null}
+    </section>
+  );
+}
+
+interface Props {
+  progress: StudentProgress | null;
+  /** set in personal pool scope: the card then shows my own counts instead of the group's */
+  mine?: MyStats | null;
+}
+
 /** Photos / tagged / untagged plus one bar per target class, with marks at 50 (enough to train) and 150 (strong). */
-export function ProgressCard({ progress }: { progress: StudentProgress | null }) {
+export function ProgressCard({ progress, mine = null }: Props) {
+  if (mine) return <MyProgress mine={mine} />;
   const p = progress;
   return (
     <section className={k.card}>

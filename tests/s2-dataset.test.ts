@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  groupKey, splitValGroups, classIndexMap, orderQueue, teamScope, pickTeamModel, countByClass,
+  groupKey, splitValGroups, classIndexMap, orderQueue, teamScope, pickTeamModel, pickOwnModel, pickScopedModels, countByClass,
 } from '../lib/cv/dataset.ts';
 
 const T0 = Date.parse('2026-10-18T10:00:00Z');
@@ -74,4 +74,35 @@ test('pickTeamModel takes the newest approved model of the group, its personal p
   assert.equal(pickTeamModel(models, 'me', 'ח1')?.id, 'personal');
   assert.equal(pickTeamModel(models.slice(0, 3), 'me', 'ח1'), null);
   assert.equal(pickTeamModel([model({ id: 'mine', owner: 'me' })], 'me', 'ח1')?.id, 'mine');
+});
+
+test('pickOwnModel takes only the newest approved model with owner = me', () => {
+  const models = [
+    model({ id: 'mine-unapproved', owner: 'me', approved: false }),
+    model({ id: 'mine-nozip', owner: 'me', zip_path: null }),
+    model({ id: 'team', team_name: 'ח1' }),
+    model({ id: 'mine', owner: 'me', team_name: 'ח1' }),
+    model({ id: 'mine-older', owner: 'me', team_name: 'ח1' }),
+  ];
+  assert.equal(pickOwnModel(models, 'me')?.id, 'mine');
+  assert.equal(pickOwnModel(models.slice(0, 3), 'me'), null);
+});
+
+test('pickScopedModels: personal scope shows mine first and the group model by someone else quieter', () => {
+  const models = [
+    model({ id: 'mate', owner: 'mate', team_name: 'ח1' }),
+    model({ id: 'mine', owner: 'me', team_name: 'ח1' }),
+    model({ id: 'merged', owner: null, team_name: 'ח1' }),
+  ];
+  const personal = pickScopedModels(models, 'me', 'ח1', true);
+  assert.equal(personal.model?.id, 'mine');
+  assert.equal(personal.group?.id, 'mate', 'the newest model that is not mine');
+  // no model of mine: the group's one (here a merged model with no owner) is the only thing on offer, folded away
+  const noMine = pickScopedModels(models.filter((m) => m.id !== 'mine' && m.id !== 'mate'), 'me', 'ח1', true);
+  assert.equal(noMine.model, null);
+  assert.equal(noMine.group?.id, 'merged');
+  // group scope: today's behaviour, nothing in the quiet slot
+  const group = pickScopedModels(models, 'me', 'ח1', false);
+  assert.equal(group.model?.id, 'mate');
+  assert.equal(group.group, null);
 });

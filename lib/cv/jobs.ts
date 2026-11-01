@@ -25,9 +25,11 @@ export interface TrainJob {
 
 export interface QueueEntry { id: string; status: string; created_at: string }
 
-export async function fetchTeamJobs(team: string, limit = 5): Promise<TrainJob[]> {
-  const { data, error } = await sb.from('sc_training_jobs')
-    .select('*').eq('team_name', team).order('created_at', { ascending: false }).limit(limit);
+/** The group's recent jobs, or only the ones `me` requested (personal scope). Newest first. */
+export async function fetchTeamJobs(team: string, me: string | null, limit = 5): Promise<TrainJob[]> {
+  let q = sb.from('sc_training_jobs').select('*').eq('team_name', team);
+  if (me) q = q.eq('requested_by', me);
+  const { data, error } = await q.order('created_at', { ascending: false }).limit(limit);
   if (error) throw new Error(error.message);
   return (data ?? []) as TrainJob[];
 }
@@ -55,11 +57,15 @@ export async function cancelOwnJob(id: string, userId: string): Promise<boolean>
 
 export type StartResult = { ok: true; job: TrainJob } | { ok: false; error: string };
 
+/**
+ * Pack, upload, open a job. In personal scope the ZIP holds only my tagged photos and the trainer
+ * registers the model with owner = requested_by; team_name stays the group's either way.
+ */
 export async function startTeamTrainingJob(
-  userId: string, team: string, onProgress: (msg: string) => void,
+  userId: string, team: string, personal: boolean, onProgress: (msg: string) => void,
 ): Promise<StartResult> {
-  onProgress('אוספים את התמונות של הקבוצה');
-  const built = await buildTeamPoolZip(team, (d, t) => onProgress(`אורזים ${d} מתוך ${t} תמונות`));
+  onProgress(personal ? 'אוספים את התמונות שלך' : 'אוספים את התמונות של הקבוצה');
+  const built = await buildTeamPoolZip(team, personal ? userId : null, (d, t) => onProgress(`אורזים ${d} מתוך ${t} תמונות`));
   if (!built.ok) return built;
   if (built.count < MIN_TRAIN_IMAGES) {
     return { ok: false, error: `יש רק ${built.count} תמונות מתויגות. צריך לפחות ${MIN_TRAIN_IMAGES}.` };

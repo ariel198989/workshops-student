@@ -62,9 +62,32 @@ export function orderQueue<T extends { detected_by: string | null; created_at: s
 
 interface PickableModel { owner: string | null; team_name: string; zip_path: string | null; approved: boolean }
 
+const usable = (m: PickableModel): boolean => !!m.zip_path && m.approved;
+
 /** The group's model: newest approved model it owns (list is newest first). No city fallback for students. */
 export function pickTeamModel<T extends PickableModel>(models: T[], userId: string | null, team: string): T | null {
   const [t, personal] = teamScope(team);
   const mine = (m: T) => (userId != null && m.owner === userId) || m.team_name === t || m.team_name === personal;
-  return models.find((m) => !!m.zip_path && m.approved && mine(m)) ?? null;
+  return models.find((m) => usable(m) && mine(m)) ?? null;
+}
+
+/** My own model: the newest approved one with owner = me (the trainer sets owner = requested_by). */
+export function pickOwnModel<T extends PickableModel>(models: T[], userId: string): T | null {
+  return models.find((m) => usable(m) && m.owner === userId) ?? null;
+}
+
+export interface ModelPick<T> {
+  /** what the results screen shows first: mine in personal scope, the group's otherwise */
+  model: T | null;
+  /** personal scope only: the group's newest model by someone else (or a merged one), shown quieter */
+  group: T | null;
+}
+
+/** Which model(s) the results screen shows for this scope. */
+export function pickScopedModels<T extends PickableModel>(models: T[], userId: string, team: string, personal: boolean): ModelPick<T> {
+  if (!personal) return { model: pickTeamModel(models, userId, team), group: null };
+  return {
+    model: pickOwnModel(models, userId),
+    group: pickTeamModel(models.filter((m) => m.owner !== userId), null, team),
+  };
 }

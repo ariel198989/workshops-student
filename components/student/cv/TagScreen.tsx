@@ -5,23 +5,34 @@ import { Spinner } from '@/components/ui/Spinner';
 import { publicUrl } from '@/lib/db';
 import { isUsableBox, type NBox } from '@/lib/cv/geometry';
 import type { StudentCaps } from '@/lib/student/caps';
+import { scopeOf } from '@/lib/student/context';
 import { TagStage } from './TagStage';
 import { useTagQueue } from './useTagQueue';
 import type { CvSession } from './CvGate';
 import s from './cv.module.css';
 import t from './tag.module.css';
 
-interface DoneProps { saved: number; skipped: number; caps: StudentCaps; mates: boolean; onMates: () => void; onReload: () => void }
+interface DoneProps {
+  saved: number;
+  skipped: number;
+  caps: StudentCaps;
+  /** personal pool scope: the queue is mine only and teammates' photos are never offered */
+  personal: boolean;
+  mates: boolean;
+  onMates: () => void;
+  onReload: () => void;
+}
 
 const taggedTitle = (n: number): string => (n === 1 ? 'סיימתם לתייג תמונה אחת' : `סיימתם לתייג ${n} תמונות`);
 
 /** The queue is empty: say what was done and put the next step first. */
-function Done({ saved, skipped, caps, mates, onMates, onReload }: DoneProps) {
+function Done({ saved, skipped, caps, personal, mates, onMates, onReload }: DoneProps) {
+  const pooled = personal ? 'התמונות המתויגות נכנסו למאגר שלך.' : 'התמונות המתויגות נכנסו למאגר של הקבוצה.';
   return (
     <div className={`${s.card} ${s.center} ${s.stack}`}>
       <h2 className={s.h2}>{saved > 0 ? taggedTitle(saved) : 'אין תמונות שמחכות לתיוג'}</h2>
       <p className={s.lead}>
-        {saved > 0 ? 'התמונות המתויגות נכנסו למאגר של הקבוצה.' : 'צלמו עוד תמונות ואז חזרו לכאן לסמן עליהן תיבות.'}
+        {saved > 0 ? pooled : 'צלמו עוד תמונות ואז חזרו לכאן לסמן עליהן תיבות.'}
       </p>
       {caps.can_train
         ? <Link href="/train" className={`${s.btn} ${s.btnPrimary}`}>לשלב הבא: אימון</Link>
@@ -29,7 +40,7 @@ function Done({ saved, skipped, caps, mates, onMates, onReload }: DoneProps) {
       {skipped > 0 ? (
         <button type="button" className={`${s.btn} ${s.btnWarn}`} onClick={onReload}>חזרה לתמונות שדילגתם ({skipped})</button>
       ) : null}
-      {!mates ? (
+      {!personal && !mates ? (
         <button type="button" className={s.btn} onClick={onMates}>עוד תמונות לתייג? כללו גם של חברי הקבוצה</button>
       ) : null}
       {caps.can_capture ? <Link href="/capture" className={`${s.btn} ${s.btnGhost}`}>לצילום</Link> : null}
@@ -90,7 +101,9 @@ function PointActions({ box, busy, onSave, onClear, onSkip, onNoObject }: Action
 export function TagScreen({ session }: { session: CvSession }) {
   const { caps } = session.ctx;
   const point = caps.tag_mode === 'point';
-  const [mates, setMates] = useState(false);
+  const { personal } = scopeOf(session.ctx);
+  const [wantMates, setMates] = useState(false);
+  const mates = !personal && wantMates; // personal scope: my photos only, no way to widen the queue
   const q = useTagQueue(session.team, session.userId, mates);
   const [box, setBox] = useState<NBox | null>(null);
   const [lastBox, setLastBox] = useState<NBox | null>(null);
@@ -117,7 +130,8 @@ export function TagScreen({ session }: { session: CvSession }) {
   }
   if (!cur) {
     return (
-      <Done saved={q.saved} skipped={q.skipped} caps={caps} mates={mates} onMates={() => setMates(true)} onReload={() => void q.reload()} />
+      <Done saved={q.saved} skipped={q.skipped} caps={caps} personal={personal} mates={mates}
+        onMates={() => setMates(true)} onReload={() => void q.reload()} />
     );
   }
 
@@ -154,10 +168,12 @@ export function TagScreen({ session }: { session: CvSession }) {
           : 'תיבה צמודה: הקצוות נוגעים באובייקט, בלי הרבה רקע מסביב. אפשר לגרור את התיבה, או את הפינות שלה.'}
       </p>
       {point ? <PointActions {...actions} /> : <BoxActions {...actions} />}
-      <label className={t.toggle}>
-        <input type="checkbox" checked={mates} onChange={(e) => setMates(e.target.checked)} />
-        להציג גם תמונות של חברי הקבוצה
-      </label>
+      {!personal ? (
+        <label className={t.toggle}>
+          <input type="checkbox" checked={mates} onChange={(e) => setMates(e.target.checked)} />
+          להציג גם תמונות של חברי הקבוצה
+        </label>
+      ) : null}
       {mates ? <p className={s.small}>מתייגים גם את התמונות של חברי הקבוצה. כל תיבה עוזרת למודל של כולם.</p> : null}
       {point && box ? <div className={t.barSpace} aria-hidden /> : null}
     </div>

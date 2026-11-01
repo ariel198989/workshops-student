@@ -24,14 +24,18 @@ const QUEUE_LIMIT = 300;
 export const ALREADY_HANDLED = 'התמונה הזאת כבר טופלה';
 export const isAlreadyHandled = (e: unknown): boolean => e instanceof Error && e.message === ALREADY_HANDLED;
 
-/** Photos per class the group has captured (tagged or not, rejected excluded). */
-export async function fetchCaptureCounts(team: string): Promise<Record<string, number>> {
-  const { data, error } = await sb.from('sc_detections')
+/**
+ * Photos per class already captured (tagged or not, rejected excluded): the whole group's, or only
+ * the ones `me` shot when the workshop's pool scope is personal.
+ */
+export async function fetchCaptureCounts(team: string, me: string | null): Promise<Record<string, number>> {
+  let q = sb.from('sc_detections')
     .select('class_name')
     .in('team_name', teamScope(team))
     .not('frame_path', 'is', null)
-    .neq('status', 'rejected')
-    .limit(COUNT_LIMIT);
+    .neq('status', 'rejected');
+  if (me) q = q.eq('detected_by', me);
+  const { data, error } = await q.limit(COUNT_LIMIT);
   if (error) throw new Error(error.message);
   return countByClass((data ?? []) as { class_name: string }[]);
 }

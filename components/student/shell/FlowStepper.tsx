@@ -5,7 +5,7 @@ import type { MouseEvent } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import { toast } from '@/lib/store';
-import { teamOf, type StudentContext } from '@/lib/student/context';
+import { scopeOf, teamOf, type StudentContext } from '@/lib/student/context';
 import { flowProgressOf, flowSteps, type FlowStep } from '@/lib/student/flow';
 import { liveBlockedReason } from '@/lib/student/live';
 import { useResultsSeen } from '@/lib/student/results-seen';
@@ -26,7 +26,8 @@ function Dot({ st, index }: { st: FlowStep; index: number }) {
 export function FlowStepper({ ctx }: { ctx: StudentContext }) {
   const pathname = usePathname();
   const resultsSeen = useResultsSeen(teamOf(ctx));
-  const steps = flowSteps(ctx.caps, flowProgressOf(ctx.progress, !!ctx.certificate, resultsSeen), ctx.live, pathname);
+  const mine = scopeOf(ctx).personal ? ctx.mine : null; // personal pool scope: the ticks follow my own counts
+  const steps = flowSteps(ctx.caps, flowProgressOf(ctx.progress, !!ctx.certificate, resultsSeen, mine), ctx.live, pathname);
   if (steps.length === 0) return null;
   const hold = (e: MouseEvent) => {
     e.preventDefault();
