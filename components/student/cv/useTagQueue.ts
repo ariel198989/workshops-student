@@ -7,9 +7,9 @@ import { reloadStudentContext } from '@/lib/student/context';
 import { toast, toastWithAction } from '@/lib/store';
 
 const REFRESH_CONTEXT_EVERY = 5;
-/** How long the "אין אובייקט" undo stays on screen. */
+/** How long the delete ("מחיקת התמונה") undo stays on screen. */
 export const UNDO_MS = 6000;
-const REJECTED_MSG = 'התמונה סומנה: אין אובייקט';
+const REJECTED_MSG = 'התמונה נמחקה';
 const RESTORED_MSG = 'התמונה חזרה לתור';
 
 const insertAt = <T,>(list: T[], at: number, item: T): T[] => [...list.slice(0, at), item, ...list.slice(at)];

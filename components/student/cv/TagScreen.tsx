@@ -59,7 +59,7 @@ function BoxActions({ box, lastBox, busy, onSave, onSkip, onNoObject }: ActionsP
         </button>
       ) : null}
       <button type="button" className={s.btn} disabled={busy} onClick={onSkip}>דילוג</button>
-      <button type="button" className={`${s.btn} ${s.btnWarn}`} disabled={busy} onClick={onNoObject}>אין אובייקט</button>
+      <button type="button" className={`${s.btn} ${s.btnWarn}`} disabled={busy} onClick={onNoObject} title="מוחקת את התמונה מהדאטה של הקבוצה">🗑 מחיקת התמונה</button>
     </div>
   );
 }
@@ -81,7 +81,7 @@ function PointActions({ box, busy, onSave, onClear, onSkip, onNoObject }: Action
   return (
     <div className={t.actions}>
       <button type="button" className={s.btn} disabled={busy} onClick={onSkip}>דילוג</button>
-      <button type="button" className={`${s.btn} ${s.btnWarn}`} disabled={busy} onClick={onNoObject}>אין אובייקט</button>
+      <button type="button" className={`${s.btn} ${s.btnWarn}`} disabled={busy} onClick={onNoObject} title="מוחקת את התמונה מהדאטה של הקבוצה">🗑 מחיקת התמונה</button>
     </div>
   );
 }
