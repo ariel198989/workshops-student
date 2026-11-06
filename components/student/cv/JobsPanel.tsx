@@ -23,6 +23,10 @@ interface Props {
   userId: string;
   /** personal pool scope: the list holds my jobs only */
   personal: boolean;
+  /** where "המודל מוכן" leads; null hides the link (staff pages have no results screen) */
+  resultsHref?: string | null;
+  /** heading of the recent-jobs list, when the default (mine / the group's) does not fit */
+  listTitle?: string;
   justDone: TrainJob | null;
   /** re-open a training job after a failure; undefined when training is blocked right now */
   onRetry?: () => void;
@@ -69,7 +73,9 @@ const fmtWhen = (iso: string): string =>
   new Date(iso).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
 /** The live job status plus the group's recent jobs. Only the requester cancels, and only when the rules allow. */
-export function JobsPanel({ jobs, active, ahead, alert, failed, userId, personal, justDone, onRetry, onChanged }: Props) {
+export function JobsPanel({
+  jobs, active, ahead, alert, failed, userId, personal, resultsHref = '/results', listTitle, justDone, onRetry, onChanged,
+}: Props) {
   const [busy, setBusy] = useState(false);
 
   async function cancel() {
@@ -91,7 +97,7 @@ export function JobsPanel({ jobs, active, ahead, alert, failed, userId, personal
       {justDone ? (
         <div className={s.note} role="status">
           <b>המודל מוכן!</b>
-          <Link href="/results" className={`${s.btn} ${s.btnPrimary}`}>לתוצאות ולבדיקה</Link>
+          {resultsHref ? <Link href={resultsHref} className={`${s.btn} ${s.btnPrimary}`}>לתוצאות ולבדיקה</Link> : null}
         </div>
       ) : null}
       {active ? (
@@ -100,7 +106,7 @@ export function JobsPanel({ jobs, active, ahead, alert, failed, userId, personal
       {failed && !justDone ? <FailedJob job={failed} onRetry={onRetry} /> : null}
       {jobs.length > 0 ? (
         <div className={s.card}>
-          <div className={s.cardHead}>{personal ? 'המשימות האחרונות שלי' : 'משימות אחרונות של הקבוצה'}</div>
+          <div className={s.cardHead}>{listTitle ?? (personal ? 'המשימות האחרונות שלי' : 'משימות אחרונות של הקבוצה')}</div>
           <ul className={s.jobs}>
             {jobs.map((j) => (
               <li key={j.id} className={s.job}>
