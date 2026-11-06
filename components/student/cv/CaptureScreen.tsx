@@ -4,10 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, CloudUploadIcon } from '@hugeicons/core-free-icons';
-import { coachTip, STUCK_HINT, TARGET_FIRST, TARGET_STRONG, uploadStuck, validateClassName } from '@/lib/cv/capture-utils';
+import {
+  captureAllowed, coachTip, STUCK_HINT, TARGET_FIRST, TARGET_STRONG, uploadStuck, validateClassName, WORKSHOP_NOT_LIVE,
+} from '@/lib/cv/capture-utils';
 import { FACE_MESSAGE } from '@/lib/cv/face-guard';
 import { toast } from '@/lib/store';
-import { poolUser, scopeOf } from '@/lib/student/context';
+import { poolUser, reloadStudentContext, scopeOf } from '@/lib/student/context';
 import { nextAfterCapture } from '@/lib/student/flow';
 import { CaptureNextBar } from './CaptureNextBar';
 import { ClassPicker } from './ClassPicker';
@@ -66,8 +68,16 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
     return () => window.removeEventListener('beforeunload', warn);
   }, [cap.stats.queued]);
 
+  // the database takes photos only during a live workshop; the button says so before a shot is wasted
+  const live = captureAllowed(session.ctx.workshop.status);
+  const rejectedNotLive = cap.stats.failing && cap.stats.error === WORKSHOP_NOT_LIVE;
+  const { setRunning } = cap;
+  useEffect(() => { if (!live) setRunning(false); }, [live, setRunning]);
+  // the server refused while the context still said live: refresh it so the button follows
+  useEffect(() => { if (rejectedNotLive) void reloadStudentContext(); }, [rejectedNotLive]);
+
   const addCustom = (cls: string) => { setCustom((l) => [...l, cls]); setActive(cls); };
-  const ready = state === 'live' && !!active && !leaving;
+  const ready = state === 'live' && !!active && !leaving && live;
 
   /** Stop shooting, let the last uploads land, release the camera, move on. Nothing is lost on the way. */
   async function goNext() {
@@ -115,7 +125,9 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
         {cap.uploaded > 0 ? (
           <CaptureNextBar next={next} loaded={cap.loaded} activeClass={active} leaving={leaving} onNext={() => void goNext()} />
         ) : null}
-        {leaving && cap.stats.queued > 0 ? (
+        {!live || rejectedNotLive ? (
+          <div className={`${c.coach} ${c.coachWarn}`} role="alert">{WORKSHOP_NOT_LIVE}</div>
+        ) : leaving && cap.stats.queued > 0 ? (
           <div className={c.coach} role="status">{UPLOADING_LAST}</div>
         ) : uploadStuck(cap.stats) ? (
           <div className={`${c.coach} ${c.coachWarn}`} role="alert">{STUCK_HINT}</div>

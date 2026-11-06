@@ -2,7 +2,7 @@
 // Upload one captured frame into the group's folder of the private ws-media bucket
 // and register it in ws_photos. No GPS, no location: a photo is a class name and a file.
 import { sb, uploadMedia } from '../db';
-import { isAlreadyUploaded } from './capture-utils';
+import { isAlreadyUploaded, isNotLiveRejection, WORKSHOP_NOT_LIVE } from './capture-utils';
 import type { GuardVerdict } from './face-guard';
 import { isAlreadySaved, photoRow, type PhotoInput } from './ws-data';
 
@@ -20,6 +20,7 @@ async function ensureUploaded(item: CaptureItem): Promise<void> {
   try {
     await uploadMedia(item.path, item.blob, 'image/jpeg');
   } catch (e) {
+    if (isNotLiveRejection(e)) throw new Error(WORKSHOP_NOT_LIVE);
     if (!isAlreadyUploaded(e)) throw e;
   }
 }
@@ -33,6 +34,7 @@ export async function saveCapture(item: CaptureItem): Promise<void> {
   }
   const { error } = await sb.from('ws_photos').insert(photoRow(item));
   // 23505 = this frame_path is already a row: the first insert landed, only its answer was lost
+  if (error && isNotLiveRejection(error)) throw new Error(WORKSHOP_NOT_LIVE);
   if (error && !isAlreadySaved(error)) throw new Error(error.message);
   uploaded.delete(item.path);
 }

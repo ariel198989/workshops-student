@@ -70,6 +70,24 @@ export function isAlreadyUploaded(e: unknown): boolean {
   return typeof message === 'string' && /already exists|duplicate/i.test(message);
 }
 
+/** The database takes photos only while the workshop is live (RLS on ws_photos and on ws-media uploads). */
+export const WORKSHOP_NOT_LIVE = 'הסדנה לא פעילה כרגע, אפשר לצלם רק בזמן מפגש';
+
+/** Capture is open only during a live workshop (ws_my_context: workshop.status). */
+export const captureAllowed = (workshopStatus: unknown): boolean => workshopStatus === 'live';
+
+/**
+ * The database refusing a photo by policy: Postgres 42501 on the ws_photos insert, or Storage's
+ * "new row violates row-level security policy" (HTTP 403) on the ws-media upload. Since the
+ * workshop-must-be-live rule, that is what a capture outside a session gets.
+ */
+export function isNotLiveRejection(e: unknown): boolean {
+  if (!e || typeof e !== 'object') return false;
+  const { code, message } = e as { code?: unknown; message?: unknown };
+  if (String(code ?? '') === '42501') return true;
+  return typeof message === 'string' && /row[- ]level security/i.test(message);
+}
+
 /** Consecutive failures of the same head item before the UI says the photo itself is stuck. */
 export const STUCK_AFTER = 3;
 export const STUCK_HINT = 'התמונה לא עולה. בדקו רשת ונסו שוב';
@@ -81,6 +99,8 @@ export interface QueueStats {
   dropped: number;
   /** how many times in a row the current head item failed; 0 once anything is saved */
   failures: number;
+  /** the message of the head item's last failure; null while nothing is failing */
+  error: string | null;
 }
 
 export const uploadStuck = (s: QueueStats): boolean => s.failing && s.failures >= STUCK_AFTER;
@@ -108,9 +128,10 @@ export function createRetryQueue<T>(
   let dropped = 0;
   let failing = false;
   let failures = 0;
+  let error: string | null = null;
   let running: Promise<void> | null = null;
 
-  const stats = (): QueueStats => ({ queued: items.length, saved, failing, dropped, failures });
+  const stats = (): QueueStats => ({ queued: items.length, saved, failing, dropped, failures, error });
   const notify = () => opts.onChange?.(stats());
 
   async function drain(): Promise<void> {
@@ -121,10 +142,12 @@ export function createRetryQueue<T>(
         saved += 1;
         failing = false;
         failures = 0;
+        error = null;
         notify();
-      } catch {
+      } catch (e) {
         failing = true;
         failures += 1;
+        error = e instanceof Error ? e.message : String(e);
         notify();
         return;
       }

@@ -53,7 +53,7 @@ test('retry queue keeps failed items and delivers them on retry', async () => {
   fail = false;
   await q.retryNow();
   assert.deepEqual(saved, ['one', 'two']);
-  assert.deepEqual(q.stats(), { queued: 0, saved: 2, failing: false, dropped: 0, failures: 0 });
+  assert.deepEqual(q.stats(), { queued: 0, saved: 2, failing: false, dropped: 0, failures: 0, error: null });
 });
 
 test('retry queue refuses new items beyond its cap instead of eating memory', async () => {
@@ -110,7 +110,7 @@ test('retry queue counts consecutive failures of the head item and resets on suc
   assert.equal(uploadStuck(q.stats()), true, 'after three strikes the UI points at the photo');
   fail = false;
   await q.retryNow();
-  assert.deepEqual(q.stats(), { queued: 0, saved: 1, failing: false, dropped: 0, failures: 0 });
+  assert.deepEqual(q.stats(), { queued: 0, saved: 1, failing: false, dropped: 0, failures: 0, error: null });
   assert.equal(uploadStuck(q.stats()), false);
 });
 

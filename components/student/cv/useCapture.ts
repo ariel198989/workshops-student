@@ -11,7 +11,7 @@ import { photoPath, type MediaScope } from '@/lib/cv/ws-data';
 import { toast } from '@/lib/store';
 
 const RETRY_EVERY_MS = 10000;
-const EMPTY_STATS: QueueStats = { queued: 0, saved: 0, failing: false, dropped: 0, failures: 0 };
+const EMPTY_STATS: QueueStats = { queued: 0, saved: 0, failing: false, dropped: 0, failures: 0, error: null };
 
 interface Args {
   videoRef: RefObject<HTMLVideoElement | null>;
