@@ -1,7 +1,7 @@
 'use client';
 // Step 2: tap-tap-tap frames into the selected class, then one "למד" pass.
 import { useEffect, useRef, useState } from 'react';
-import { checkFrame, startFaceGuard } from '@/lib/cv/face-detector';
+import { checkFrame, faceGuardSettled, startFaceGuard } from '@/lib/cv/face-detector';
 import { FACE_WARNING_FACILITATOR } from '@/lib/cv/face-guard';
 import { dotStates, RECOMMENDED_PER_CLASS } from '@/lib/pocket/score';
 import { CameraFlip } from './CameraFlip';
@@ -69,6 +69,8 @@ export function TeachStep(p: Props) {
   const [flashAt, setFlashAt] = useState(0);
   /** the privacy guard saw a face in the last shot; this mode never uploads, so it only warns */
   const [faceWarn, setFaceWarn] = useState(false);
+  /** numbers the face checks: only the latest shot's answer may set or clear the warning */
+  const checkSeq = useRef(0);
 
   useEffect(() => { startFaceGuard(); }, []);
 
@@ -80,8 +82,24 @@ export function TeachStep(p: Props) {
     p.onShot({ durl, label: p.active });
     setFlashAt(Date.now());
     navigator.vibrate?.(30);
-    void checkFrame(scratch.current).then((v) => setFaceWarn(v === 'face'));
+    void warnIfFace(scratch.current);
   };
+
+  /** Checks a copy of this shot (the scratch canvas is reused by the next one); out-of-order answers are dropped. */
+  async function warnIfFace(canvas: HTMLCanvasElement): Promise<void> {
+    const id = ++checkSeq.current;
+    let copy: ImageBitmap | null = null;
+    try {
+      copy = await createImageBitmap(canvas); // the pixels are copied when this is called, before any await
+      await faceGuardSettled();
+      const verdict = await checkFrame(copy);
+      if (id === checkSeq.current) setFaceWarn(verdict === 'face');
+    } catch {
+      /* a warning only: this mode never uploads */
+    } finally {
+      copy?.close();
+    }
+  }
 
   const canShoot = cam.state === 'live' && !!p.active && !p.learning;
   const ready = Object.values(p.counts).filter((n) => n > 0).length >= 2;
