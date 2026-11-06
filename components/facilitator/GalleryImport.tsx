@@ -3,6 +3,8 @@
 // which gallery classes become trainer classes and the frames are embedded
 // here, in the browser. Downloads only; nothing is written anywhere.
 import { useEffect, useRef, useState } from 'react';
+import { checkFrame, preloadFaceGuard } from '@/lib/cv/face-detector';
+import { galleryFaceNote } from '@/lib/cv/face-guard';
 import { signedUrls } from '@/lib/cv/signed-url';
 import { addExample, imageFromUrl } from '@/lib/pocket/engine';
 import {
@@ -10,6 +12,7 @@ import {
   type GalleryClass, type GalleryGroup, type GalleryRow,
 } from '@/lib/pocket/gallery';
 import { capPerClass, MAX_CLASSES } from '@/lib/pocket/score';
+import { toast } from '@/lib/store';
 import { Spinner } from '@/components/ui/Spinner';
 import f from './facilitator.module.css';
 
@@ -33,7 +36,7 @@ export function GalleryImport({ workshopId, classes, onImported, onClose }: Prop
   const closeRef = useRef<HTMLButtonElement>(null);
   const importing = !!progress && progress.done < progress.total;
 
-  useEffect(() => { closeRef.current?.focus(); }, []);
+  useEffect(() => { closeRef.current?.focus(); preloadFaceGuard(); }, []);
 
   // Escape closes the sheet, except while frames are still being embedded
   useEffect(() => {
@@ -83,12 +86,14 @@ export function GalleryImport({ workshopId, classes, onImported, onClose }: Prop
     // the photos are private: one request signs a link for every picked frame (staff may read their workshop's)
     const urls = await signedUrls(rows.map((r) => r.frame_path)).catch(() => new Map<string, string>());
     let failed = 0;
+    let withFaces = 0; // privacy guard: this mode never uploads, so a face is only reported
     for (let i = 0; i < rows.length; i++) {
       try {
         const url = urls.get(rows[i].frame_path);
         if (!url) throw new Error('no signed link');
         const img = await imageFromUrl(url);
         await addExample(img, rows[i].class_name);
+        if ((await checkFrame(img)) === 'face') withFaces += 1;
       } catch {
         failed += 1;
       }
@@ -99,6 +104,8 @@ export function GalleryImport({ workshopId, classes, onImported, onClose }: Prop
       setError(ALL_FAILED);
       return;
     }
+    const note = galleryFaceNote(withFaces);
+    if (note) toast(note);
     onImported(picked);
   };
 

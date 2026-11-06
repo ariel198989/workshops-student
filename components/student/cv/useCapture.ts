@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { frameQuality, grabJpeg, holdScreenAwake, videoReady } from '@/lib/cv/camera';
 import { createRetryQueue, randomSuffix, SERIES_INTERVAL_MS, type QueueStats, type RetryQueue } from '@/lib/cv/capture-utils';
 import { fetchCaptureCounts } from '@/lib/cv/detections';
+import { checkFrame, preloadFaceGuard } from '@/lib/cv/face-detector';
+import { mayUpload } from '@/lib/cv/face-guard';
 import { QUALITY_MESSAGES, type QualityReason } from '@/lib/cv/quality';
 import { saveCapture, type CaptureItem } from '@/lib/cv/upload';
 import { photoPath, type MediaScope } from '@/lib/cv/ws-data';
@@ -33,11 +35,15 @@ export function useCapture({ videoRef, team, media, userId, me, className }: Arg
   const [issue, setIssue] = useState<QualityReason | null>(null);
   const [skipped, setSkipped] = useState(0);
   const [flashAt, setFlashAt] = useState(0);
+  /** the last shot had a face in it and was not uploaded (privacy guard) */
+  const [faceBlocked, setFaceBlocked] = useState(false);
+  const busy = useRef(false);
   const queue = useRef<RetryQueue<CaptureItem> | null>(null);
   const scratch = useRef<HTMLCanvasElement | null>(null);
   const classRef = useRef(className);
 
   useEffect(() => { classRef.current = className; }, [className]);
+  useEffect(() => { preloadFaceGuard(); }, []);
   useEffect(() => {
     fetchCaptureCounts(team, me).then(setBase).catch(() => undefined).finally(() => setLoaded(true));
   }, [team, me]);
@@ -51,23 +57,38 @@ export function useCapture({ videoRef, team, media, userId, me, className }: Arg
     return () => { clearInterval(timer); window.removeEventListener('online', retry); queue.current = null; };
   }, []);
 
-  /** One frame -> the queue. Resolves false when nothing was taken (camera not ready, or the queue is full). */
+  /**
+   * One frame -> the face guard -> the queue. Resolves false when nothing was taken: camera not
+   * ready, a face in the frame (privacy guard, the photo never leaves the phone), or the queue is full.
+   */
   const shoot = useCallback(async (): Promise<boolean> => {
     const video = videoRef.current;
     const q = queue.current;
-    if (!q || !videoReady(video)) return false;
-    scratch.current ??= document.createElement('canvas');
-    const blob = await grabJpeg(video, scratch.current);
-    if (!blob) return false;
-    const cls = classRef.current;
-    // the path is fixed here, at snapshot time: every retry of this item reuses it
-    const path = photoPath({ workshopId, groupId }, Date.now(), randomSuffix());
-    const item: CaptureItem = { blob, path, className: cls, team, groupId, userId };
-    if (!q.submit(item)) { toast('יש יותר מדי תמונות שמחכות להעלאה. חכו לחיבור ואז המשיכו.'); return false; }
-    setTaken((t) => ({ ...t, [cls]: (t[cls] ?? 0) + 1 }));
-    setFlashAt(Date.now());
-    navigator.vibrate?.(20);
-    return true;
+    if (!q || !videoReady(video) || busy.current) return false;
+    busy.current = true; // the scratch canvas holds this frame until the guard has read it
+    try {
+      scratch.current ??= document.createElement('canvas');
+      const blob = await grabJpeg(video, scratch.current);
+      if (!blob) return false;
+      const faceGuard = await checkFrame(scratch.current);
+      if (!mayUpload(faceGuard)) {
+        setFaceBlocked(true);
+        navigator.vibrate?.([40, 60, 40]);
+        return false;
+      }
+      setFaceBlocked(false);
+      const cls = classRef.current;
+      // the path is fixed here, at snapshot time: every retry of this item reuses it
+      const path = photoPath({ workshopId, groupId }, Date.now(), randomSuffix());
+      const item: CaptureItem = { blob, path, className: cls, team, groupId, userId, faceGuard };
+      if (!q.submit(item)) { toast('יש יותר מדי תמונות שמחכות להעלאה. חכו לחיבור ואז המשיכו.'); return false; }
+      setTaken((t) => ({ ...t, [cls]: (t[cls] ?? 0) + 1 }));
+      setFlashAt(Date.now());
+      navigator.vibrate?.(20);
+      return true;
+    } finally {
+      busy.current = false;
+    }
   }, [videoRef, team, workshopId, groupId, userId]);
 
   const shootRef = useRef(shoot);
@@ -109,6 +130,7 @@ export function useCapture({ videoRef, team, media, userId, me, className }: Arg
 
   return {
     shoot, running, setRunning, countOf, sessionTotal, uploaded, loaded, stats, issueText, skipped, flashAt, idle,
+    faceBlocked, dismissFace: () => setFaceBlocked(false),
     retryNow: () => void queue.current?.retryNow(),
   };
 }

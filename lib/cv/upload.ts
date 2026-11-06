@@ -3,11 +3,14 @@
 // and register it in ws_photos. No GPS, no location: a photo is a class name and a file.
 import { sb, uploadMedia } from '../db';
 import { isAlreadyUploaded } from './capture-utils';
+import type { GuardVerdict } from './face-guard';
 import { isAlreadySaved, photoRow, type PhotoInput } from './ws-data';
 
 export interface CaptureItem extends PhotoInput {
   blob: Blob;
   // `path` is fixed at snapshot time so a retry never creates an orphan upload
+  /** the privacy guard's verdict at snapshot time: 'face' never reaches the queue */
+  faceGuard: Exclude<GuardVerdict, 'face'>;
 }
 
 const uploaded = new Set<string>();
@@ -23,6 +26,8 @@ async function ensureUploaded(item: CaptureItem): Promise<void> {
 
 export async function saveCapture(item: CaptureItem): Promise<void> {
   if (!uploaded.has(item.path)) {
+    // fail open is a choice, so it is on record: this photo went up without the face check
+    if (item.faceGuard === 'skipped') console.warn('[face-guard] uploading without a face check (detector unavailable):', item.path);
     await ensureUploaded(item);
     uploaded.add(item.path); // upload ok but insert failed: retry only the insert
   }

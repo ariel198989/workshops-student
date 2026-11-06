@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, CloudUploadIcon } from '@hugeicons/core-free-icons';
 import { coachTip, STUCK_HINT, TARGET_FIRST, TARGET_STRONG, uploadStuck, validateClassName } from '@/lib/cv/capture-utils';
+import { FACE_MESSAGE } from '@/lib/cv/face-guard';
 import { toast } from '@/lib/store';
 import { poolUser, scopeOf } from '@/lib/student/context';
 import { nextAfterCapture } from '@/lib/student/flow';
@@ -102,6 +103,11 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
         <div className={c.err} role="alert">
           <p>{error}</p>
           <button type="button" className="primary" onClick={retry}>ניסיון נוסף</button>
+        </div>
+      ) : cap.faceBlocked ? (
+        <div className={c.err} role="alert">
+          <p>{FACE_MESSAGE}</p>
+          <button type="button" className="primary" onClick={cap.dismissFace}>צילום מחדש</button>
         </div>
       ) : <div className={c.spacer} />}
 

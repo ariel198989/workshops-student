@@ -1,6 +1,8 @@
 'use client';
 // Step 2: tap-tap-tap frames into the selected class, then one "למד" pass.
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { checkFrame, preloadFaceGuard } from '@/lib/cv/face-detector';
+import { FACE_WARNING_FACILITATOR } from '@/lib/cv/face-guard';
 import { dotStates, RECOMMENDED_PER_CLASS } from '@/lib/pocket/score';
 import { CameraFlip } from './CameraFlip';
 import { grabFrame, useFacilitatorCamera } from './useFacilitatorCamera';
@@ -65,6 +67,10 @@ export function TeachStep(p: Props) {
   const cam = useFacilitatorCamera();
   const scratch = useRef<HTMLCanvasElement | null>(null);
   const [flashAt, setFlashAt] = useState(0);
+  /** the privacy guard saw a face in the last shot; this mode never uploads, so it only warns */
+  const [faceWarn, setFaceWarn] = useState(false);
+
+  useEffect(() => { preloadFaceGuard(); }, []);
 
   const shoot = () => {
     if (!p.active) return;
@@ -74,6 +80,7 @@ export function TeachStep(p: Props) {
     p.onShot({ durl, label: p.active });
     setFlashAt(Date.now());
     navigator.vibrate?.(30);
+    void checkFrame(scratch.current).then((v) => setFaceWarn(v === 'face'));
   };
 
   const canShoot = cam.state === 'live' && !!p.active && !p.learning;
@@ -109,6 +116,7 @@ export function TeachStep(p: Props) {
           {p.classes.map((c) => (
             <ClassCard key={c} name={c} learned={p.counts[c] ?? 0} queued={queuedOf(c)} on={c === p.active} onPick={() => p.onPick(c)} />
           ))}
+          {faceWarn ? <p className={f.err} role="status">{FACE_WARNING_FACILITATOR}</p> : null}
           <p className={f.sub}>{RECOMMENDED_PER_CLASS} תמונות לכל מחלקה, מזוויות שונות.</p>
           {p.workshopId ? (
             <button type="button" onClick={p.onOpenGallery} disabled={!!p.learning}>מהגלריה של הקבוצות</button>
