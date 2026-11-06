@@ -7,6 +7,23 @@ export interface SessionPlan {
   modulesBySession: Record<string, ModuleRow[]>;
 }
 
+/**
+ * The story of the workshop's curriculum template (ws_workshops.template_id → ws_curriculum_templates.story),
+ * or null: no template, no story, or RLS hides templates from this account (only core staff read them).
+ * Never throws: the opener box is a nice-to-have on top of the plan.
+ */
+export async function fetchTemplateStory(workshopId: string): Promise<unknown> {
+  try {
+    const { data, error } = await sb.from('ws_workshops')
+      .select('template:ws_curriculum_templates(story)').eq('id', workshopId).maybeSingle();
+    if (error || !data) return null;
+    const t = (data as { template?: { story?: unknown } | { story?: unknown }[] | null }).template;
+    return (Array.isArray(t) ? t[0]?.story : t?.story) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchSessionPlan(workshopId: string): Promise<SessionPlan> {
   const [s, m] = await Promise.all([
     sb.from('ws_sessions')

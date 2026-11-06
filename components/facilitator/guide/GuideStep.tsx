@@ -8,15 +8,17 @@ import {
   fmtShortDate, fmtTime, he, parseNotes, pickDefaultSession, safeContent, SESSION_KIND_HE, sessionChipLabel, sessionTotal,
   type ModuleRow, type ParsedNotes, type SessionRow,
 } from '@/lib/facilitator/guide';
-import { fetchSessionPlan, type SessionPlan } from '@/lib/facilitator/guide-api';
+import { fetchSessionPlan, fetchTemplateStory, type SessionPlan } from '@/lib/facilitator/guide-api';
 import { clearLiveStep, fetchLiveState, setLiveStep } from '@/lib/facilitator/live-api';
 import { breakArgs, liveLabelOf, liveStepArgs } from '@/lib/facilitator/live-step';
+import { openerFor } from '@/lib/facilitator/story';
 import { toast } from '@/lib/store';
 import {
   agendaId, emptyProgress, loadProgress, nextUndone, resetModule, saveProgress, toggleAgenda, toggleModule, type GuideProgress,
 } from '@/lib/facilitator/progress';
 import type { AgendaEntry } from './AgendaList';
 import { ModuleCard } from './ModuleCard';
+import { OpenerBox } from './OpenerBox';
 import { itemSeconds, NowBar, type LiveControls } from './NowBar';
 import { useCountdown } from './useCountdown';
 import { Projector } from './Projector';
@@ -52,6 +54,7 @@ export function GuideStep({ workshopId }: { workshopId: string }) {
   const [projector, setProjector] = useState(false);
   const [liveLabel, setLiveLabel] = useState<string | null>(null);
   const [liveBusy, setLiveBusy] = useState(false);
+  const [story, setStory] = useState<unknown>(null);
 
   useEffect(() => {
     let alive = true;
@@ -68,6 +71,14 @@ export function GuideStep({ workshopId }: { workshopId: string }) {
   }, [workshopId, tick]);
 
   useEffect(() => { setProgress(loadProgress(workshopId)); }, [workshopId]);
+
+  // the template's story frame: one opener per session; missing or hidden by RLS = no box
+  useEffect(() => {
+    let alive = true;
+    setStory(null);
+    void fetchTemplateStory(workshopId).then((s) => { if (alive) setStory(s); });
+    return () => { alive = false; };
+  }, [workshopId]);
 
   // what the students see right now; a failure here is silent (the bar just shows ״לא משודר״)
   useEffect(() => {
@@ -144,6 +155,7 @@ export function GuideStep({ workshopId }: { workshopId: string }) {
   const label = sessionChipLabel(session, total);
   const entriesByModule = Object.fromEntries(prepared.map((p) => [p.module.id, p.entries]));
   const doneCount = allEntries.filter((e) => done.has(e.id)).length;
+  const opener = openerFor(story, session.session_no);
 
   return (
     <div className={g.root}>
@@ -169,6 +181,8 @@ export function GuideStep({ workshopId }: { workshopId: string }) {
         </span>
         <button type="button" className={g.projToggle} aria-pressed={projector} disabled={modules.length === 0} onClick={() => setProjector(true)}>מקרן</button>
       </div>
+
+      {opener ? <OpenerBox opener={opener} /> : null}
 
       {modules.length === 0 ? (
         <p className={g.quiet}>למפגש הזה עוד אין מודולים. בקונסול: מפגשים → טעינת תבנית.</p>
