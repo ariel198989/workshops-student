@@ -11,7 +11,7 @@ import { photoPath, type MediaScope } from '@/lib/cv/ws-data';
 import { toast } from '@/lib/store';
 
 const RETRY_EVERY_MS = 10000;
-const EMPTY_STATS: QueueStats = { queued: 0, saved: 0, failing: false, dropped: 0, failures: 0, error: null };
+const EMPTY_STATS: QueueStats = { queued: 0, saved: 0, failing: false, dropped: 0, failures: 0, error: null, halted: false };
 
 interface Args {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -51,7 +51,8 @@ export function useCapture({ videoRef, team, media, userId, me, className }: Arg
   useEffect(() => {
     const q = createRetryQueue<CaptureItem>(saveCapture, { onChange: setStats });
     queue.current = q;
-    const retry = () => void q.retryNow();
+    // automatic retries stop after a fatal error (expired session); a tap on the queue button tries again
+    const retry = () => { if (!q.stats().halted) void q.retryNow(); };
     const timer = setInterval(() => { if (q.stats().failing) retry(); }, RETRY_EVERY_MS);
     window.addEventListener('online', retry);
     return () => { clearInterval(timer); window.removeEventListener('online', retry); queue.current = null; };

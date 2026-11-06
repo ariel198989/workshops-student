@@ -88,6 +88,34 @@ export function isNotLiveRejection(e: unknown): boolean {
   return typeof message === 'string' && /row[- ]level security/i.test(message);
 }
 
+/** A policy refusal while the workshop is live, or an expired token: signing in again is the fix. */
+export const SESSION_EXPIRED = 'החיבור פג, נסו להיכנס שוב';
+
+/** An upload error that retrying will not fix: the queue stops its automatic retries (see halted). */
+export class FatalUploadError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FatalUploadError';
+  }
+}
+
+export const isFatalUpload = (e: unknown): boolean => e instanceof Error && e.name === 'FatalUploadError';
+
+/** The token is gone or expired (HTTP 401, or Supabase/GoTrue's JWT messages). */
+export function isAuthError(e: unknown): boolean {
+  if (!e || typeof e !== 'object') return false;
+  const { status, statusCode, message } = e as { status?: unknown; statusCode?: unknown; message?: unknown };
+  if (String(status ?? '') === '401' || String(statusCode ?? '') === '401') return true;
+  return typeof message === 'string' && /jwt expired|invalid jwt|jwt malformed|not authenticated|invalid claim/i.test(message);
+}
+
+/**
+ * A policy refusal (42501 / RLS) means "not live" only when a freshly reloaded context says the
+ * workshop is not live. Otherwise (still live, or the context could not be reloaded) it is the session.
+ */
+export const classifyRefusal = (reloadedStatus: unknown): 'not-live' | 'session' =>
+  typeof reloadedStatus === 'string' && reloadedStatus !== 'live' ? 'not-live' : 'session';
+
 /** Consecutive failures of the same head item before the UI says the photo itself is stuck. */
 export const STUCK_AFTER = 3;
 export const STUCK_HINT = 'התמונה לא עולה. בדקו רשת ונסו שוב';
@@ -101,6 +129,8 @@ export interface QueueStats {
   failures: number;
   /** the message of the head item's last failure; null while nothing is failing */
   error: string | null;
+  /** a fatal error stopped the automatic retries; only retryNow() (a tap) tries again */
+  halted: boolean;
 }
 
 export const uploadStuck = (s: QueueStats): boolean => s.failing && s.failures >= STUCK_AFTER;
@@ -120,9 +150,11 @@ export interface RetryQueue<T> {
  */
 export function createRetryQueue<T>(
   save: (item: T) => Promise<void>,
-  opts: { max?: number; onChange?: (s: QueueStats) => void } = {},
+  opts: { max?: number; onChange?: (s: QueueStats) => void; isFatal?: (e: unknown) => boolean } = {},
 ): RetryQueue<T> {
   const max = opts.max ?? 80;
+  const isFatal = opts.isFatal ?? isFatalUpload;
+  let halted = false;
   const items: T[] = [];
   let saved = 0;
   let dropped = 0;
@@ -131,7 +163,7 @@ export function createRetryQueue<T>(
   let error: string | null = null;
   let running: Promise<void> | null = null;
 
-  const stats = (): QueueStats => ({ queued: items.length, saved, failing, dropped, failures, error });
+  const stats = (): QueueStats => ({ queued: items.length, saved, failing, dropped, failures, error, halted });
   const notify = () => opts.onChange?.(stats());
 
   async function drain(): Promise<void> {
@@ -148,6 +180,7 @@ export function createRetryQueue<T>(
         failing = true;
         failures += 1;
         error = e instanceof Error ? e.message : String(e);
+        halted = isFatal(e);
         notify();
         return;
       }
@@ -164,10 +197,10 @@ export function createRetryQueue<T>(
       if (items.length >= max) { dropped += 1; notify(); return false; }
       items.push(item);
       notify();
-      void pump();
+      if (!halted) void pump(); // halted: it waits for a tap instead of hitting the same wall again
       return true;
     },
-    async retryNow() { await pump(); },
+    async retryNow() { halted = false; await pump(); },
     async idle() { while (running) await running; },
     stats,
   };
