@@ -294,5 +294,5 @@
 .numberPill{display:inline-flex;align-items:center;gap:12px;padding:6px 16px;border:2px solid var(--cy-text);border-radius:14px;background:#fff}
 .numberRow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .numberLabel{font-size:16px;color:var(--muted);white-space:nowrap}
-.numberBig{font-family:'JetBrains Mono','Space Grotesk',ui-monospace,monospace;font-size:34px;font-weight:700;letter-spacing:.12em;color:var(--cy-text);line-height:1}
+.numberBig{font-family:'JetBrains Mono',var(--font-space-grotesk),ui-monospace,monospace;font-size:34px;font-weight:700;letter-spacing:.12em;color:var(--cy-text);line-height:1}
 @media (max-width:640px){.numberPill{width:100%;justify-content:center;padding:10px 16px}.numberBig{font-size:40px}}

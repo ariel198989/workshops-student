@@ -2,7 +2,7 @@
 .sheet{position:relative;width:297mm;height:210mm;padding:14mm 22mm 12mm;background:#fff;color:#0F1C2E;
   border:5mm solid #17948C;outline:1px solid #17948C;outline-offset:-8mm;
   display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;
-  font-family:"Rubik","Heebo",Arial,sans-serif;direction:rtl;overflow:hidden;
+  font-family:var(--font-rubik),"Heebo",Arial,sans-serif;direction:rtl;overflow:hidden;
   -webkit-print-color-adjust:exact;print-color-adjust:exact}
 .brand{font-size:11pt;font-weight:700;letter-spacing:.14em;color:#17948C;text-transform:uppercase}
 .title{margin:0;font-size:34pt;font-weight:700;color:#17948C;line-height:1.1}
@@ -18,7 +18,7 @@
 .sigs{display:flex;gap:30mm;justify-content:center;width:100%}
 .sig{border-top:.3mm solid #64748B;padding-top:2mm;min-width:62mm;font-size:11pt;color:#64748B}
 .verify{display:flex;flex-direction:column;align-items:center;gap:.5mm;font-size:8.5pt;color:#64748B}
-.verify code{font-family:"Space Grotesk","Rubik",monospace;font-size:8.5pt;background:none;border:none;padding:0;color:#0F1C2E}
+.verify code{font-family:var(--font-space-grotesk),var(--font-rubik),monospace;font-size:8.5pt;background:none;border:none;padding:0;color:#0F1C2E}
 .no{font-weight:600;color:#0F1C2E}
 /* take-home QR: bottom start corner, next to the verify block, 22 mm as printed */
 .share{position:absolute;bottom:12mm;inset-inline-start:22mm;margin:0;display:flex;flex-direction:column;align-items:center;gap:1.5mm;width:34mm}

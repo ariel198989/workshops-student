@@ -18,14 +18,15 @@
   --danger-soft:rgba(220,38,38,.09);
   --shadow-card:0 1px 2px rgba(15,28,46,.06);
   --radius:6px;
-  --font-num:"Space Grotesk","Rubik",sans-serif;
+  --font-sans:var(--font-rubik),-apple-system,"Segoe UI","Heebo",Arial,sans-serif;
+  --font-num:var(--font-space-grotesk),var(--font-rubik),sans-serif;
 }
 
 /* ---------- base ---------- */
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;min-height:100vh;min-height:100dvh;color:var(--body);overflow-x:hidden;background:var(--bg-0);
-  font-family:"Rubik",-apple-system,"Segoe UI","Heebo",Arial,sans-serif;font-size:15px;line-height:1.55;
+  font-family:var(--font-sans);font-size:15px;line-height:1.55;
   font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 img,video,canvas{max-width:100%}
 h1,h2,h3,h4{margin:0;color:var(--ink);text-wrap:balance}
