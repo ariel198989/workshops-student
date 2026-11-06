@@ -1,5 +1,6 @@
 'use client';
 import type { ReactNode } from 'react';
+import { A11yLink } from '@/components/A11yLink';
 import { useStore } from '@/lib/store';
 import { groupChip } from '@/lib/student/labels';
 import { useStudentContext } from '@/lib/student/context';
@@ -24,6 +25,7 @@ export function StudentShell({ children }: { children: ReactNode }) {
       {ctx?.group ? <FlowStepper ctx={ctx} /> : null}
       <main className={ctx ? s.main : `${s.main} ${s.mainBare}`}>
         <CapsGuard ctx={ctx}>{children}</CapsGuard>
+        <A11yLink />
       </main>
       {ctx ? <BottomNav caps={ctx.caps} checksCount={ctx.checks.length} live={ctx.live} /> : null}
     </div>

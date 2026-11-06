@@ -8,6 +8,7 @@ import { wsAuthStore } from '@/lib/ws/staff';
 import { Spinner } from '@/components/ui/Spinner';
 import { StudentShell } from '@/components/student/shell/StudentShell';
 import { AuthGate } from './AuthGate';
+import { A11Y_PATH, A11yLink } from './A11yLink';
 import { StaffNotice } from './StaffNotice';
 
 /** Runs inside AuthGate (whoami is loaded): student shell, join redirect, or the staff notice. */
@@ -24,7 +25,7 @@ function RouteGuard({ children }: { children: ReactNode }) {
   }, [target, router]);
 
   if (decision.kind === 'student') return <StudentShell>{children}</StudentShell>;
-  if (decision.kind === 'staff-notice') return <StaffNotice onPreview={() => setPreviewing(true)} />;
+  if (decision.kind === 'staff-notice') return <><StaffNotice onPreview={() => setPreviewing(true)} /><A11yLink /></>;
   return <div className="center-screen"><Spinner large /></div>;
 }
 
@@ -33,7 +34,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   // once per app start: drop the Smart City model cache that devices kept from before the split
   useEffect(() => { void purgeLegacyCaches(browserCaches()); }, []);
-  if (isPublicPath(pathname)) return <>{children}</>;
+  if (isPublicPath(pathname)) return <>{children}{pathname === A11Y_PATH ? null : <A11yLink />}</>;
   return (
     <AuthGate>
       <RouteGuard>{children}</RouteGuard>

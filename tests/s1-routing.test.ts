@@ -71,3 +71,8 @@ test('a student who has not joined is sent to /join', () => {
   assert.deepEqual(decideAccess(fresh, '/capture', false), { kind: 'redirect', to: '/join' });
   assert.deepEqual(decideAccess(fresh, '/join', false), { kind: 'student' });
 });
+
+test('the accessibility statement is public: no sign-in needed to read it', () => {
+  assert.equal(isPublicPath('/accessibility'), true);
+  assert.equal(isPublicPath('/accessibility-x'), false);
+});

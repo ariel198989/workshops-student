@@ -12,7 +12,9 @@ export function isPublicPath(pathname: string | null): boolean {
   // /facilitator renders bare: its own layout gates on staff (FacilitatorGate)
   // /model/<token> is the take-home page: anon RPC, no session at all
   // /g/<join_token> is the one-scan group sign-in: it creates the session itself
+  // /accessibility is the accessibility statement: readable by anyone, signed in or not
   return pathname === '/verify' || pathname.startsWith('/verify/')
+    || pathname === '/accessibility'
     || pathname === '/facilitator' || pathname.startsWith('/facilitator/')
     || pathname === '/model' || pathname.startsWith('/model/')
     || pathname === '/g' || pathname.startsWith('/g/');

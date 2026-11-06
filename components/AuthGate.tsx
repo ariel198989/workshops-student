@@ -6,6 +6,7 @@ import { resetStudentContext } from '@/lib/student/context';
 import { whoami as fetchWhoami, wsAuthStore } from '@/lib/ws/staff';
 import { Spinner } from '@/components/ui/Spinner';
 import { AuthCard, type AuthVariant } from '@/components/student/shell/AuthCard';
+import { A11yLink } from './A11yLink';
 
 function NoAccess({ email }: { email?: string }) {
   return (
@@ -58,7 +59,9 @@ export function AuthGate({ children, variant = 'student' }: Props) {
   if (!loaded || (user && !whoamiLoaded)) {
     return <div className="center-screen"><Spinner large /></div>;
   }
-  if (!user) return <AuthCard variant={variant} />;
-  if (!whoami) return <NoAccess email={user.email} />;
+  // the staff variant sits under /facilitator, where AppFrame already appends the link
+  const a11y = variant === 'student' ? <A11yLink /> : null;
+  if (!user) return <><AuthCard variant={variant} />{a11y}</>;
+  if (!whoami) return <><NoAccess email={user.email} />{a11y}</>;
   return <>{children}</>;
 }

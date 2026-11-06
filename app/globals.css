@@ -121,3 +121,7 @@ a.primary[role=button]:hover{background:#12807A;border-color:#12807A;color:#fff;
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
 }
+
+/* ---------- accessibility statement link (every screen) ---------- */
+.a11y-foot{padding:12px 16px max(12px,env(safe-area-inset-bottom));text-align:center;font-size:13.5px}
+.a11y-foot a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);text-decoration:underline}
