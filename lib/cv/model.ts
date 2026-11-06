@@ -5,6 +5,7 @@
 import { sb, modelUrl } from '../db';
 import { MODEL_CACHE } from './config';
 import { pickScopedModels, type ModelPick } from './dataset';
+import { createEngineSlot } from './engine-slot';
 import { createEngine, type Engine } from './infer';
 
 export interface TeamModel {
@@ -56,26 +57,24 @@ async function downloadZip(zipPath: string): Promise<Blob> {
   return res.blob();
 }
 
-let live: { path: string; engine: Engine } | null = null;
-let inflight: { path: string; promise: Promise<Engine> } | null = null;
+// classes per zip path, for the slot's loader (a zip_path is immutable, so are its classes)
+const classesOf = new Map<string, string[]>();
+const slot = createEngineSlot<Engine>(
+  async (path) => createEngine(await downloadZip(path), classesOf.get(path) ?? []),
+  (engine) => engine.dispose(),
+);
 
-/** Returns the engine for this zip; a new zip_path replaces (and disposes) the running one. */
+/**
+ * The engine for this zip. Only the newest request becomes live (and disposes the previous engine);
+ * an older load that lands later is disposed and rejects with StaleLoadError (see engine-slot.ts).
+ */
 export function loadEngineFromPath(zipPath: string, classes: readonly string[]): Promise<Engine> {
-  if (live?.path === zipPath) return Promise.resolve(live.engine);
-  if (inflight?.path === zipPath) return inflight.promise;
-  const promise = (async () => {
-    const engine = await createEngine(await downloadZip(zipPath), [...classes]);
-    live?.engine.dispose();
-    live = { path: zipPath, engine };
-    return engine;
-  })().finally(() => { inflight = null; });
-  inflight = { path: zipPath, promise };
-  return promise;
+  classesOf.set(zipPath, [...classes]);
+  return slot.get(zipPath);
 }
 
 export const loadEngine = (model: TeamModel): Promise<Engine> => loadEngineFromPath(model.zip_path, model.classes ?? []);
 
 export function disposeEngine(): void {
-  live?.engine.dispose();
-  live = null;
+  slot.drop();
 }
