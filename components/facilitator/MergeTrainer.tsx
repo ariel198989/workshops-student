@@ -9,6 +9,8 @@ import { Spinner } from '@/components/ui/Spinner';
 import { JobsPanel } from '@/components/student/cv/JobsPanel';
 import { ReadinessList } from '@/components/student/cv/ReadinessList';
 import { useTrainJobs } from '@/components/student/cv/useTrainJobs';
+import { excludedNote, type ScreenVerdict } from '@/lib/cv/dataset';
+import { checkFrame, faceGuardSettled, startFaceGuard } from '@/lib/cv/face-detector';
 import { startTeamTrainingJob } from '@/lib/cv/jobs';
 import { fetchPoolStats, type PoolStats } from '@/lib/cv/pool';
 import { coverageRows, trainBlockReason, trainErrorHe } from '@/lib/cv/readiness';
@@ -20,6 +22,21 @@ import s from '@/components/student/cv/cv.module.css';
 /** The whole group's pool: no personal filter, whatever the workshop's pool_scope says. */
 const WHOLE_GROUP = null;
 
+/**
+ * Privacy guard over every photo before it goes into the ZIP, in this browser, one at a time (the bitmap
+ * is closed right after). A face is left out; a photo the guard could not check is left out too. After a
+ * hard detector failure the guard answers 'skipped' and the photo goes in (the page says so).
+ */
+async function screenPhoto(bytes: Uint8Array): Promise<ScreenVerdict> {
+  const bitmap = await createImageBitmap(new Blob([bytes as BlobPart], { type: 'image/jpeg' }));
+  try {
+    const v = await checkFrame(bitmap);
+    return v === 'face' ? 'face' : v === 'clear' || v === 'skipped' ? 'keep' : 'unchecked';
+  } finally {
+    bitmap.close();
+  }
+}
+
 export function MergeTrainer({ group, staffUserId }: { group: MergeGroup; staffUserId: string }) {
   const team = group.team_name;
   const media = useMemo(() => ({ workshopId: group.workshop_id, groupId: group.id }), [group]);
@@ -27,6 +44,9 @@ export function MergeTrainer({ group, staffUserId }: { group: MergeGroup; staffU
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
+  const [excluded, setExcluded] = useState<string | null>(null);
+  const [guardOff, setGuardOff] = useState(false);
+  useEffect(() => { startFaceGuard(); }, []);
   // jobs: the ones this staff member opened for the group (the merged runs); the trainer queue stays shared
   const { jobs, active, ahead, alert, failed, justDone, refresh } = useTrainJobs(team, staffUserId);
 
@@ -42,11 +62,19 @@ export function MergeTrainer({ group, staffUserId }: { group: MergeGroup; staffU
   async function start() {
     setBusy(true);
     setError('');
+    setExcluded(null);
     try {
-      // personal = false: the ZIP holds every member's tagged photos
-      const r = await startTeamTrainingJob({ userId: staffUserId, team, media }, false, setProgress);
+      setProgress('מכינים את בודק הפרטיות...');
+      const guard = await faceGuardSettled();
+      setGuardOff(guard === 'failed');
+      // personal = false: the ZIP holds every member's tagged photos, minus the ones with a face
+      const r = await startTeamTrainingJob({ userId: staffUserId, team, media }, false, setProgress, { screen: screenPhoto });
       if (!r.ok) setError(trainErrorHe(r.error));
-      else { toast('משימת האימון הקבוצתי נפתחה ונכנסה לתור.', true); await refresh(); }
+      else {
+        setExcluded(excludedNote(r.excluded.faces, r.excluded.unchecked));
+        toast('משימת האימון הקבוצתי נפתחה ונכנסה לתור.', true);
+        await refresh();
+      }
     } catch (e) {
       setError(trainErrorHe(e instanceof Error ? e.message : ''));
     } finally {
@@ -77,6 +105,10 @@ export function MergeTrainer({ group, staffUserId }: { group: MergeGroup; staffU
       </button>
       {reason && !busy ? <p className={`${s.small} ${s.center}`}>{reason}</p> : null}
       {error ? <p className={`${s.note} ${s.noteBad}`} role="alert">{error}</p> : null}
+      {excluded ? <p className={`${s.note} ${s.noteWarn}`} role="status">{excluded}</p> : null}
+      {guardOff ? (
+        <p className={`${s.note} ${s.noteBad}`} role="alert">בודק הפרטיות לא נטען בדפדפן הזה, ולכן התמונות לא נבדקו לפנים.</p>
+      ) : null}
       <JobsPanel jobs={jobs ?? []} active={active} ahead={ahead} alert={alert} failed={failed} userId={staffUserId} personal
         resultsHref={null} listTitle="אימונים קבוצתיים שפתחת" justDone={justDone}
         onRetry={canStart ? () => void start() : undefined} onChanged={refresh} />

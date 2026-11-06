@@ -4,7 +4,7 @@
 // the group's files in the private ws-media bucket.
 import { sb, downloadMedia } from '../db';
 import { POOL_LIMIT } from './config';
-import { classIndexMap, splitValGroups, groupKey } from './dataset';
+import { classIndexMap, packProblem, splitValGroups, groupKey, type ScreenVerdict } from './dataset';
 import { yoloLabelLine, type NBox } from './geometry';
 
 export interface PoolStats {
@@ -22,8 +22,13 @@ interface PoolRow {
 }
 
 export type BuiltZip =
-  | { ok: true; blob: Blob; count: number; classes: string[] }
+  | { ok: true; blob: Blob; count: number; classes: string[]; excluded: { faces: number; unchecked: number } }
   | { ok: false; error: string };
+
+export interface PackOptions {
+  /** checks each downloaded photo before it goes in (the staff merge runs the face guard here) */
+  screen?: (bytes: Uint8Array) => Promise<ScreenVerdict>;
+}
 
 // training-grade = a photo with a human box, not rejected. `me` set = only the photos I shot (personal scope).
 async function fetchPoolRows(team: string, me: string | null): Promise<PoolRow[]> {
@@ -61,12 +66,36 @@ async function fetchBytes(path: string): Promise<Uint8Array | null> {
 
 const yieldToUi = () => new Promise<void>((r) => setTimeout(r, 0));
 
-/** The YOLO dataset ZIP of the group's tagged photos, or of mine only when `me` is set. */
-export async function buildTeamPoolZip(team: string, me: string | null, onProgress: (done: number, total: number) => void): Promise<BuiltZip> {
+/**
+ * The YOLO dataset ZIP of the group's tagged photos, or of mine only when `me` is set. Photos are
+ * downloaded (and screened, when asked) one at a time; the class list and the split follow the kept ones.
+ */
+export async function buildTeamPoolZip(
+  team: string, me: string | null, onProgress: (done: number, total: number) => void, opts: PackOptions = {},
+): Promise<BuiltZip> {
   const JSZip = (await import('jszip')).default;
-  const rows = await fetchPoolRows(team, me);
-  if (!rows.length) return { ok: false, error: 'אין עדיין תמונות מתויגות. תייגו קודם.' };
+  const all = await fetchPoolRows(team, me);
+  if (!all.length) return { ok: false, error: 'אין עדיין תמונות מתויגות. תייגו קודם.' };
 
+  const kept: { row: PoolRow; bytes: Uint8Array }[] = [];
+  let failed = 0;
+  let faces = 0;
+  let unchecked = 0;
+  for (let i = 0; i < all.length; i++) {
+    onProgress(i + 1, all.length);
+    const bytes = await fetchBytes(all[i].frame_path);
+    if (!bytes) { failed++; continue; }
+    const verdict = opts.screen ? await opts.screen(bytes).catch((): ScreenVerdict => 'unchecked') : 'keep';
+    if (verdict === 'face') faces++;
+    else if (verdict === 'unchecked') unchecked++;
+    else kept.push({ row: all[i], bytes });
+    await yieldToUi();
+  }
+  // a mostly-failed pack would train on almost nothing: abort loudly (left-out photos are not failures)
+  const problem = packProblem({ total: all.length, kept: kept.length, failed, faces, unchecked });
+  if (problem) return { ok: false, error: problem };
+
+  const rows = kept.map((k) => k.row);
   const { names, idx } = classIndexMap(rows);
   const valGroups = splitValGroups(rows);
   const zip = new JSZip();
@@ -74,25 +103,13 @@ export async function buildTeamPoolZip(team: string, me: string | null, onProgre
     `# Workshops group pool\npath: .\ntrain: images/train\nval: images/val\n\n` +
     `nc: ${names.length}\nnames: [${names.map((n) => `'${n}'`).join(', ')}]\n`);
 
-  let ok = 0;
-  let failed = 0;
-  for (let i = 0; i < rows.length; i++) {
-    const r = rows[i];
-    onProgress(i + 1, rows.length);
-    const bytes = await fetchBytes(r.frame_path);
-    if (!bytes) { failed++; continue; }
+  kept.forEach(({ row: r, bytes }, i) => {
     const seg = valGroups.has(groupKey(r)) ? 'val' : 'train';
     const base = `pool_${String(i).padStart(4, '0')}`;
     zip.file(`images/${seg}/${base}.jpg`, bytes);
     zip.file(`labels/${seg}/${base}.txt`, `${yoloLabelLine(idx[r.class_name], r.bbox)}\n`);
-    ok++;
-    await yieldToUi();
-  }
-  // a mostly-failed pack would train on almost nothing: abort loudly
-  if (ok === 0 || failed > rows.length * 0.25) {
-    return { ok: false, error: `${failed} מתוך ${rows.length} תמונות לא ירדו (רשת?). האימון בוטל, נסו שוב.` };
-  }
+  });
 
   const blob = await zip.generateAsync({ type: 'blob' });
-  return { ok: true, blob, count: ok, classes: names };
+  return { ok: true, blob, count: kept.length, classes: names, excluded: { faces, unchecked } };
 }

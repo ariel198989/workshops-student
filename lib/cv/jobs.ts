@@ -4,7 +4,7 @@
 // jobs FIFO and registers the model in ws_models under the job's group.
 import { sb, uploadMedia } from '../db';
 import { randomSuffix } from './capture-utils';
-import { buildTeamPoolZip } from './pool';
+import { buildTeamPoolZip, type PackOptions } from './pool';
 import { MIN_TRAIN_IMAGES } from './config';
 import { jobRow, jobZipPath, normalizeQueue, type MediaScope, type QueueEntry } from './ws-data';
 
@@ -57,7 +57,9 @@ export async function cancelOwnJob(id: string, userId: string): Promise<boolean>
   return (data ?? []).length > 0;
 }
 
-export type StartResult = { ok: true; job: TrainJob } | { ok: false; error: string };
+export type StartResult =
+  | { ok: true; job: TrainJob; excluded: { faces: number; unchecked: number } }
+  | { ok: false; error: string };
 
 /** Who opens the job: the signed-in student, their group's data key and its folder in ws-media. */
 export interface JobOwner { userId: string; team: string; media: MediaScope }
@@ -67,10 +69,11 @@ export interface JobOwner { userId: string; team: string; media: MediaScope }
  * registers the model with owner = requested_by; team_name stays the group's either way.
  */
 export async function startTeamTrainingJob(
-  { userId, team, media }: JobOwner, personal: boolean, onProgress: (msg: string) => void,
+  { userId, team, media }: JobOwner, personal: boolean, onProgress: (msg: string) => void, pack: PackOptions = {},
 ): Promise<StartResult> {
   onProgress(personal ? 'אוספים את התמונות שלך' : 'אוספים את התמונות של הקבוצה');
-  const built = await buildTeamPoolZip(team, personal ? userId : null, (d, t) => onProgress(`אורזים ${d} מתוך ${t} תמונות`));
+  const verb = pack.screen ? 'בודקים ואורזים' : 'אורזים';
+  const built = await buildTeamPoolZip(team, personal ? userId : null, (d, t) => onProgress(`${verb} ${d} מתוך ${t} תמונות`), pack);
   if (!built.ok) return built;
   if (built.count < MIN_TRAIN_IMAGES) {
     return { ok: false, error: `יש רק ${built.count} תמונות מתויגות. צריך לפחות ${MIN_TRAIN_IMAGES}.` };
@@ -82,5 +85,5 @@ export async function startTeamTrainingJob(
     .insert(jobRow({ path, count: built.count, classes: built.classes, team, groupId: media.groupId, userId }))
     .select().single();
   if (error) return { ok: false, error: error.message };
-  return { ok: true, job: data as TrainJob };
+  return { ok: true, job: data as TrainJob, excluded: built.excluded };
 }

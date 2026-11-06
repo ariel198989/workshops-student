@@ -95,3 +95,32 @@ export function pickScopedModels<T extends PickableModel>(models: T[], userId: s
     group: pickGroupScopeModel(models, team),
   };
 }
+
+// ---------------------------------------------------------------- pool screening (staff merge)
+
+/** What the optional face screen says about one downloaded photo before it goes into the ZIP. */
+export type ScreenVerdict = 'keep' | 'face' | 'unchecked';
+
+export interface PackCounts { total: number; kept: number; failed: number; faces: number; unchecked: number }
+
+/**
+ * Why a pack must not train, or null when it may. Photos left out by the face screen are not download
+ * failures: only real failures count toward the 25% abort rule.
+ */
+export function packProblem(c: PackCounts): string | null {
+  if (c.kept === 0 && c.faces + c.unchecked > 0 && c.failed === 0) {
+    return 'כל התמונות הוצאו מהאימון (פנים או שלא נבדקו). אין על מה לאמן.';
+  }
+  if (c.kept === 0 || c.failed > c.total * 0.25) {
+    return `${c.failed} מתוך ${c.total} תמונות לא ירדו (רשת?). האימון בוטל, נסו שוב.`;
+  }
+  return null;
+}
+
+/** "3 תמונות עם פנים הוצאו מהאימון", plus the unchecked ones; null when nothing was left out. */
+export function excludedNote(faces: number, unchecked: number): string | null {
+  const parts: string[] = [];
+  if (faces > 0) parts.push(faces === 1 ? 'תמונה אחת עם פנים הוצאה מהאימון' : `${faces} תמונות עם פנים הוצאו מהאימון`);
+  if (unchecked > 0) parts.push(unchecked === 1 ? 'תמונה אחת שלא נבדקה הוצאה' : `${unchecked} תמונות שלא נבדקו הוצאו`);
+  return parts.length ? `${parts.join('. ')}.` : null;
+}
