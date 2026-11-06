@@ -39,6 +39,9 @@ export type FrameSource = HTMLImageElement | HTMLVideoElement | HTMLCanvasElemen
 
 export interface Prediction { label: string; confidence: number; confidences: Record<string, number> }
 
+/** google/imagenet/mobilenet_v2_050_224/classification/2 (tfjs graph model, 7.8 MB), copied into public/. */
+export const MOBILENET_URL = '/models/mobilenet/model.json';
+
 let tf: Tf | null = null;
 let net: MobileNetLike | null = null;
 let knn: KnnLike | null = null;
@@ -54,7 +57,9 @@ async function load(): Promise<void> {
     ]);
     tf = tfMod;
     await tf.ready();
-    if (!net) net = (await mobilenet.load({ version: 2, alpha: 0.5 })) as MobileNetLike; // phone-friendly
+    // phone-friendly v2 alpha 0.5, self-hosted (no tfhub/kaggle at runtime). With a modelUrl the package
+    // no longer looks up the input range, so it is given here: this model expects [0, 1].
+    if (!net) net = (await mobilenet.load({ version: 2, alpha: 0.5, modelUrl: MOBILENET_URL, inputRange: [0, 1] })) as MobileNetLike;
     if (!knn) knn = knnLib.create() as KnnLike;
     engineStore.set({ status: 'ready' });
   } catch (e) {
