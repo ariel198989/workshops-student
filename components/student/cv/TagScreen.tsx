@@ -2,11 +2,11 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Spinner } from '@/components/ui/Spinner';
-import { publicUrl } from '@/lib/db';
 import { isUsableBox, type NBox } from '@/lib/cv/geometry';
 import type { StudentCaps } from '@/lib/student/caps';
 import { scopeOf } from '@/lib/student/context';
 import { TagStage } from './TagStage';
+import { useSignedUrl } from './useSignedUrl';
 import { useTagQueue } from './useTagQueue';
 import type { CvSession } from './CvGate';
 import s from './cv.module.css';
@@ -109,6 +109,7 @@ export function TagScreen({ session }: { session: CvSession }) {
   const [lastBox, setLastBox] = useState<NBox | null>(null);
   const [label, setLabel] = useState('');
   const { cur } = q;
+  const photo = useSignedUrl(cur?.frame_path ?? null);
   const targets = session.ctx.subproblem?.target_classes;
 
   useEffect(() => { setBox(null); setLabel(cur?.class_name ?? ''); }, [cur?.id, cur?.class_name]);
@@ -136,7 +137,7 @@ export function TagScreen({ session }: { session: CvSession }) {
   }
 
   const actions: ActionsProps = {
-    box, lastBox, busy: q.busy,
+    box, lastBox: photo.url ? lastBox : null, busy: q.busy, // never offer "same box" on a photo that is not on screen
     onSave: (b) => void save(b),
     onClear: () => setBox(null),
     onSkip: q.skip,
@@ -160,8 +161,15 @@ export function TagScreen({ session }: { session: CvSession }) {
           ))}
         </div>
       ) : null}
-      <TagStage src={publicUrl(cur.frame_path)} box={box} label={label || cur.class_name} onChange={setBox}
-        mode={point ? 'point' : 'box'} />
+      {photo.url ? (
+        <TagStage src={photo.url} box={box} label={label || cur.class_name} onChange={setBox}
+          mode={point ? 'point' : 'box'} onImageError={photo.onLoadError} />
+      ) : photo.error ? (
+        <div className={`${s.card} ${s.center} ${s.stack}`} role="alert">
+          <p className={s.lead}>{photo.error}</p>
+          <button type="button" className={s.btn} onClick={photo.retry}>ניסיון נוסף</button>
+        </div>
+      ) : <div className={s.spin}><Spinner large /></div>}
       <p className={s.small}>
         {point
           ? 'הקישו על האובייקט ותופיע תיבה. אפשר למשוך את העיגולים כדי שהתיבה תיצמד לאובייקט, ואז לאשר.'

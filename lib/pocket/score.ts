@@ -30,8 +30,8 @@ export const confidenceWord = (confidence: number): string => CONFIDENCE_WORDS[b
 
 /**
  * k derived from the SMALLEST class that has examples. An unbalanced dataset
- * must not get a built-in majority vote (Smart City's "everything is a TV
- * remote" bug). Classes with zero examples do not count.
+ * must not get a built-in majority vote (the "everything is a TV remote"
+ * bug). Classes with zero examples do not count.
  */
 export function kFor(counts: Record<string, number>): number {
   const present = Object.values(counts).filter((n) => n > 0);

@@ -1,5 +1,5 @@
-// Pure helpers for the capture screen: file naming, class-name validation,
-// image sizing, the variety coach, and an in-memory upload retry queue.
+// Pure helpers for the capture screen: class-name validation, image sizing,
+// the variety coach, and an in-memory upload retry queue. (File paths: ./ws-data.)
 
 export const MAX_CLASS_NAME = 40;
 export const MAX_SIDE = 1280;
@@ -8,11 +8,6 @@ export const SERIES_INTERVAL_MS = 1500;
 /** Goals shown next to the live per-class count. */
 export const TARGET_FIRST = 50;
 export const TARGET_STRONG = 150;
-
-/** ASCII-only storage key in the shared `smartcity` bucket (ws_ marks workshop shots). */
-export function captureFilename(now: number, rand: string): string {
-  return `pool/ws_${now}_${rand}.jpg`;
-}
 
 export const randomSuffix = (): string => Math.random().toString(36).slice(2, 7).padEnd(5, '0');
 

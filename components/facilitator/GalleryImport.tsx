@@ -3,9 +3,10 @@
 // which gallery classes become trainer classes and the frames are embedded
 // here, in the browser. Downloads only; nothing is written anywhere.
 import { useEffect, useRef, useState } from 'react';
+import { signedUrls } from '@/lib/cv/signed-url';
 import { addExample, imageFromUrl } from '@/lib/pocket/engine';
 import {
-  fetchGalleryRows, fetchWorkshopGroups, frameUrl, GALLERY_CAP_PER_CLASS, galleryClasses,
+  fetchGalleryRows, fetchWorkshopGroups, GALLERY_CAP_PER_CLASS, galleryClasses,
   type GalleryClass, type GalleryGroup, type GalleryRow,
 } from '@/lib/pocket/gallery';
 import { capPerClass, MAX_CLASSES } from '@/lib/pocket/score';
@@ -79,10 +80,14 @@ export function GalleryImport({ workshopId, classes, onImported, onClose }: Prop
     const rows = capPerClass(loaded.rows, picked, GALLERY_CAP_PER_CLASS);
     setError(null);
     setProgress({ done: 0, total: rows.length, failed: 0 });
+    // the photos are private: one request signs a link for every picked frame (staff may read their workshop's)
+    const urls = await signedUrls(rows.map((r) => r.frame_path)).catch(() => new Map<string, string>());
     let failed = 0;
     for (let i = 0; i < rows.length; i++) {
       try {
-        const img = await imageFromUrl(frameUrl(rows[i]));
+        const url = urls.get(rows[i].frame_path);
+        if (!url) throw new Error('no signed link');
+        const img = await imageFromUrl(url);
         await addExample(img, rows[i].class_name);
       } catch {
         failed += 1;

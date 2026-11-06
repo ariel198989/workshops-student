@@ -1,10 +1,10 @@
 'use client';
 // The group's training pool: stats for the readiness view and the YOLO dataset
-// ZIP (data.yaml, images/, labels/, stratified split, capped negatives).
-// Ported from Smart City lib/citypool.ts with the `team` scope only.
-import { sb, publicUrl } from '../db';
+// ZIP (data.yaml, images/, labels/, stratified split) built from ws_photos and
+// the group's files in the private ws-media bucket.
+import { sb, downloadMedia } from '../db';
 import { POOL_LIMIT } from './config';
-import { classIndexMap, splitValGroups, teamScope, groupKey } from './dataset';
+import { classIndexMap, splitValGroups, groupKey } from './dataset';
 import { yoloLabelLine, type NBox } from './geometry';
 
 export interface PoolStats {
@@ -22,15 +22,14 @@ interface PoolRow {
 }
 
 export type BuiltZip =
-  | { ok: true; blob: Blob; count: number; negatives: number; classes: string[] }
+  | { ok: true; blob: Blob; count: number; classes: string[] }
   | { ok: false; error: string };
 
-// training-grade = a full frame + a human box, not rejected. `me` set = only the photos I shot (personal scope).
+// training-grade = a photo with a human box, not rejected. `me` set = only the photos I shot (personal scope).
 async function fetchPoolRows(team: string, me: string | null): Promise<PoolRow[]> {
-  let q = sb.from('sc_detections')
+  let q = sb.from('ws_photos')
     .select('class_name, frame_path, bbox, detected_by, created_at')
-    .in('team_name', teamScope(team))
-    .not('frame_path', 'is', null)
+    .eq('team_name', team)
     .not('bbox', 'is', null)
     .neq('status', 'rejected');
   if (me) q = q.eq('detected_by', me);
@@ -51,17 +50,10 @@ export async function fetchPoolStats(team: string, me: string | null): Promise<P
   return { total: rows.length, contributors: people.size, byClass };
 }
 
-// accepted "the AI was right" photos are background images (empty labels)
-async function fetchAcceptedNegatives(limit: number): Promise<{ frame_path: string }[]> {
-  const { data, error } = await sb.from('sc_feedback')
-    .select('frame_path').eq('kind', 'negative').eq('status', 'accepted').limit(limit);
-  return error ? [] : ((data ?? []) as { frame_path: string }[]);
-}
-
+// the bucket is private: an authenticated download, never a public URL
 async function fetchBytes(path: string): Promise<Uint8Array | null> {
   try {
-    const res = await fetch(publicUrl(path));
-    return res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
+    return new Uint8Array(await (await downloadMedia(path)).arrayBuffer());
   } catch {
     return null;
   }
@@ -101,18 +93,6 @@ export async function buildTeamPoolZip(team: string, me: string | null, onProgre
     return { ok: false, error: `${failed} מתוך ${rows.length} תמונות לא ירדו (רשת?). האימון בוטל, נסו שוב.` };
   }
 
-  const negs = await fetchAcceptedNegatives(Math.ceil(ok / 4));
-  let negOk = 0;
-  for (let i = 0; i < negs.length; i++) {
-    const bytes = await fetchBytes(negs[i].frame_path);
-    if (!bytes) continue;
-    const seg = i % 5 === 0 ? 'val' : 'train';
-    const base = `neg_${String(i).padStart(4, '0')}`;
-    zip.file(`images/${seg}/${base}.jpg`, bytes);
-    zip.file(`labels/${seg}/${base}.txt`, '');
-    negOk++;
-  }
-
   const blob = await zip.generateAsync({ type: 'blob' });
-  return { ok: true, blob, count: ok, negatives: negOk, classes: names };
+  return { ok: true, blob, count: ok, classes: names };
 }

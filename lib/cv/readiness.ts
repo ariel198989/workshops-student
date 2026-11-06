@@ -1,6 +1,6 @@
 // Pure readiness, queue and model-quality rules for the train and results screens.
-// Thresholds mirror Smart City (YOLO is useful from ~50 tagged photos per
-// class, strong from ~150) and components/ws/p4/readiness.ts (the staff board).
+// Thresholds (YOLO is useful from ~50 tagged photos per class, strong from
+// ~150) mirror components/ws/p4/readiness.ts (the staff board).
 
 export type Tier = 'red' | 'ok' | 'strong';
 export type JobTone = 'ok' | 'active' | 'wait' | 'off' | 'bad';
@@ -8,7 +8,7 @@ export type Verdict = 'unknown' | 'weak' | 'basic' | 'strong';
 
 export const RED_BELOW = 50;
 export const STRONG_FROM = 150;
-/** Smart City refuses to open a job under this many tagged photos. */
+/** No job is opened under this many tagged photos. */
 export const MIN_TRAIN_IMAGES = 10;
 const WEAK_AP50 = 0.5;
 const WEAK_BOXES = 20;
@@ -95,7 +95,7 @@ export interface ClassStat {
   name: string;
   ap50?: number | null;
   boxes?: number | null;
-  /** optional in Smart City's trainer output (0..1); only present when the trainer wrote them */
+  /** optional in the trainer's output (0..1); only present when the trainer wrote them */
   precision?: number;
   recall?: number;
   /** confusion counts, when the trainer wrote them */
@@ -106,7 +106,7 @@ export interface ClassStat {
 
 const OPTIONAL_NUMERIC: readonly (keyof ClassStat)[] = ['precision', 'recall', 'tp', 'fp', 'fn'];
 
-/** sc_models.class_stats is free-form jsonb: keep only well-formed {name,...} entries. */
+/** ws_models.class_stats is free-form jsonb: keep only well-formed {name,...} entries. */
 export function parseClassStats(raw: unknown): ClassStat[] {
   if (!Array.isArray(raw)) return [];
   const out: ClassStat[] = [];
@@ -132,7 +132,7 @@ export function isWeak(s: ClassStat): boolean {
 
 export const weakClasses = (raw: unknown): ClassStat[] => parseClassStats(raw).filter(isWeak);
 
-/** Honest one-word verdict on a model, same cut-offs as Smart City's model card. */
+/** Honest one-word verdict on a model: how many photos it learned from, and whether it was validated honestly. */
 export function modelVerdict(imageCount: number | null, honestVal: boolean | null): Verdict {
   if (imageCount == null) return 'unknown';
   if (imageCount < 30 || honestVal === false) return 'weak';

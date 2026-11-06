@@ -37,7 +37,7 @@ function Explain() {
 }
 
 export function TrainScreen({ session }: { session: CvSession }) {
-  const { team, userId, ctx } = session;
+  const { team, media, userId, ctx } = session;
   const scope = scopeOf(ctx);
   const me = poolUser(scope, userId); // personal scope: my photos, my jobs; the trainer queue stays shared
   const [pool, setPool] = useState<PoolStats | null>(null);
@@ -60,7 +60,7 @@ export function TrainScreen({ session }: { session: CvSession }) {
     setBusy(true);
     setError('');
     try {
-      const r = await startTeamTrainingJob(userId, team, scope.personal, setProgress);
+      const r = await startTeamTrainingJob({ userId, team, media }, scope.personal, setProgress);
       // r.error may be raw database text; the mapper turns it into one Hebrew sentence
       if (!r.ok) setError(trainErrorHe(r.error));
       else { toast('משימת האימון נפתחה ונכנסה לתור.', true); navigator.vibrate?.(120); await refresh(); }

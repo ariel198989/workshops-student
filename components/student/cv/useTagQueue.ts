@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { friendlyError } from '@/lib/cv/capture-utils';
 import { fetchUntagged, isAlreadyHandled, rejectFrame, restoreFrame, saveBox, type QueueRow } from '@/lib/cv/detections';
 import type { NBox } from '@/lib/cv/geometry';
+import { signedUrls } from '@/lib/cv/signed-url';
 import { reloadStudentContext } from '@/lib/student/context';
 import { toast, toastWithAction } from '@/lib/store';
 
@@ -30,7 +31,10 @@ export function useTagQueue(team: string, userId: string, includeTeammates: bool
     setRows(null);
     setLoadError('');
     try {
-      setRows(await fetchUntagged(team, userId, includeTeammates));
+      const next = await fetchUntagged(team, userId, includeTeammates);
+      // one request signs the whole queue, so each photo opens at once; a failure here is retried per photo
+      await signedUrls(next.map((r) => r.frame_path)).catch(() => undefined);
+      setRows(next);
       setIdx(0);
       setSkipped(0);
     } catch (e) {

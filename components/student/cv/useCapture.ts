@@ -1,12 +1,11 @@
 'use client';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { frameQuality, grabJpeg, holdScreenAwake, videoReady } from '@/lib/cv/camera';
-import {
-  captureFilename, createRetryQueue, randomSuffix, SERIES_INTERVAL_MS, type QueueStats, type RetryQueue,
-} from '@/lib/cv/capture-utils';
+import { createRetryQueue, randomSuffix, SERIES_INTERVAL_MS, type QueueStats, type RetryQueue } from '@/lib/cv/capture-utils';
 import { fetchCaptureCounts } from '@/lib/cv/detections';
 import { QUALITY_MESSAGES, type QualityReason } from '@/lib/cv/quality';
 import { saveCapture, type CaptureItem } from '@/lib/cv/upload';
+import { photoPath, type MediaScope } from '@/lib/cv/ws-data';
 import { toast } from '@/lib/store';
 
 const RETRY_EVERY_MS = 10000;
@@ -15,6 +14,8 @@ const EMPTY_STATS: QueueStats = { queued: 0, saved: 0, failing: false, dropped: 
 interface Args {
   videoRef: RefObject<HTMLVideoElement | null>;
   team: string;
+  /** the group's folder in ws-media; every photo path starts with it */
+  media: MediaScope;
   userId: string;
   /** whose photos the counts cover: me (personal pool scope) or null for the whole group */
   me: string | null;
@@ -22,7 +23,8 @@ interface Args {
 }
 
 /** Single shots, the auto-shoot series, per-class counts and the offline retry queue. */
-export function useCapture({ videoRef, team, userId, me, className }: Args) {
+export function useCapture({ videoRef, team, media, userId, me, className }: Args) {
+  const { workshopId, groupId } = media;
   const [base, setBase] = useState<Record<string, number>>({});
   const [loaded, setLoaded] = useState(false);
   const [taken, setTaken] = useState<Record<string, number>>({});
@@ -58,13 +60,15 @@ export function useCapture({ videoRef, team, userId, me, className }: Args) {
     const blob = await grabJpeg(video, scratch.current);
     if (!blob) return false;
     const cls = classRef.current;
-    const item: CaptureItem = { blob, path: captureFilename(Date.now(), randomSuffix()), className: cls, team, userId };
+    // the path is fixed here, at snapshot time: every retry of this item reuses it
+    const path = photoPath({ workshopId, groupId }, Date.now(), randomSuffix());
+    const item: CaptureItem = { blob, path, className: cls, team, groupId, userId };
     if (!q.submit(item)) { toast('יש יותר מדי תמונות שמחכות להעלאה. חכו לחיבור ואז המשיכו.'); return false; }
     setTaken((t) => ({ ...t, [cls]: (t[cls] ?? 0) + 1 }));
     setFlashAt(Date.now());
     navigator.vibrate?.(20);
     return true;
-  }, [videoRef, team, userId]);
+  }, [videoRef, team, workshopId, groupId, userId]);
 
   const shootRef = useRef(shoot);
   useEffect(() => { shootRef.current = shoot; }, [shoot]);

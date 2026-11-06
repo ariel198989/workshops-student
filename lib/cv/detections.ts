@@ -1,9 +1,9 @@
 'use client';
-// sc_detections reads/writes for the student cycle: capture counts, the tag
-// queue, saving a box, rejecting a frame. RLS: signed-in users may insert and
-// update their OWN rows; every sc_* table is publicly readable.
+// ws_photos reads/writes for the student cycle: capture counts, the tag queue,
+// saving a box, rejecting a frame. RLS: a student reads only the photos of their
+// own group; a box or a delete goes through the ws_tag_detection RPC.
 import { sb } from '../db';
-import { countByClass, orderQueue, teamScope } from './dataset';
+import { countByClass, orderQueue } from './dataset';
 import type { NBox } from './geometry';
 
 export interface QueueRow {
@@ -29,10 +29,9 @@ export const isAlreadyHandled = (e: unknown): boolean => e instanceof Error && e
  * the ones `me` shot when the workshop's pool scope is personal.
  */
 export async function fetchCaptureCounts(team: string, me: string | null): Promise<Record<string, number>> {
-  let q = sb.from('sc_detections')
+  let q = sb.from('ws_photos')
     .select('class_name')
-    .in('team_name', teamScope(team))
-    .not('frame_path', 'is', null)
+    .eq('team_name', team)
     .neq('status', 'rejected');
   if (me) q = q.eq('detected_by', me);
   const { data, error } = await q.limit(COUNT_LIMIT);
@@ -42,11 +41,10 @@ export async function fetchCaptureCounts(team: string, me: string | null): Promi
 
 /** Frames of the group that still have no box. Mine first; teammates' only when asked. */
 export async function fetchUntagged(team: string, userId: string, includeTeammates: boolean): Promise<QueueRow[]> {
-  let q = sb.from('sc_detections')
+  let q = sb.from('ws_photos')
     .select('id, class_name, frame_path, created_at, detected_by')
-    .in('team_name', teamScope(team))
+    .eq('team_name', team)
     .is('bbox', null)
-    .not('frame_path', 'is', null)
     .neq('status', 'rejected');
   if (!includeTeammates) q = q.eq('detected_by', userId);
   const { data, error } = await q.order('created_at', { ascending: false }).limit(QUEUE_LIMIT);
@@ -55,7 +53,7 @@ export async function fetchUntagged(team: string, userId: string, includeTeammat
 }
 
 // ws_tag_detection lets a student tag any training photo of their own group,
-// not only the ones they shot (Smart City's RLS allows own rows only).
+// not only the ones they shot (ws_photos itself has no client update grant).
 async function tag(id: string, bbox: NBox | null, className: string | null, reject: boolean): Promise<void> {
   const { error } = await sb.rpc('ws_tag_detection', {
     p_id: id, p_bbox: bbox, p_class: className, p_reject: reject,

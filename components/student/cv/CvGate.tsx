@@ -3,13 +3,16 @@ import Link from 'next/link';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import { getUserId } from '@/lib/cv/session';
+import type { MediaScope } from '@/lib/cv/ws-data';
 import { useStudentContext, type StudentContext } from '@/lib/student/context';
 import s from './cv.module.css';
 
 export interface CvSession {
   ctx: StudentContext;
-  /** the key on every sc_detections / sc_training_jobs / sc_models row of this group */
+  /** the key on every ws_photos / ws_training_jobs / ws_models row of this group */
   team: string;
+  /** the group's folder in the private ws-media bucket: w/{workshop}/g/{group}/ */
+  media: MediaScope;
   userId: string;
 }
 
@@ -58,5 +61,6 @@ export function CvGate({ children }: { children: (session: CvSession) => ReactNo
         action={<Link href="/" className={`${s.btn} ${s.btnPrimary}`}>לדף הבית</Link>} />
     );
   }
-  return <>{children({ ctx, team: ctx.group.team_name, userId })}</>;
+  const media: MediaScope = { workshopId: ctx.workshop.id, groupId: ctx.group.id };
+  return <>{children({ ctx, team: ctx.group.team_name, media, userId })}</>;
 }

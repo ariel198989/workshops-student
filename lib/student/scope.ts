@@ -47,7 +47,7 @@ export function scopeOf(ctx: ScopedContext | null | undefined): Scope {
   };
 }
 
-/** The user the sc_* queries filter on: me in personal scope, nobody (the whole group) otherwise. */
+/** The user the photo, job and model queries filter on: me in personal scope, nobody (the whole group) otherwise. */
 export const poolUser = (scope: Pick<Scope, 'personal'>, userId: string): string | null => (scope.personal ? userId : null);
 
 /** Photos of mine that still wait for a box. */

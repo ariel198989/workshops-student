@@ -1,5 +1,5 @@
 // Pure YOLO output decoding (no tfjs): letterbox math, output reshape,
-// score threshold, per-class NMS. Ported from Smart City lib/infer.ts.
+// score threshold, per-class NMS. The tfjs side lives in ./infer.
 
 export interface Box { x: number; y: number; w: number; h: number; cls: number; score: number }
 

@@ -1,33 +1,13 @@
 'use client';
-// Upload one captured frame and register it in sc_detections. The exact same
-// row Smart City's SeriesCollect writes for a series frame, minus GPS and campaigns.
-import { sb, uploadBlob } from '../db';
+// Upload one captured frame into the group's folder of the private ws-media bucket
+// and register it in ws_photos. No GPS, no location: a photo is a class name and a file.
+import { sb, uploadMedia } from '../db';
 import { isAlreadyUploaded } from './capture-utils';
-import { DEFAULT_CITY } from './config';
+import { isAlreadySaved, photoRow, type PhotoInput } from './ws-data';
 
-export interface CaptureItem {
+export interface CaptureItem extends PhotoInput {
   blob: Blob;
-  path: string; // fixed at snapshot time so a retry never creates an orphan upload
-  className: string;
-  team: string;
-  userId: string;
-}
-
-/** The insert row. lat/lng are NOT NULL in Smart City, so the city centre stands in (no GPS prompt for kids). */
-export function detectionRow(item: CaptureItem): Record<string, unknown> {
-  return {
-    lat: DEFAULT_CITY.center_lat,
-    lng: DEFAULT_CITY.center_lng,
-    class_name: item.className,
-    confidence: 0,
-    frame_path: item.path,
-    detected_by: item.userId,
-    team_name: item.team,
-    credits: 0,
-    heading: null,
-    status: 'dataset', // training material, never a live incident
-    campaign_id: null,
-  };
+  // `path` is fixed at snapshot time so a retry never creates an orphan upload
 }
 
 const uploaded = new Set<string>();
@@ -35,7 +15,7 @@ const uploaded = new Set<string>();
 /** The object is in storage after this resolves: a fresh upload, or a 409 from one that landed earlier. */
 async function ensureUploaded(item: CaptureItem): Promise<void> {
   try {
-    await uploadBlob(item.path, item.blob, 'image/jpeg');
+    await uploadMedia(item.path, item.blob, 'image/jpeg');
   } catch (e) {
     if (!isAlreadyUploaded(e)) throw e;
   }
@@ -46,7 +26,8 @@ export async function saveCapture(item: CaptureItem): Promise<void> {
     await ensureUploaded(item);
     uploaded.add(item.path); // upload ok but insert failed: retry only the insert
   }
-  const { error } = await sb.from('sc_detections').insert(detectionRow(item));
-  if (error) throw new Error(error.message);
+  const { error } = await sb.from('ws_photos').insert(photoRow(item));
+  // 23505 = this frame_path is already a row: the first insert landed, only its answer was lost
+  if (error && !isAlreadySaved(error)) throw new Error(error.message);
   uploaded.delete(item.path);
 }

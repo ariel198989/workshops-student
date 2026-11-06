@@ -15,6 +15,8 @@ interface Props {
   onChange: (box: NBox | null) => void;
   /** box (L3/L4): draw with a finger. point (L2): one tap proposes a box, big handles adjust it. */
   mode?: Exclude<TagMode, 'none'>;
+  /** the photo did not load (its signed link died, or the network did) */
+  onImageError?: () => void;
 }
 
 const pct = (n: number) => `${n * 100}%`;
@@ -22,7 +24,7 @@ const pct = (n: number) => `${n * 100}%`;
 const POINT_HANDLE_TOLERANCE = 0.09;
 
 /** The photo with one box. Box mode: draw anywhere, drag to move, drag a corner to resize. Point mode: tap once to propose. */
-export function TagStage({ src, box, label, onChange, mode = 'box' }: Props) {
+export function TagStage({ src, box, label, onChange, mode = 'box', onImageError }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const drag = useRef<Mode>(null);
   // pointermove can fire faster than React re-renders: read the box from a ref, not from a stale prop
@@ -79,7 +81,7 @@ export function TagStage({ src, box, label, onChange, mode = 'box' }: Props) {
     <div ref={wrap} className={point ? `${t.stage} ${t.stagePoint}` : t.stage}
       onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" draggable={false} className={t.photo} />
+      <img src={src} alt="" draggable={false} className={t.photo} onError={onImageError} />
       {box ? (
         <div className={t.box} style={{ left: pct(box.x), top: pct(box.y), width: pct(box.w), height: pct(box.h) }}>
           <span className={t.boxLabel}>{label}</span>

@@ -118,5 +118,5 @@ export function useStudentContext(): State & { reload: () => Promise<StudentCont
   return { ...state, reload: reloadStudentContext };
 }
 
-/** The data key every photo, job and model of this group carries in Smart City's sc_* tables. */
+/** The data key every photo, job and model of this group carries (ws_photos, ws_training_jobs, ws_models). */
 export const teamOf = (ctx: StudentContext | null): string | null => ctx?.group?.team_name ?? null;

@@ -50,7 +50,7 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
   const router = useRouter();
   const { videoRef, state, error, retry, stop } = useCamera();
   const scope = scopeOf(session.ctx);
-  const cap = useCapture({ videoRef, team: session.team, userId: session.userId, me: poolUser(scope, session.userId), className: active });
+  const cap = useCapture({ videoRef, team: session.team, media: session.media, userId: session.userId, me: poolUser(scope, session.userId), className: active });
   const next = nextAfterCapture(session.ctx.caps, { total: cap.uploaded, active: active ? cap.countOf(active) : undefined });
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 // Pure bounding-box math for the tagger. All coordinates are normalized 0..1
-// against the displayed image, which is what sc_detections.bbox stores:
+// against the displayed image, which is what ws_photos.bbox stores:
 // { x, y, w, h } with (x, y) the top-left corner.
 
 export interface NBox { x: number; y: number; w: number; h: number }

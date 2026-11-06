@@ -1,11 +1,7 @@
 // Pure dataset rules shared by the pool export, the tag queue and the model
 // picker. No imports on purpose: unit tested under plain Node.
 
-const PERSONAL_PREFIX = 'אישי · ';
 const BURST_WINDOW_MS = 600000;
-
-/** A group's pool = its own shots + its members' personal ones, never another group's. */
-export const teamScope = (team: string): [string, string] => [team, `${PERSONAL_PREFIX}${team}`];
 
 interface GroupRow { class_name: string; detected_by: string | null; created_at: string }
 
@@ -64,11 +60,10 @@ interface PickableModel { owner: string | null; team_name: string; zip_path: str
 
 const usable = (m: PickableModel): boolean => !!m.zip_path && m.approved;
 
-/** The group's model: newest approved model it owns (list is newest first). No city fallback for students. */
+/** The group's model: the newest approved one under its team_name, or one I own (list is newest first). */
 export function pickTeamModel<T extends PickableModel>(models: T[], userId: string | null, team: string): T | null {
-  const [t, personal] = teamScope(team);
-  const mine = (m: T) => (userId != null && m.owner === userId) || m.team_name === t || m.team_name === personal;
-  return models.find((m) => usable(m) && mine(m)) ?? null;
+  const ours = (m: T) => (userId != null && m.owner === userId) || m.team_name === team;
+  return models.find((m) => usable(m) && ours(m)) ?? null;
 }
 
 /** My own model: the newest approved one with owner = me (the trainer sets owner = requested_by). */

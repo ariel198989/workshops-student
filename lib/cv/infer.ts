@@ -1,7 +1,7 @@
 'use client';
 // TF.js inference engine (client only). tfjs is imported dynamically, so the
-// ~1MB bundle is only fetched on the results screen. Ported from Smart City
-// lib/infer.ts; the pure decode lives in ./yolo.
+// ~1MB bundle is only fetched on the results screen. The pure decode lives
+// in ./yolo.
 import type { GraphModel, Tensor } from '@tensorflow/tfjs';
 import { normalizeHebrewCount } from './capture-utils';
 import { decodeYolo, letterbox, rowsFromOutput, type Decoded } from './yolo';

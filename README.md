@@ -27,3 +27,8 @@ npm run build
 The Supabase project and every `ws_*` table, RPC and policy are owned by the instructor console repo
 (`workshops-os`). Migrations live there only; this repo has none. Changes to a table or RPC used here
 (`ws_whoami`, `ws_my_context`, `ws_verify_certificate`, `ws_certificates`, join RPCs) must be made there.
+
+Photos, training jobs and models live in the workshops' own tables: `ws_photos`, `ws_training_jobs`,
+`ws_models` (plus the RPCs `ws_tag_detection`, `ws_training_queue`, `ws_shared_model`). Files live in two
+buckets: `ws-media` (private: photos at `w/{workshop}/g/{group}/p/`, dataset ZIPs at `.../jobs/`, shown
+through signed links, see `lib/cv/signed-url.ts`) and `ws-models` (model ZIPs, public by URL).

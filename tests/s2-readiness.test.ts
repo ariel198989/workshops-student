@@ -52,14 +52,14 @@ test('failed jobs render in Hebrew with the reason when there is one', () => {
 
 test('trainErrorHe maps raw English errors to one Hebrew sentence and never leaks them', () => {
   assert.match(trainErrorHe('TypeError: Failed to fetch'), /אין חיבור/);
-  assert.match(trainErrorHe('new row violates row-level security policy for table "sc_training_jobs"'), /הרשאה/);
+  assert.match(trainErrorHe('new row violates row-level security policy for table "ws_training_jobs"'), /הרשאה/);
   assert.match(trainErrorHe('duplicate key value violates unique constraint'), /כבר יש משימת/);
   assert.match(trainErrorHe('Payload too large'), /גדול מדי/);
   assert.match(trainErrorHe('The resource was not found in the bucket'), /העלאת הדאטה/);
   assert.match(trainErrorHe('canceling statement due to statement timeout'), /בזמן/);
   assert.equal(trainErrorHe('הודעה בעברית'), 'הודעה בעברית', 'our own copy passes through');
-  const fallback = trainErrorHe('relation sc_x does not exist');
-  assert.doesNotMatch(fallback, /relation|sc_x/);
+  const fallback = trainErrorHe('relation ws_x does not exist');
+  assert.doesNotMatch(fallback, /relation|ws_x/);
   assert.match(fallback, /נסו שוב/);
   assert.equal(trainErrorHe('', 'ברירת מחדל'), 'ברירת מחדל');
   assert.equal(trainErrorHe(null, 'ברירת מחדל'), 'ברירת מחדל');

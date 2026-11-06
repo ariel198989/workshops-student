@@ -1,17 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  captureFilename, validateClassName, fitWithin, coachTip, COACH_TIPS, createRetryQueue, mergeCounts, friendlyError, isAlreadyUploaded, uploadStuck, STUCK_AFTER,
+  validateClassName, fitWithin, coachTip, COACH_TIPS, createRetryQueue, mergeCounts, friendlyError, isAlreadyUploaded, uploadStuck, STUCK_AFTER,
 } from '../lib/cv/capture-utils.ts';
 import { assessPixels } from '../lib/cv/quality.ts';
 
-test('captureFilename is ASCII, under pool/, and ws_ prefixed', () => {
-  const p = captureFilename(1760000000000, 'ab12c');
-  assert.equal(p, 'pool/ws_1760000000000_ab12c.jpg');
-  assert.match(p, /^pool\/ws_\d+_[a-z0-9]+\.jpg$/);
-});
-
-test('validateClassName enforces the Smart City rules', () => {
+test('validateClassName enforces the ws_photos class name rules', () => {
   assert.deepEqual(validateClassName('  כוס  '), { ok: true, name: 'כוס' });
   assert.equal(validateClassName('').ok, false);
   assert.equal(validateClassName('a"b').ok, false);

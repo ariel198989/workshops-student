@@ -1,7 +1,7 @@
 'use client';
 // The facilitator's pocket model: MobileNet v2 (alpha 0.5) embeddings + a kNN
-// head, Teachable-Machine style, ported from Smart City's lib/pocket.ts. Runs
-// entirely in the browser; nothing is uploaded. Pure rules live in score.ts.
+// head, Teachable-Machine style. Runs entirely in the browser; nothing is
+// uploaded. Pure rules live in score.ts.
 import type * as tfTypes from '@tensorflow/tfjs';
 import { createStore } from '../store';
 import { canClassify, kFor } from './score';
