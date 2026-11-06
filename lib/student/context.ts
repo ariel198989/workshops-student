@@ -27,7 +27,9 @@ export interface StudentProgress {
   off_target_classes: StudentCoverage[];
   readiness: 'no_targets' | 'red' | 'ok' | 'strong';
   jobs: { pending: number; running: number; done: number; last: { id: string; status: string; image_count: number; created_at: string; completed_at: string | null } | null };
-  model: { id: string; name: string; accuracy: number | null; approved: boolean; image_count: number | null; honest_val: boolean | null; class_stats: unknown; personal: boolean; created_at: string } | null;
+  model: { id: string; name: string; accuracy: number | null; approved: boolean; image_count: number | null; honest_val: boolean | null; class_stats: unknown; personal: boolean; created_at: string;
+    /** ws_models.scope: 'personal' | 'group' (absent on servers before migration 0017) */
+    scope?: string | null } | null;
 }
 
 export interface StudentWorkshop {

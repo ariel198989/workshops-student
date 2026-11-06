@@ -90,21 +90,26 @@ test('pickOwnModel takes only the newest approved model with owner = me', () => 
   assert.equal(pickOwnModel(models.slice(0, 3), 'me'), null);
 });
 
-test('pickScopedModels: personal scope shows mine first and the group model by someone else quieter', () => {
+test('pickScopedModels: personal scope shows mine and, beside it, the group model (scope group only)', () => {
   const models = [
-    model({ id: 'mate', owner: 'mate', team_name: 'ח1' }),
-    model({ id: 'mine', owner: 'me', team_name: 'ח1' }),
-    model({ id: 'merged', owner: null, team_name: 'ח1' }),
+    model({ id: 'mate', owner: 'mate', team_name: 'ח1', scope: 'personal' }),
+    model({ id: 'mine', owner: 'me', team_name: 'ח1', scope: 'personal' }),
+    model({ id: 'merged-unapproved', owner: 'staff', team_name: 'ח1', scope: 'group', approved: false }),
+    model({ id: 'merged', owner: 'staff', team_name: 'ח1', scope: 'group' }),
   ];
   const personal = pickScopedModels(models, 'me', 'ח1', true);
   assert.equal(personal.model?.id, 'mine');
-  assert.equal(personal.group?.id, 'mate', 'the newest model that is not mine');
-  // no model of mine: the group's one (here a merged model with no owner) is the only thing on offer, folded away
-  const noMine = pickScopedModels(models.filter((m) => m.id !== 'mine' && m.id !== 'mate'), 'me', 'ח1', true);
+  assert.equal(personal.group?.id, 'merged', "the approved group-scope model, never a teammate's own");
+  // no model of mine: the group's model is shown alone
+  const noMine = pickScopedModels(models.filter((m) => m.id !== 'mine'), 'me', 'ח1', true);
   assert.equal(noMine.model, null);
   assert.equal(noMine.group?.id, 'merged');
+  // no group-scope model: nothing in the group slot, even though a teammate has one
+  const noGroup = pickScopedModels(models.filter((m) => m.scope !== 'group'), 'me', 'ח1', true);
+  assert.equal(noGroup.model?.id, 'mine');
+  assert.equal(noGroup.group, null);
   // group scope: today's behaviour, nothing in the quiet slot
   const group = pickScopedModels(models, 'me', 'ח1', false);
-  assert.equal(group.model?.id, 'mate');
+  assert.equal(group.model?.id, 'mate', "group scope: the group's newest approved model, as before");
   assert.equal(group.group, null);
 });

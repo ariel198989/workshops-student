@@ -96,3 +96,14 @@ test('progressForScope hands back the group progress untouched in group scope', 
   assert.equal(progressForScope({ personal: false }, g, mine({ photos: 1 })), g);
   assert.equal(progressForScope({ personal: true }, g, mine({ photos: 1 }))?.photos, 1);
 });
+
+test('hasGroupModel: only an approved model with scope group counts', async () => {
+  const { hasGroupModel } = await import('../lib/student/scope.ts');
+  const m = (over: Record<string, unknown>) => ({ model: { id: 'm', approved: true, scope: 'group', ...over } }) as never;
+  assert.equal(hasGroupModel(m({})), true);
+  assert.equal(hasGroupModel(m({ approved: false })), false);
+  assert.equal(hasGroupModel(m({ scope: 'personal' })), false);
+  assert.equal(hasGroupModel(m({ scope: undefined })), false);
+  assert.equal(hasGroupModel({ model: null }), false);
+  assert.equal(hasGroupModel(null), false);
+});

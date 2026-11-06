@@ -56,7 +56,11 @@ export function orderQueue<T extends { detected_by: string | null; created_at: s
   return [...mine, ...others];
 }
 
-interface PickableModel { owner: string | null; team_name: string; zip_path: string | null; approved: boolean }
+interface PickableModel {
+  owner: string | null; team_name: string; zip_path: string | null; approved: boolean;
+  /** ws_models.scope: 'personal' (one student's) or 'group' (merged by staff, or a group-scope workshop) */
+  scope?: string | null;
+}
 
 const usable = (m: PickableModel): boolean => !!m.zip_path && m.approved;
 
@@ -74,8 +78,13 @@ export function pickOwnModel<T extends PickableModel>(models: T[], userId: strin
 export interface ModelPick<T> {
   /** what the results screen shows first: mine in personal scope, the group's otherwise */
   model: T | null;
-  /** personal scope only: the group's newest model by someone else (or a merged one), shown quieter */
+  /** personal scope only: the group's newest approved model with scope 'group' ("המודל של הקבוצה") */
   group: T | null;
+}
+
+/** The group's own model: newest approved one with scope 'group' (never a teammate's personal model). */
+export function pickGroupScopeModel<T extends PickableModel>(models: T[], team: string): T | null {
+  return pickTeamModel(models.filter((m) => m.scope === 'group'), null, team);
 }
 
 /** Which model(s) the results screen shows for this scope. */
@@ -83,6 +92,6 @@ export function pickScopedModels<T extends PickableModel>(models: T[], userId: s
   if (!personal) return { model: pickTeamModel(models, userId, team), group: null };
   return {
     model: pickOwnModel(models, userId),
-    group: pickTeamModel(models.filter((m) => m.owner !== userId), null, team),
+    group: pickGroupScopeModel(models, team),
   };
 }

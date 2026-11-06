@@ -37,12 +37,15 @@ function NoModel({ caps, personal }: { caps: StudentCaps; personal: boolean }) {
   );
 }
 
-interface GroupModelProps { model: TeamModel; caps: StudentCaps; loadingEngine: boolean; onLive: () => void }
+interface GroupModelProps { model: TeamModel; caps: StudentCaps; loadingEngine: boolean; onLive: () => void; open: boolean }
 
-/** Personal scope without a model of my own: the group's model, folded away under a quiet heading. */
-function GroupModel({ model, caps, loadingEngine, onLive }: GroupModelProps) {
+/**
+ * Personal scope: the group's model (scope 'group', e.g. merged by the facilitator from everyone's photos).
+ * Beside my own model it is folded under a quiet heading; with no model of mine it is shown open, alone.
+ */
+function GroupModel({ model, caps, loadingEngine, onLive, open }: GroupModelProps) {
   return (
-    <details className={s.fold}>
+    <details className={s.fold} open={open}>
       <summary className={s.foldHead}>המודל של הקבוצה</summary>
       <div className={s.stack}>
         <ModelCard model={model} mode={caps.metric_mode} canCapture={caps.can_capture} />
@@ -64,10 +67,15 @@ export function ResultsScreen({ session }: { session: CvSession }) {
   const [group, setGroup] = useState<TeamModel | null>(null);
   const [error, setError] = useState('');
   const [live, setLive] = useState<Engine | null>(null);
+  // which model the one engine holds: mine by default, the group's while its live test is asked for
+  const [target, setTarget] = useState<TeamModel | null>(null);
+  const [wantLive, setWantLive] = useState(false);
   // changes when a training run finishes: the group's newest model, and my own model count
   const modelKey = `${ctx.progress?.model?.id ?? ''}|${ctx.mine.models}`;
-  const engine = useEngine(model ?? group);
+  const shown = target ?? model ?? group;
+  const engine = useEngine(shown);
   const loadingEngine = engine.status === 'loading';
+  const loadingGroup = loadingEngine && !!group && shown === group;
 
   const load = useCallback(async () => {
     setError('');
@@ -86,6 +94,15 @@ export function ResultsScreen({ session }: { session: CvSession }) {
   useEffect(() => { if (model) markResultsSeen(team); }, [model, team]);
 
   const openLive = async () => { setLive(await engine.ensure()); };
+  const { ensure } = engine;
+  // a target switch re-binds ensure to the other model on the next render; open the live test then
+  useEffect(() => {
+    if (!wantLive) return;
+    setWantLive(false);
+    void ensure().then(setLive);
+  }, [wantLive, ensure]);
+  const openGroupLive = () => { setTarget(group); setWantLive(true); };
+  const closeLive = () => { setLive(null); setTarget(null); };
 
   if (model === undefined) return <div className={s.spin}><Spinner large /></div>;
   return (
@@ -106,14 +123,15 @@ export function ResultsScreen({ session }: { session: CvSession }) {
           <ClassStatsList view={formatMetric(caps.metric_mode, model)} canCapture={caps.can_capture} />
           <TestPanel status={engine.status} error={engine.error} ensure={engine.ensure} onLive={openLive} />
           {caps.can_capture ? <Link href="/capture" className={s.btn}>חזרה לצילום: עוד תמונות לשיפור</Link> : null}
+          {group ? <GroupModel model={group} caps={caps} loadingEngine={loadingGroup} onLive={openGroupLive} open={false} /> : null}
         </>
       ) : !error ? (
         <>
           <NoModel caps={caps} personal={personal} />
-          {group ? <GroupModel model={group} caps={caps} loadingEngine={loadingEngine} onLive={() => void openLive()} /> : null}
+          {group ? <GroupModel model={group} caps={caps} loadingEngine={loadingGroup} onLive={openGroupLive} open /> : null}
         </>
       ) : null}
-      {live ? <LiveTest engine={live} onClose={() => setLive(null)} /> : null}
+      {live ? <LiveTest engine={live} onClose={closeLive} /> : null}
     </div>
   );
 }

@@ -50,6 +50,15 @@ export function scopeOf(ctx: ScopedContext | null | undefined): Scope {
 /** The user the photo, job and model queries filter on: me in personal scope, nobody (the whole group) otherwise. */
 export const poolUser = (scope: Pick<Scope, 'personal'>, userId: string): string | null => (scope.personal ? userId : null);
 
+/**
+ * The group's own model is ready: progress.model (the server lists approved, then scope 'group', first)
+ * is an approved model with scope 'group'. A teammate's personal model never counts.
+ */
+export function hasGroupModel(progress: Pick<StudentProgress, 'model'> | null | undefined): boolean {
+  const m = progress?.model;
+  return !!m && m.approved === true && m.scope === 'group';
+}
+
 /** Photos of mine that still wait for a box. */
 export const untaggedOf = (mine: MyStats): number => Math.max(0, mine.photos - mine.tagged);
 

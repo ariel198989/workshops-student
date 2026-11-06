@@ -1,8 +1,9 @@
+import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ChartLineData01Icon } from '@hugeicons/core-free-icons';
 import type { MyStats, StudentProgress } from '@/lib/student/context';
 import { MIN_TAGGED, STRONG_TAGGED, barFill, classLevel, type ClassLevel } from '@/lib/student/next-step';
-import { untaggedOf } from '@/lib/student/scope';
+import { hasGroupModel, untaggedOf } from '@/lib/student/scope';
 import k from './kit.module.css';
 import h from './home.module.css';
 
@@ -33,7 +34,7 @@ function ClassBar({ name, tagged }: { name: string; tagged: number }) {
 }
 
 /** Personal pool scope: my photos, my tags, my model, and one bar of my tagged total against the 50 / 150 marks. */
-function MyProgress({ mine }: { mine: MyStats }) {
+function MyProgress({ mine, groupModel }: { mine: MyStats; groupModel: boolean }) {
   return (
     <section className={k.card}>
       <div className={k.cardHead}><HugeiconsIcon icon={ChartLineData01Icon} size={18} />ההתקדמות שלי</div>
@@ -46,6 +47,9 @@ function MyProgress({ mine }: { mine: MyStats }) {
         <ClassBar name="התמונות המתויגות שלי" tagged={mine.tagged} />
       </div>
       {untaggedOf(mine) > 0 ? <p className={k.small}>עוד {untaggedOf(mine)} תמונות שלי מחכות לתיוג.</p> : null}
+      {groupModel ? (
+        <p className={k.small}>המודל של הקבוצה מוכן, מכל התמונות של כולם. <Link href="/results">לצפייה ולבדיקה</Link></p>
+      ) : null}
     </section>
   );
 }
@@ -58,7 +62,7 @@ interface Props {
 
 /** Photos / tagged / untagged plus one bar per target class, with marks at 50 (enough to train) and 150 (strong). */
 export function ProgressCard({ progress, mine = null }: Props) {
-  if (mine) return <MyProgress mine={mine} />;
+  if (mine) return <MyProgress mine={mine} groupModel={hasGroupModel(progress)} />;
   const p = progress;
   return (
     <section className={k.card}>
