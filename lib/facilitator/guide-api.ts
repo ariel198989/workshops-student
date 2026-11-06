@@ -8,17 +8,14 @@ export interface SessionPlan {
 }
 
 /**
- * The story of the workshop's curriculum template (ws_workshops.template_id → ws_curriculum_templates.story),
- * or null: no template, no story, or RLS hides templates from this account (only core staff read them).
- * Never throws: the opener box is a nice-to-have on top of the plan.
+ * The story of the workshop's curriculum template, through ws_workshop_story(p_workshop): the template's
+ * story jsonb (or null) for anyone who is staff of that workshop. The templates table itself is readable
+ * by core staff only, so it is never queried directly. Never throws: the opener box is a nice-to-have.
  */
 export async function fetchTemplateStory(workshopId: string): Promise<unknown> {
   try {
-    const { data, error } = await sb.from('ws_workshops')
-      .select('template:ws_curriculum_templates(story)').eq('id', workshopId).maybeSingle();
-    if (error || !data) return null;
-    const t = (data as { template?: { story?: unknown } | { story?: unknown }[] | null }).template;
-    return (Array.isArray(t) ? t[0]?.story : t?.story) ?? null;
+    const { data, error } = await sb.rpc('ws_workshop_story', { p_workshop: workshopId });
+    return error ? null : (data ?? null);
   } catch {
     return null;
   }

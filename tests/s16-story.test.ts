@@ -36,3 +36,11 @@ test('a session_no sent as text still matches; junk entries are skipped', () => 
   const s = { hero_he: 5, sessions: [null, 'x', { session_no: '2', opener_he: 'שלום' }] };
   assert.deepEqual(openerFor(s, 2), { hero: null, beat: null, opener: 'שלום', materials: null });
 });
+
+test('the story comes from the ws_workshop_story RPC, never from the core-staff-only templates table', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const api = readFileSync(join(import.meta.dirname, '..', 'lib/facilitator/guide-api.ts'), 'utf8');
+  assert.match(api, /rpc\('ws_workshop_story', \{ p_workshop: workshopId \}\)/);
+  assert.doesNotMatch(api, /ws_curriculum_templates/);
+});
