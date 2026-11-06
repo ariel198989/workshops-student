@@ -1,6 +1,7 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
+import { browserCaches, purgeLegacyCaches } from '@/lib/cv/legacy-cache';
 import { decideAccess, isPublicPath } from '@/lib/student/access';
 import { useStore } from '@/lib/store';
 import { wsAuthStore } from '@/lib/ws/staff';
@@ -30,6 +31,8 @@ function RouteGuard({ children }: { children: ReactNode }) {
 /** Wraps the app in AuthGate + RouteGuard; public routes (/verify/*) render bare. */
 export function AppFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  // once per app start: drop the Smart City model cache that devices kept from before the split
+  useEffect(() => { void purgeLegacyCaches(browserCaches()); }, []);
   if (isPublicPath(pathname)) return <>{children}</>;
   return (
     <AuthGate>
