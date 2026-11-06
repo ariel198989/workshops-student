@@ -1,7 +1,7 @@
 'use client';
 // Step 2: tap-tap-tap frames into the selected class, then one "למד" pass.
 import { useEffect, useRef, useState } from 'react';
-import { checkFrame, preloadFaceGuard } from '@/lib/cv/face-detector';
+import { checkFrame, startFaceGuard } from '@/lib/cv/face-detector';
 import { FACE_WARNING_FACILITATOR } from '@/lib/cv/face-guard';
 import { dotStates, RECOMMENDED_PER_CLASS } from '@/lib/pocket/score';
 import { CameraFlip } from './CameraFlip';
@@ -70,7 +70,7 @@ export function TeachStep(p: Props) {
   /** the privacy guard saw a face in the last shot; this mode never uploads, so it only warns */
   const [faceWarn, setFaceWarn] = useState(false);
 
-  useEffect(() => { preloadFaceGuard(); }, []);
+  useEffect(() => { startFaceGuard(); }, []);
 
   const shoot = () => {
     if (!p.active) return;

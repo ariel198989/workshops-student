@@ -1,78 +1,71 @@
 'use client';
-// In-browser face detector for the privacy guard. BlazeFace (short range, ~460 KB) is self-hosted
-// under public/models/blazeface; tfjs and the model load lazily, only on the screens that capture.
-// Fail open: when the detector cannot load or run, the verdict is 'skipped' and a console warning
-// tells the facilitator; a class is never blocked because a model failed. Decisions: ./face-guard.
+// In-browser face detector for the privacy guard. BlazeFace (short range, ~460 KB) is self-hosted under
+// public/models/blazeface; tfjs and the model load lazily (capture route, or home when capture is next).
+// The lifecycle (one load, one shared 20 s deadline, hard failure = fail open with a banner) is the pure
+// createFaceGuard in ./face-guard; this file only binds it to blazeface and the canvas.
+import { useSyncExternalStore } from 'react';
 import type { BlazeFaceModel } from '@tensorflow-models/blazeface';
-import { decideFaces, GUARD_LOAD_TIMEOUT_MS, type FaceBoxLike, type GuardVerdict } from './face-guard';
+import { createFaceGuard, letterbox, type GuardStatus, type GuardVerdict, type PreparedFrame } from './face-guard';
 
 export const BLAZEFACE_URL = '/models/blazeface/model.json';
 
-export type FaceSource = HTMLCanvasElement | HTMLVideoElement | HTMLImageElement;
+export type FaceSource = HTMLCanvasElement | HTMLVideoElement | HTMLImageElement | ImageBitmap;
 
-let model: BlazeFaceModel | null = null;
-let loading: Promise<BlazeFaceModel | null> | null = null;
-/** A failed load is not retried on every shot (each would wait for it); the next screen mount retries. */
-let failed = false;
-let warned = false;
-
-function warnOnce(why: unknown): void {
-  if (warned) return;
-  warned = true;
-  console.warn('[face-guard] face detector unavailable, photos are NOT checked for faces (fail open):', why);
+async function loadBlazeface(): Promise<BlazeFaceModel> {
+  const [tf, blazeface] = await Promise.all([import('@tensorflow/tfjs'), import('@tensorflow-models/blazeface')]);
+  await tf.ready();
+  // a low load threshold keeps candidates; face-guard.ts applies the real confidence bar
+  return blazeface.load({ modelUrl: BLAZEFACE_URL, maxFaces: 5, scoreThreshold: 0.6 });
 }
 
-async function load(): Promise<BlazeFaceModel | null> {
-  try {
-    const [tf, blazeface] = await Promise.all([import('@tensorflow/tfjs'), import('@tensorflow-models/blazeface')]);
-    await tf.ready();
-    // a low load threshold keeps candidates; face-guard.ts applies the real confidence bar
-    model = await blazeface.load({ modelUrl: BLAZEFACE_URL, maxFaces: 5, scoreThreshold: 0.6 });
-    return model;
-  } catch (e) {
-    failed = true;
-    warnOnce(e);
-    return null;
-  } finally {
-    loading = null;
-  }
-}
+const guard = createFaceGuard({
+  load: async () => {
+    const m = await loadBlazeface();
+    // annotateBoxes=true: without it blazeface drops the probability
+    return { estimateFaces: (input: never) => m.estimateFaces(input as HTMLCanvasElement, false, false, true) };
+  },
+  onHardFail: (why) => console.warn('[face-guard] face detector unavailable, capture continues UNCHECKED (banner shown):', why),
+});
 
-function ensureModel(): Promise<BlazeFaceModel | null> {
-  if (model) return Promise.resolve(model);
-  if (failed) return Promise.resolve(null);
-  loading ??= load();
-  return loading;
-}
+/** Start the download (idempotent): the capture route on open, the home screen when capture is next. */
+export const startFaceGuard = (): void => guard.start();
+export const faceGuardStatus = (): GuardStatus => guard.status();
+export const faceGuardSettled = (): Promise<'ready' | 'failed'> => guard.settled();
 
-/** Start the download as a capture screen opens, so the first shot does not wait. Retries a failed load. */
-export function preloadFaceGuard(): void {
-  failed = false;
-  void ensureModel();
-}
-
-const timeout = (ms: number) => new Promise<null>((res) => setTimeout(() => res(null), ms));
-
-/** Faces in this frame, or null when the detector is unavailable (still loading after the timeout, failed to load, or threw). */
-async function detect(src: FaceSource): Promise<readonly FaceBoxLike[] | null> {
-  const m = await Promise.race([ensureModel(), timeout(GUARD_LOAD_TIMEOUT_MS)]);
-  if (!m) { warnOnce(failed ? 'load failed' : `still loading after ${GUARD_LOAD_TIMEOUT_MS} ms`); return null; }
-  try {
-    // annotateBoxes=true: without it blazeface drops the probability; the frame is read before the first await
-    return await m.estimateFaces(src, false, false, true);
-  } catch (e) {
-    console.warn('[face-guard] detection failed on this frame, not checked (fail open):', e);
-    return null;
-  }
+/** The guard's status as React state; starts the load on first use. */
+export function useFaceGuardStatus(): GuardStatus {
+  return useSyncExternalStore(
+    (fn) => { const off = guard.subscribe(fn); guard.start(); return off; },
+    () => guard.status(),
+    () => 'idle',
+  );
 }
 
 const sizeOf = (src: FaceSource): { w: number; h: number } =>
-  src instanceof HTMLVideoElement ? { w: src.videoWidth, h: src.videoHeight }
-    : src instanceof HTMLImageElement ? { w: src.naturalWidth, h: src.naturalHeight }
+  typeof HTMLVideoElement !== 'undefined' && src instanceof HTMLVideoElement ? { w: src.videoWidth, h: src.videoHeight }
+    : typeof HTMLImageElement !== 'undefined' && src instanceof HTMLImageElement ? { w: src.naturalWidth, h: src.naturalHeight }
       : { w: src.width, h: src.height };
 
-/** 'face' means do not upload this frame; 'clear' and 'skipped' (fail open) let it through. */
-export async function checkFrame(src: FaceSource): Promise<GuardVerdict> {
+/** Letterbox the frame onto a fresh square canvas, synchronously: the check owns this copy. */
+function prepare(src: FaceSource): PreparedFrame {
   const { w, h } = sizeOf(src);
-  return decideFaces(await detect(src), w, h);
+  if (!(w > 0) || !(h > 0)) throw new Error('empty frame');
+  const geom = letterbox(w, h);
+  const canvas = document.createElement('canvas');
+  canvas.width = geom.side;
+  canvas.height = geom.side;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('no 2d context');
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, geom.side, geom.side);
+  ctx.drawImage(src, geom.dx, geom.dy, geom.drawW, geom.drawH);
+  return { input: canvas, geom, frameW: w, frameH: h };
+}
+
+/**
+ * 'clear' and 'skipped' (hard failure, fail open) may upload; 'face', 'error' (this frame's check threw)
+ * and 'not-ready' may not.
+ */
+export function checkFrame(src: FaceSource): Promise<GuardVerdict> {
+  return guard.check(() => prepare(src));
 }

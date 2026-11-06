@@ -3,7 +3,7 @@
 // which gallery classes become trainer classes and the frames are embedded
 // here, in the browser. Downloads only; nothing is written anywhere.
 import { useEffect, useRef, useState } from 'react';
-import { checkFrame, preloadFaceGuard } from '@/lib/cv/face-detector';
+import { checkFrame, faceGuardSettled, startFaceGuard } from '@/lib/cv/face-detector';
 import { galleryFaceNote } from '@/lib/cv/face-guard';
 import { signedUrls } from '@/lib/cv/signed-url';
 import { addExample, imageFromUrl } from '@/lib/pocket/engine';
@@ -36,7 +36,7 @@ export function GalleryImport({ workshopId, classes, onImported, onClose }: Prop
   const closeRef = useRef<HTMLButtonElement>(null);
   const importing = !!progress && progress.done < progress.total;
 
-  useEffect(() => { closeRef.current?.focus(); preloadFaceGuard(); }, []);
+  useEffect(() => { closeRef.current?.focus(); startFaceGuard(); }, []);
 
   // Escape closes the sheet, except while frames are still being embedded
   useEffect(() => {
@@ -87,6 +87,7 @@ export function GalleryImport({ workshopId, classes, onImported, onClose }: Prop
     const urls = await signedUrls(rows.map((r) => r.frame_path)).catch(() => new Map<string, string>());
     let failed = 0;
     let withFaces = 0; // privacy guard: this mode never uploads, so a face is only reported
+    await faceGuardSettled(); // one shared deadline; after a hard failure the frames are simply not counted
     for (let i = 0; i < rows.length; i++) {
       try {
         const url = urls.get(rows[i].frame_path);

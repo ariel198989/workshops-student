@@ -7,7 +7,8 @@ import { Cancel01Icon, CloudUploadIcon } from '@hugeicons/core-free-icons';
 import {
   captureAllowed, coachTip, STUCK_HINT, TARGET_FIRST, TARGET_STRONG, uploadStuck, validateClassName, WORKSHOP_NOT_LIVE,
 } from '@/lib/cv/capture-utils';
-import { FACE_MESSAGE } from '@/lib/cv/face-guard';
+import { useFaceGuardStatus } from '@/lib/cv/face-detector';
+import { captureGate, FACE_MESSAGE, GUARD_OFF_BANNER, GUARD_RETRY } from '@/lib/cv/face-guard';
 import { toast } from '@/lib/store';
 import { poolUser, reloadStudentContext, scopeOf } from '@/lib/student/context';
 import { nextAfterCapture } from '@/lib/student/flow';
@@ -76,8 +77,11 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
   // the server refused while the context still said live: refresh it so the button follows
   useEffect(() => { if (rejectedNotLive) void reloadStudentContext(); }, [rejectedNotLive]);
 
+  // privacy guard: the buttons wait for the face detector; after a hard failure a banner stays on screen
+  const gate = captureGate(useFaceGuardStatus());
+
   const addCustom = (cls: string) => { setCustom((l) => [...l, cls]); setActive(cls); };
-  const ready = state === 'live' && !!active && !leaving && live;
+  const ready = state === 'live' && !!active && !leaving && live && gate.canShoot;
 
   /** Stop shooting, let the last uploads land, release the camera, move on. Nothing is lost on the way. */
   async function goNext() {
@@ -107,6 +111,7 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
         <ClassPicker classes={classes} active={active} counts={cap.countOf} onPick={setActive}
           allowCustom={targets.length === 0} onAdd={addCustom} />
         {active ? <GoalBar count={cap.countOf(active)} /> : null}
+        {gate.banner ? <div className={c.guardOff} role="alert">{GUARD_OFF_BANNER}</div> : null}
       </div>
 
       {state === 'error' ? (
@@ -114,10 +119,10 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
           <p>{error}</p>
           <button type="button" className="primary" onClick={retry}>ניסיון נוסף</button>
         </div>
-      ) : cap.faceBlocked ? (
+      ) : cap.guardNote ? (
         <div className={c.err} role="alert">
-          <p>{FACE_MESSAGE}</p>
-          <button type="button" className="primary" onClick={cap.dismissFace}>צילום מחדש</button>
+          <p>{cap.guardNote === 'face' ? FACE_MESSAGE : GUARD_RETRY}</p>
+          <button type="button" className="primary" onClick={cap.dismissGuardNote}>צילום מחדש</button>
         </div>
       ) : <div className={c.spacer} />}
 
@@ -131,6 +136,8 @@ export function CaptureScreen({ session, presetClass }: { session: CvSession; pr
           <div className={c.coach} role="status">{UPLOADING_LAST}</div>
         ) : uploadStuck(cap.stats) ? (
           <div className={`${c.coach} ${c.coachWarn}`} role="alert">{STUCK_HINT}</div>
+        ) : gate.note && state === 'live' ? (
+          <div className={c.coach} role="status">{gate.note}</div>
         ) : cap.issueText ? (
           <div className={`${c.coach} ${c.coachWarn}`} role="status">{cap.issueText}</div>
         ) : ready ? (

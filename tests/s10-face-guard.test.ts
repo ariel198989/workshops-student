@@ -56,6 +56,8 @@ test('no faces is clear; a detector that did not run (null) is skipped and fails
   assert.equal(mayUpload('clear'), true);
   assert.equal(mayUpload('skipped'), true);
   assert.equal(mayUpload('face'), false);
+  assert.equal(mayUpload('error'), false, 'a frame whose check threw is not uploaded');
+  assert.equal(mayUpload('not-ready'), false, 'nothing uploads while the detector loads');
 });
 
 test('the student message is Hebrew, short and tells them what to do', () => {

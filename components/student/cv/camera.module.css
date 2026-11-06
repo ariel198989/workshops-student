@@ -58,6 +58,8 @@
 .coach{align-self:center;max-width:100%;padding:8px 16px;border-radius:999px;background:rgba(11,18,32,.7);
   font-size:16px;font-weight:600;text-align:center}
 .coachWarn{background:rgba(217,119,6,.9)}
+/* privacy guard off after a hard load failure: stays for the whole session on this screen */
+.guardOff{margin-top:8px;padding:8px 12px;border-radius:12px;background:rgba(220,38,38,.92);color:#fff;font-size:14px;font-weight:600;line-height:1.45}
 .controls{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px}
 .side{display:flex;align-items:center;gap:8px;min-width:0}
 .side > *{max-width:100%}
