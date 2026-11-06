@@ -28,7 +28,11 @@ export interface TrainJobsView {
  * Recent jobs (the group's, or only the ones `me` requested in personal scope) and the shared queue,
  * refreshed every 15s. Announces a job that just finished or failed.
  */
-export function useTrainJobs(team: string, me: string | null): TrainJobsView {
+export function useTrainJobs(
+  team: string, me: string | null, opts: { reloadContext?: boolean } = {},
+): TrainJobsView {
+  // staff pages have no student context: a finished job must not call ws_my_context for them
+  const reloadContext = opts.reloadContext ?? true;
   const [jobs, setJobs] = useState<TrainJob[] | null>(null);
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [justDone, setJustDone] = useState<TrainJob | null>(null);
@@ -42,7 +46,7 @@ export function useTrainJobs(team: string, me: string | null): TrainJobsView {
       if (wasActive && job.status === 'done') {
         setJustDone(job);
         toast('המודל מוכן. אפשר לראות את התוצאות ולבדוק אותו.', true);
-        void reloadStudentContext();
+        if (reloadContext) void reloadStudentContext();
       } else if (wasActive && job.status === 'failed') {
         toast(failedLabel(jobFailureReason(job)));
       }
@@ -50,7 +54,7 @@ export function useTrainJobs(team: string, me: string | null): TrainJobsView {
     }
     setJobs(list);
     setQueue(waiting);
-  }, [team, me]);
+  }, [team, me, reloadContext]);
 
   usePolling(refresh, JOB_POLL_MS);
 

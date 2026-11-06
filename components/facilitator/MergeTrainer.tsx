@@ -48,7 +48,7 @@ export function MergeTrainer({ group, staffUserId }: { group: MergeGroup; staffU
   const [guardOff, setGuardOff] = useState(false);
   useEffect(() => { startFaceGuard(); }, []);
   // jobs: the ones this staff member opened for the group (the merged runs); the trainer queue stays shared
-  const { jobs, active, ahead, alert, failed, justDone, refresh } = useTrainJobs(team, staffUserId);
+  const { jobs, active, ahead, alert, failed, justDone, refresh } = useTrainJobs(team, staffUserId, { reloadContext: false });
 
   const loadPool = useCallback(
     () => fetchPoolStats(team, WHOLE_GROUP).then(setPool).catch(() => setPool({ total: 0, byClass: [], contributors: 0 })),

@@ -15,7 +15,7 @@ function Notice({ title, text }: { title: string; text: string }) {
     <div className={m.notice} role="alert">
       <h1>{title}</h1>
       <p>{text}</p>
-      <Link href="/facilitator" role="button">למצב מדריך</Link>
+      <Link href="/facilitator">למצב מדריך</Link>
     </div>
   );
 }
